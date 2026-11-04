@@ -134,6 +134,7 @@
       .x-drop{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
       .x-emb--7{animation:x-mglow 3s ease-in-out infinite}
       @keyframes x-mglow{50%{filter:drop-shadow(0 0 8px #ff7a3d)}}
+      .x-rankshow{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}@media(min-width:900px){.x-rankshow{grid-template-columns:repeat(8,1fr)}}.x-rankshow li{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:var(--r-m);border:1px solid var(--x-line);background:var(--x-panel);text-align:center}.x-rankshow b{font-size:12px;line-height:1.2}.x-rankshow small{font-size:11px;opacity:.65}
       .x-ladder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
       .x-ladder li{display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:var(--r-m);border:1px solid var(--x-line);background:var(--x-panel)}
       .x-ladder li.is-cur{border-color:var(--x-gold);box-shadow:0 0 0 1px var(--x-gold)}
@@ -217,6 +218,11 @@
               <div><h3>2 · Battle</h3><p>Ranked Matches Across Three Lanes<br>Face off against fellow Thalvorix players in Ranked mode, Play your NFT hero to earn bonus.</p></div>
               <div><h3>3 · Climb</h3><p>8 tiers from Ashen Recruit to Mythic Thalvorian, 10 divisions each. 3 wins in a row pays out loot; 10 in a row pays out again.</p></div>
             </div>
+          </section>
+          <section class="section" id="ranks">
+            <div class="head"><h2>Rank Tiers</h2></div>
+            <p class="x-muted">From lowest to highest. Each tier has 10 divisions, X to I.</p>
+            <ol class="x-rankshow" id="rankShow" aria-label="Rank tiers from lowest to highest"></ol>
           </section>
                   <section class="section" id="roadmap">
             <div class="head"><h2>THALVORIX ROADMAP</h2></div>
@@ -790,6 +796,7 @@ const SHIELD='M32 4 L56 12 V30 C56 46 44 56 32 60 C20 56 8 46 8 30 V12Z',chev=y=
 const EPLATE=[`<circle cx="32" cy="32" r="27"/>`,`<polygon points="32,4 56,18 56,46 32,60 8,46 8,18"/>`,`<path d="${SHIELD}"/>`,`<polygon points="2,14 16,22 16,40"/><polygon points="62,14 48,22 48,40"/><path d="M32 6 L50 13 V30 C50 44 41 52 32 56 C23 52 14 44 14 30 V13Z"/>`,`<path d="M14 16 L20 5 L26 13 L32 3 L38 13 L44 5 L50 16Z"/><path d="M32 12 L54 18 V32 C54 46 43 55 32 60 C21 55 10 46 10 32 V18Z"/>`,`<polygon points="32,3 61,32 32,61 3,32"/>`,`<polygon points="${starPts(8,30,22)}"/>`,`<polygon points="${starPts(10,31,20)}"/>`];
 const EGLYPH=[chev(28),chev(22)+chev(32),chev(18)+chev(28)+chev(38),`<path d="M32 18 V44 M24 37 H40 M32 44 V49" fill="none" stroke-width="5" stroke-linecap="round"/>`,`<polygon points="${starPts(5,13,5.5,32,35)}" stroke="none"/>`,`<polygon points="32,18 44,28 32,47 20,28" stroke="none"/><path d="M20 28 H44" stroke-width="2"/>`,`<polygon points="25,20 33,27 25,42 17,27" stroke="none"/><polygon points="39,20 47,27 39,42 31,27" stroke="none"/>`,`<path d="M19 42 V26 L25.5 33 L32 21 L38.5 33 L45 26 V42Z" stroke="none"/>`];
 let eid=0;const emb=(t,z)=>{const c=TC[t],id='eg'+(++eid);return`<svg class="x-emb--${t}" width="${z}" height="${z}" viewBox="0 0 64 64" role="img" aria-label="${TIERS[t]} emblem" style="flex:none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient></defs><g fill="url(#${id})" stroke="${c[2]}" stroke-width="2" stroke-linejoin="round">${EPLATE[t]}</g><g fill="${c[3]}" stroke="${c[3]}">${EGLYPH[t]}</g></svg>`};
+try{const rs=document.getElementById('rankShow');if(rs)rs.innerHTML=TIERS.map((t,i)=>`<li>${emb(i,60)}<b>${t}</b><small>Tier ${i+1}</small></li>`).join('')}catch(e){}
 const SPD=25,starsHtml=s=>(s=Math.min(SPD,s),`<span class="x-stars" role="img" aria-label="${s} of ${SPD} stars"><b>★</b>${s}/${SPD}<span class="x-bar"><i style="width:${s/SPD*100}%"></i></span></span>`);
 /* Division-promotion drop odds from Gold Champion (tier index 4) up: Common/Rare/Epic/Legendary/Mythic % */
 const DROP={4:[50,30,15,4,1],5:[35,33,20,9,3],6:[20,32,28,14,6],7:[5,25,35,23,12]};
