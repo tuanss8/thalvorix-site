@@ -1,0 +1,28 @@
+{
+  "name": "Ingrith #605",
+  "description": "Thalvorix Hero NFT. Ingrith is a Assassin of Rare rarity, wielding Sound power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h60.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Ingrith"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 60
+    }
+  ]
+}

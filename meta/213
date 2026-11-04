@@ -1,0 +1,28 @@
+{
+  "name": "Aldrovane #213",
+  "description": "Thalvorix Hero NFT. Aldrovane is a Assassin of Common rarity, wielding Wind power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h78.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Aldrovane"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 78
+    }
+  ]
+}

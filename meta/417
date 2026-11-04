@@ -1,0 +1,28 @@
+{
+  "name": "Drakmor #417",
+  "description": "Thalvorix Hero NFT. Drakmor is a Tank of Legendary rarity, wielding Arcane power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h81.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Drakmor"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Tank"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Arcane"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 81
+    }
+  ]
+}

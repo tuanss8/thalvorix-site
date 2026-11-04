@@ -1,0 +1,28 @@
+{
+  "name": "Lethrael #570",
+  "description": "Thalvorix Hero NFT. Lethrael is a Assassin of Epic rarity, wielding Venom power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h63.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Lethrael"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Venom"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 63
+    }
+  ]
+}

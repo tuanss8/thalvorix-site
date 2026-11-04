@@ -1,0 +1,28 @@
+{
+  "name": "Isoleth #255",
+  "description": "Thalvorix Hero NFT. Isoleth is a Marksman of Rare rarity, wielding Frost power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h34.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Isoleth"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Marksman"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 34
+    }
+  ]
+}

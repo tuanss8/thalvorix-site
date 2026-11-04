@@ -1,0 +1,28 @@
+{
+  "name": "Zorvekh #586",
+  "description": "Thalvorix Hero NFT. Zorvekh is a Assassin of Epic rarity, wielding Earth power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h77.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Zorvekh"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Earth"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 77
+    }
+  ]
+}

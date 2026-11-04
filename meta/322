@@ -1,0 +1,28 @@
+{
+  "name": "Yllandra #322",
+  "description": "Thalvorix Hero NFT. Yllandra is a Assassin of Common rarity, wielding Sound power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h76.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Yllandra"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 76
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "name": "Pyrelith #557",
+  "description": "Thalvorix Hero NFT. Pyrelith is a Mage of Common rarity, wielding Spirit power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h15.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Pyrelith"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Mage"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Spirit"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 15
+    }
+  ]
+}

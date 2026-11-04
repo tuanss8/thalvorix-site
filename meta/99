@@ -1,0 +1,28 @@
+{
+  "name": "Brevnor #99",
+  "description": "Thalvorix Hero NFT. Brevnor is a Marksman of Common rarity, wielding Earth power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h27.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Brevnor"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Marksman"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Earth"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 27
+    }
+  ]
+}

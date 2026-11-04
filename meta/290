@@ -1,0 +1,28 @@
+{
+  "name": "Ravathe #290",
+  "description": "Thalvorix Hero NFT. Ravathe is a Fighter of Common rarity, wielding Sound power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h43.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Ravathe"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Fighter"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 43
+    }
+  ]
+}

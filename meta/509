@@ -1,0 +1,28 @@
+{
+  "name": "Tharokh #509",
+  "description": "Thalvorix Hero NFT. Tharokh is a Mage of Common rarity, wielding Shadow power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h19.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Tharokh"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Mage"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Shadow"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 19
+    }
+  ]
+}

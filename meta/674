@@ -1,0 +1,28 @@
+{
+  "name": "Hollowen #674",
+  "description": "Thalvorix Hero NFT. Hollowen is a Tank of Common rarity, wielding Frost power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h85.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Hollowen"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Tank"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 85
+    }
+  ]
+}

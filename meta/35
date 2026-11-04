@@ -1,0 +1,28 @@
+{
+  "name": "Zephrael #35",
+  "description": "Thalvorix Hero NFT. Zephrael is a Fighter of Common rarity, wielding Frost power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h51.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Zephrael"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Fighter"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 51
+    }
+  ]
+}
