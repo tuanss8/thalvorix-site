@@ -29,6 +29,17 @@
     <style>
       :root{--x-gold:#e3b341;--x-gold2:#a8761f;--x-panel:rgba(46,22,74,.5);--x-line:rgba(227,179,65,.28)}
       body{background:radial-gradient(1200px 700px at 50% -10%,#2b1449,#0b0710 65%) fixed #0b0710}
+.nm-tabs{display:flex;gap:26px;overflow-x:auto;border-bottom:1px solid var(--x-line);margin:4px 0 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch}.nm-tabs::-webkit-scrollbar{display:none}
+      .nm-tabs button{flex:none;background:none;border:0;color:var(--text-secondary);font:var(--type-label);font-size:17px;padding:10px 0 12px;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap}
+      .nm-tabs button[aria-selected=true]{color:#fff;font-weight:700;border-bottom-color:#fff}
+      .nm-chips{display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}.nm-chips::-webkit-scrollbar{display:none}
+      .nm-chips button{flex:none;border:1px solid var(--x-line);background:rgba(255,255,255,.04);color:var(--text-secondary);border-radius:999px;padding:8px 16px;font:var(--type-label);cursor:pointer}
+      .nm-chips button[aria-pressed=true]{color:#fff;border-color:#fff;background:rgba(255,255,255,.1)}
+      .nm-tbl{width:100%;border-collapse:collapse}.nm-tbl th{font:var(--type-label);letter-spacing:.08em;text-transform:uppercase;color:var(--text-secondary);text-align:left;padding:10px 6px;border-bottom:1px solid var(--x-line);font-weight:500}
+      .nm-tbl td{padding:12px 6px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:middle}.nm-tbl td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+      .nm-ev{display:inline-flex;align-items:center;gap:8px;font-weight:700}.nm-ev i{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;font-style:normal;font-size:13px;background:#2b6bff}
+      .nm-bar{height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;min-width:60px}.nm-bar i{display:block;height:100%;background:var(--x-gold)}
+      .nm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}.nm-stats div{background:rgba(255,255,255,.04);border:1px solid var(--x-line);border-radius:12px;padding:12px 14px}.nm-stats b{display:block;font-size:1.4em;margin-top:2px}
       .x-tabs{position:sticky;top:0;z-index:50;display:flex;gap:4px;align-items:center;overflow-x:auto;padding:8px var(--gutter);background:rgba(11,7,16,.86);backdrop-filter:var(--hark-blur);-webkit-backdrop-filter:var(--hark-blur);border-bottom:1px solid var(--x-line)}
       .x-brand{flex:none;font:var(--type-label);letter-spacing:.18em;color:var(--x-gold);margin-right:8px}
       .x-tabs button{flex:none;min-height:var(--tap);padding:0 14px;border-radius:var(--r-pill);border:0;background:none;color:var(--text-secondary);font:var(--type-label);cursor:pointer}
@@ -375,10 +386,20 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
             <div><p class="x-muted" style="margin:0">Sold</p><b id="nftSales" style="font-size:1.5em">…</b></div>
             <div><p class="x-muted" style="margin:0">Listed now</p><b id="nftListedN" style="font-size:1.5em">…</b></div>
           </div>
+          <div class="nm-tabs" role="tablist" id="nmTabs"><button role="tab" data-nm="items" aria-selected="true">Items</button><button role="tab" data-nm="offers" aria-selected="false">Offers</button><button role="tab" data-nm="holders" aria-selected="false">Holders</button><button role="tab" data-nm="traits" aria-selected="false">Traits</button><button role="tab" data-nm="activity" aria-selected="false">Activity</button><button role="tab" data-nm="analytics" aria-selected="false">Analytics</button></div>
+          <div data-nmp="items">
           <div class="x-row"><select class="x-in" id="nRar"></select><select class="x-in" id="nSort"><option value="asc">Price: low to high</option><option value="desc">Price: high to low</option></select></div>
-          <div class="x-row"><select class="x-in" id="nActFilter"><option value="all">All activity</option><option value="List">List only</option><option value="Buy">Buy only</option><option value="Cancel">Delist only</option></select></div>
           <div class="x-grid" id="nftGrid"></div>
-          <div class="x-box" style="margin-top:16px"><h3>NFT Market Activity</h3><p class="x-muted">Who buys and sells on the NFT Market, newest first.</p><div id="nftActivity"></div></div>
+          </div>
+          <div data-nmp="offers" hidden><div id="nmOffers"></div></div>
+          <div data-nmp="holders" hidden><div id="nmHolders"><p class="x-muted">Loading holders…</p></div></div>
+          <div data-nmp="traits" hidden><div id="nmTraits"><p class="x-muted">Loading traits…</p></div></div>
+          <div data-nmp="activity" hidden>
+            <div class="nm-chips" id="nmChips"><button data-ev="all" aria-pressed="true">All</button><button data-ev="Buy" aria-pressed="false">Sale</button><button data-ev="Mint" aria-pressed="false">Mint</button><button data-ev="List" aria-pressed="false">List</button><button data-ev="Cancel" aria-pressed="false">Delist</button></div>
+            <select class="x-in" id="nActFilter" hidden><option value="all">All</option></select>
+            <div id="nftActivity"></div>
+          </div>
+          <div data-nmp="analytics" hidden><div id="nmAnalytics"><p class="x-muted">Loading analytics…</p></div></div>
           </div>
         </section>
 
@@ -859,7 +880,7 @@ const shortAddr=a=>a&&a.length>12?a.slice(0,6)+'…'+a.slice(-4):(a||'You');
 const whoMe=()=>S.wallet?shortAddr(S.wallet)+' (You)':'You';
 function saveAct(){try{localStorage.setItem('thalvorix_activity',JSON.stringify(ACT.slice(0,50)))}catch(e){}}
 function logAct(kind,market,name,price,buyer,seller,tx){ACT.unshift({t:new Date().toISOString(),kind,market,name,price,buyer,seller,tx:tx||null});ACT=ACT.slice(0,50);saveAct();try{renderAct()}catch(e){}}
-function renderAct(){const fmtAct=a=>{const tm=new Date(a.t);let ts='';try{ts=tm.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch(e){ts=tm.toLocaleTimeString()}return `<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)"><b>${a.kind}</b> · ${a.name} · <span class="x-gold">${a.price?fmt(a.price):'Free'}</span><br><span class="x-muted">Buyer: ${a.buyer} ← Seller: ${a.seller} · ${ts}${a.tx?` · <a class="link" href="${BSCSCAN}/tx/${a.tx}" target="_blank" rel="noopener">View tx</a>`:''}</span></div>`};const ne=$('#nftActivity');if(ne){const _f=$('#nActFilter')?$('#nActFilter').value:'all';const _na=ACT.filter(a=>a.market==='NFT'&&(_f==='all'||a.kind===_f));ne.innerHTML=_na.map(fmtAct).join('')||'';}const ie=$('#itemActivity');if(ie)ie.innerHTML=ACT.filter(a=>a.market==='Item').map(fmtAct).join('')||'<p class="x-muted">No activity yet. Buy or sell on the Item Market and it will appear here.</p>';}
+function renderAct(){const fmtAct=a=>{const tm=new Date(a.t);let ts='';try{ts=tm.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}catch(e){ts=tm.toLocaleTimeString()}return `<div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08)"><b>${a.kind}</b> · ${a.name} · <span class="x-gold">${a.price?fmt(a.price):'Free'}</span><br><span class="x-muted">Buyer: ${a.buyer} ← Seller: ${a.seller} · ${ts}${a.tx?` · <a class="link" href="${BSCSCAN}/tx/${a.tx}" target="_blank" rel="noopener">View tx</a>`:''}</span></div>`};try{nmRenderActivity()}catch(e){}const ie=$('#itemActivity');if(ie)ie.innerHTML=ACT.filter(a=>a.market==='Item').map(fmtAct).join('')||'<p class="x-muted">No activity yet. Buy or sell on the Item Market and it will appear here.</p>';}
 const IP='Ancient,Cursed,Blessed,Gilded,Shattered,Eternal,Forsaken,Radiant,Grim,Hallowed,Savage,Runed,Obsidian,Celestial,Infernal,Molten,Spectral,Venerable,Wicked,Exalted,Dread,Sacred,Feral,Sunken,Starforged'.split(',');
 const IB='Blade,Greatsword,Dagger,Bow,Staff,Wand,Tome,Shield,Helm,Gauntlets,Greaves,Cloak,Amulet,Ring,Crown,Scythe,Halberd,Mace,Orb,Lantern,Talisman,Bracers,Mantle,Spear,Warhammer,Quiver,Idol,Sigil,Chalice,Pauldrons'.split(',');
 const IS='the Fallen King,the Abyss,the Dawn,the Seventh Moon,the Lost Legion,the Wyrm,the Ashen Vale,the Hollow Star,the Last Oath,the Crimson Tide,the Silent Choir,the Storm Lord,the Endless Night,the Old Gods,the Shattered Sky,the Deep Roots,the Pale Rider,the Void Gate,the First Flame,the Bone Court,the Tempest,the Sunken City,the Eclipse,the Warden,the Thalvorix Throne'.split(',');
@@ -1043,6 +1064,40 @@ $('#mintBtn').onclick=async()=>{
     updateMintUI();
   }
 };
+
+/* ---------- NFT Market sub-tabs: Items, Offers, Holders, Traits, Activity, Analytics ---------- */
+const NM={tab:'items',ev:'all',scan:null,busy:false,at:0};
+const nmEsc=v=>String(v==null?'':v).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]);
+const nmAddr=a=>a?`<a class="link" href="${BSCSCAN}/address/${a}" target="_blank" rel="noopener">${nmEsc(shortAddr(a))}</a>`:'—';
+function nmShow(t){NM.tab=t;$$('#nmTabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.nm===t));$$('[data-nmp]').forEach(p=>p.hidden=p.dataset.nmp!==t);
+ if(t==='offers')nmRenderOffers();if(t==='activity')nmRenderActivity();if(t==='holders'||t==='traits'||t==='analytics'){nmRenderScan();nmScan()}}
+$$('#nmTabs button').forEach(b=>b.onclick=()=>nmShow(b.dataset.nm));
+$$('#nmChips button').forEach(b=>b.onclick=()=>{NM.ev=b.dataset.ev;$$('#nmChips button').forEach(x=>x.setAttribute('aria-pressed',x===b));nmRenderActivity()});
+function nmRenderOffers(){const el=$('#nmOffers');if(!el)return;el.innerHTML='<div class="x-box"><h3>No offers yet</h3><p class="x-muted">Making offers on heroes is coming soon. For now you can buy any listed hero at its price in Items.</p></div>'}
+function nmRenderActivity(){const el=$('#nftActivity');if(!el)return;const rows=[];
+ ACT.filter(a=>a.market==='NFT').forEach(a=>rows.push({t:new Date(a.t).getTime(),kind:a.kind,name:a.name,price:a.price,from:a.seller,to:a.buyer,tx:a.tx}));
+ (()=>{try{return LIVE.items}catch(e){return[]}})().forEach(x=>rows.push({t:0,kind:'Mint',name:x.hero?x.hero.name+(x.rar?' · '+x.rar[0]:''):'Hero #'+x.id,price:0,from:'',to:x.by?shortAddr(x.by):'',id:x.id}));
+ const L=rows.filter(r=>NM.ev==='all'||r.kind===NM.ev).sort((a,b)=>b.t-a.t||(b.id||0)-(a.id||0));
+ const lab={Buy:['Sale','#2b6bff','&#9973;'],List:['List','#7a4dff','&#9998;'],Cancel:['Delist','#555','&#10005;'],Mint:['Mint','#1aa36b','&#10022;']};
+ el.innerHTML=L.length?`<div class="table-wrap"><table class="nm-tbl"><thead><tr><th>Event</th><th>Item</th><th>Price</th><th>By</th></tr></thead><tbody>${L.slice(0,60).map(r=>{const l=lab[r.kind]||[r.kind,'#555','&#8226;'];return `<tr><td><span class="nm-ev"><i style="background:${l[1]}">${l[2]}</i>${l[0]}</span></td><td>${nmEsc(r.name)}</td><td class="num x-gold">${r.price?fmt(r.price):'Free'}</td><td class="x-muted">${nmEsc(r.to||r.from||'—')}${r.tx?` · <a class="link" href="${BSCSCAN}/tx/${r.tx}" target="_blank" rel="noopener">tx</a>`:''}</td></tr>`}).join('')}</tbody></table></div>`:'<p class="x-muted">No activity for this filter yet.</p>'}
+async function nmScan(force){if(NM.busy)return;if(NM.scan&&!force&&Date.now()-NM.at<120000)return;NM.busy=true;
+ try{const tm=Number(BigInt(await ethCall(HERO,SEL.totalMinted)));const ids=[];for(let i=1;i<=tm;i++)ids.push(i);const own=[],hs=[],rs=[];
+  for(let k=0;k<ids.length;k+=300){const ch=ids.slice(k,k+300);const [o,h,r]=await Promise.all([mcallIds(SEL.ownerOf,ch).catch(()=>ch.map(()=>null)),mcallIds(SEL.heroIdOf,ch).catch(()=>ch.map(()=>null)),mcallIds(SEL.rarityOf,ch).catch(()=>ch.map(()=>null))]);own.push(...o);hs.push(...h);rs.push(...r)}
+  const lst={};(S.nfts||[]).forEach(n=>{if(n.listed)lst[n.id]=n.owner});
+  const items=ids.map((id,k)=>{let o=own[k]?('0x'+String(own[k]).slice(-40)).toLowerCase():'';if(o===HERO.toLowerCase()&&lst[id])o=lst[id];let hero=null,rar=null;try{hero=HEROES[Number(BigInt(hs[k]))]}catch(e){}try{rar=RAR[Number(BigInt(rs[k]))]}catch(e){}return{id,owner:o,hero,rar}});
+  NM.scan={total:tm,items};NM.at=Date.now()}catch(e){if(!NM.scan)NM.err=true}finally{NM.busy=false}nmRenderScan()}
+function nmRenderScan(){const sc=NM.scan,H=$('#nmHolders'),T=$('#nmTraits'),A=$('#nmAnalytics');
+ if(!sc){const m=NM.err?'<p class="x-muted">Could not load on-chain data. Please try again in a minute.</p>':'<p class="x-muted">Loading on-chain data…</p>';[H,T,A].forEach(e=>{if(e)e.innerHTML=m});return}
+ const it=sc.items.filter(x=>x.owner),tot=it.length||1,by={};it.forEach(x=>{by[x.owner]=(by[x.owner]||0)+1});
+ const hold=Object.entries(by).sort((a,b)=>b[1]-a[1]),me=S.wallet?S.wallet.toLowerCase():'';
+ if(H)H.innerHTML=`<p class="x-muted">${hold.length} unique holders · ${sc.total} heroes minted</p><div class="table-wrap"><table class="nm-tbl"><thead><tr><th>#</th><th>Holder</th><th>Owned</th><th>Share</th></tr></thead><tbody>${hold.slice(0,100).map((h,k)=>`<tr><td class="x-muted">${k+1}</td><td>${nmAddr(h[0])}${h[0]===me?' <b class="x-gold">(You)</b>':''}</td><td class="num">${h[1]}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="nm-bar" style="flex:1"><i style="width:${(h[1]/hold[0][1]*100).toFixed(1)}%"></i></div><span class="num x-muted">${(h[1]/tot*100).toFixed(1)}%</span></div></td></tr>`).join('')}</tbody></table></div>`;
+ const grp=(f)=>{const c={};sc.items.forEach(x=>{const k=f(x);if(k)c[k]=(c[k]||0)+1});return Object.entries(c).sort((a,b)=>b[1]-a[1])};
+ const fl=(f)=>{const c={};(S.nfts||[]).filter(n=>n.listed).forEach(n=>{const k=f(n);if(k&&(c[k]==null||n.price<c[k]))c[k]=n.price});return c};
+ const sec=(title,rows,floor)=>`<div class="x-box" style="margin-bottom:12px"><h3>${title}</h3><table class="nm-tbl"><thead><tr><th>Trait</th><th>Count</th><th>Rarity</th><th>Floor</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${nmEsc(r[0])}</td><td class="num">${r[1]}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="nm-bar" style="flex:1"><i style="width:${(r[1]/sc.items.length*100).toFixed(1)}%"></i></div><span class="num x-muted">${(r[1]/sc.items.length*100).toFixed(1)}%</span></div></td><td class="num x-gold">${floor[r[0]]!=null?fmt(floor[r[0]]):'—'}</td></tr>`).join('')}</tbody></table></div>`;
+ if(T)T.innerHTML=sec('Rarity',grp(x=>x.rar&&x.rar[0]),fl(n=>n.rar&&n.rar[0]))+sec('Role',grp(x=>x.hero&&x.hero.role),fl(n=>n.hero&&n.hero.role))+sec('Element',grp(x=>x.hero&&x.hero.el),fl(n=>n.hero&&n.hero.el));
+ const L=(S.nfts||[]).filter(n=>n.listed),floor=L.length?Math.min(...L.map(n=>n.price)):null,avg=L.length?L.reduce((a,n)=>a+n.price,0)/L.length:null,sold=($('#nftSales')||{}).textContent||'—';
+ const rr=grp(x=>x.rar&&x.rar[0]);
+ if(A)A.innerHTML=`<div class="nm-stats"><div><span class="x-muted">Minted</span><b>${sc.total}</b></div><div><span class="x-muted">Holders</span><b>${hold.length}</b></div><div><span class="x-muted">Listed</span><b>${L.length}</b></div><div><span class="x-muted">Floor price</span><b class="x-gold">${floor!=null?fmt(floor):'—'}</b></div><div><span class="x-muted">Avg listing</span><b>${avg!=null?fmt(avg):'—'}</b></div><div><span class="x-muted">Sold (30 days)</span><b>${nmEsc(sold)}</b></div><div><span class="x-muted">Listed share</span><b>${(L.length/(sc.total||1)*100).toFixed(1)}%</b></div><div><span class="x-muted">Avg per holder</span><b>${(it.length/(hold.length||1)).toFixed(2)}</b></div></div><div class="x-box"><h3>Supply by rarity</h3>${rr.map(r=>`<div style="display:flex;align-items:center;gap:10px;margin:8px 0"><span style="width:96px" class="t-${r[0]}">${r[0]}</span><div class="nm-bar" style="flex:1;height:12px"><i style="width:${(r[1]/rr[0][1]*100).toFixed(1)}%"></i></div><span class="num x-muted" style="width:44px;text-align:right">${r[1]}</span></div>`).join('')}</div>`}
 function rNft(){const ra=$('#nRar').value,d=$('#nSort').value==='asc'?1:-1;try{const _seen=new Set(S.nfts.map(n=>n.id));for(const m of S.myNfts){if(m.listed&&!_seen.has(m.id)){S.nfts.push({id:m.id,hero:m.hero,rar:m.rar,price:m.price,priceWei:m.priceWei,owner:S.wallet,listed:true});_seen.add(m.id);}}}catch(e){}
 const L=S.nfts.filter(n=>n.listed&&(!ra||n.rar[0]===ra)).sort((a,b)=>(a.price-b.price)*d);
 $('#nftGrid').innerHTML=L.map(n=>nftCard(n,`<b class="x-gold">${fmt(n.price)}</b>${feeTxt(n.price)}`+(S.wallet&&n.owner===S.wallet?`<button class="btn" data-delist="${n.id}">Delist (yours)</button>`:`<button class="x-cta" data-buy="${n.id}" ${!S.wallet||S.bal==null||S.bal<n.price?'disabled':''}>Buy</button>`))).join('')||'<p class="x-muted">No listings match.</p>'}
@@ -1342,7 +1397,7 @@ refreshChain().catch(()=>{});
     
 const LIVE={items:[],busy:false};
 async function liveScan(){if(LIVE.busy)return;LIVE.busy=true;try{const total=Number(BigInt(await ethCall(HERO,SEL.totalMinted)));if(!total){liveRender();return}const top=LIVE.items.length?Math.max(...LIVE.items.map(x=>x.id)):0;const ids=[];for(let i=total;i>=Math.max(1,total-14)&&i>top;i--)ids.push(i);if(!ids.length){if(!LIVE.items.length)liveRender();return}const [hs,rs,os]=await Promise.all([mcallIds(SEL.heroIdOf,ids).catch(()=>[]),mcallIds(SEL.rarityOf,ids).catch(()=>[]),mcallIds(SEL.ownerOf,ids).catch(()=>[])]);const by={};try{const latest=await latestBlock(),T0='0x'+'0'.repeat(64),jobs=[];for(let k=0;k<6;k++){const t=latest-k*1000,f=t-999;jobs.push(rpcCall('eth_getLogs',[{fromBlock:'0x'+f.toString(16),toBlock:'0x'+t.toString(16),address:HERO,topics:[TOPIC_TRANSFER,T0]}]).catch(()=>[]))}(await Promise.all(jobs)).forEach(a=>(a||[]).forEach(l=>{by[Number(BigInt(l.topics[3]))]='0x'+l.topics[2].slice(26)}))}catch(e){}const nw=ids.map((id,k)=>{const x={id};try{x.hero=HEROES[Number(BigInt(hs[k]))];x.rar=RAR[Number(BigInt(rs[k]))]}catch(e){}let o=by[id]||(os[k]?'0x'+String(os[k]).slice(-40):'');if(o&&o.toLowerCase()===HERO.toLowerCase())o='';x.by=o;return x});LIVE.items=nw.concat(LIVE.items).sort((a,b)=>b.id-a.id).slice(0,15);liveRender()}catch(e){}finally{LIVE.busy=false}}
-function liveRender(){const tr=document.getElementById('liveTrack');if(!tr)return;const esc=v=>String(v).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]);const html=LIVE.items.length?LIVE.items.map(x=>'<span>'+(x.hero?'<b>'+esc(x.hero.name)+'</b>'+(x.rar?' · '+esc(x.rar[0]):''):'<b>Hero #'+x.id+'</b>')+(x.by?' minted by '+esc(shortAddr(x.by)):' minted')+' &#183;</span>').join(''):'<span>No mints yet. Be the first to mint a free hero!</span>';tr.innerHTML=html;tr.style.setProperty('--live-dur',Math.max(25,LIVE.items.length*6)+'s')}
+function liveRender(){const tr=document.getElementById('liveTrack');if(!tr)return;const esc=v=>String(v).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]);const html=LIVE.items.length?LIVE.items.map(x=>'<span>'+(x.hero?'<b>'+esc(x.hero.name)+'</b>'+(x.rar?' · '+esc(x.rar[0]):''):'<b>Hero #'+x.id+'</b>')+(x.by?' minted by '+esc(shortAddr(x.by)):' minted')+' &#183;</span>').join(''):'<span>No mints yet. Be the first to mint a free hero!</span>';tr.innerHTML=html;tr.style.setProperty('--live-dur',Math.max(25,LIVE.items.length*6)+'s');try{if(NM.tab==='activity')nmRenderActivity()}catch(e){}}
 setTimeout(()=>{liveScan();setInterval(()=>{if(!document.hidden)liveScan()},60000)},1500);
 </script>
   </body>
