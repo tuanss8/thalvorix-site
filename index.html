@@ -327,7 +327,6 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
               <li>Mythic items are the rarest of all, the true mark of a Thalvorian legend</li>
             </ul>
             <p>Choose your NFT hero, battle your way to the top rank, and claim rare items with every win.<br>Thalvorix awaits.</p>
-            <p class="x-muted" style="font-size:11px;opacity:.7">Music: &ldquo;Fate and Fortune&rdquo; by <a href="https://www.scottbuckley.com.au/library/fate-and-fortune/" target="_blank" rel="noopener">Scott Buckley</a>, CC BY 4.0.</p>
           </section>
           <p style="text-align:left"><a href="https://x.com/THALVORIX" target="_blank" rel="noopener" style="text-decoration:none"><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:0">𝕏</span> <span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:1">T</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:2">H</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:3">A</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:4">L</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:5">V</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:6">O</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:7">R</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:8">I</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:9">X</span></a></p>
 </div>
@@ -1289,12 +1288,12 @@ if(M.plBuf&&!M.plSrc){const sr=C.createBufferSource();sr.buffer=M.plBuf;sr.loop=
 M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(vol*1.8,n,.08)}
 else{M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(0,n,.08);if(M.plSrc){const sr=M.plSrc;M.plSrc=null;try{sr.stop(n+.4)}catch(e){}}}}
 /* NFT Market has its own music track (original drum track, first 30 s looped); leaving the market restores the war music */
-/* Site music outside Play Game and NFT Market: "Fate and Fortune" by Scott Buckley, CC BY 4.0 (www.scottbuckley.com.au) */
+/* Site music outside Play Game and NFT Market: original Thalvorix theme (epic choir, D minor, 136 bpm), composed for this site */
 function webMusicSync(){if(!M.ctx)return;const C=M.ctx,want=M.on&&tab!=='nft'&&tab!=='play';
 if(!M.webGain){M.webGain=C.createGain();M.webGain.gain.value=0;const lim=C.createDynamicsCompressor();lim.threshold.value=-10;lim.knee.value=6;lim.ratio.value=6;lim.attack.value=.005;lim.release.value=.25;M.webGain.connect(lim);lim.connect(C.destination)}
-if(!M.webBuf&&!M.webLoading){M.webLoading=true;fetch('web-music.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.webBuf=buf;M.webLoading=false;webMusicSync()}).catch(()=>{M.webLoading=false})}
+if(!M.webBuf&&!M.webLoading){M.webLoading=true;fetch('web-music.m4a?v=2').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.webBuf=buf;M.webLoading=false;webMusicSync()}).catch(()=>{M.webLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
-if(want){if(M.webBuf&&!M.webSrc){const sr=C.createBufferSource();sr.buffer=M.webBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=M.webBuf.duration-0.02;sr.connect(M.webGain);sr.start(n);M.webSrc=sr}M.webGain.gain.cancelScheduledValues(n);M.webGain.gain.setTargetAtTime(vol*1.1,n,.3)}
+if(want){if(M.webBuf&&!M.webSrc){const sr=C.createBufferSource();sr.buffer=M.webBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=Math.min(M.webBuf.duration,56.4706);sr.connect(M.webGain);sr.start(n);M.webSrc=sr}M.webGain.gain.cancelScheduledValues(n);M.webGain.gain.setTargetAtTime(vol*1.1,n,.3)}
 else{M.webGain.gain.cancelScheduledValues(n);M.webGain.gain.setTargetAtTime(0,n,.2);if(M.webSrc){const sr=M.webSrc;M.webSrc=null;try{sr.stop(n+.4)}catch(e){}}}}
 function nftMusicSync(){try{webMusicSync()}catch(e){}const inNft=tab==='nft',want=inNft&&M.on;
 if(!M.ctx){return}const C=M.ctx;
