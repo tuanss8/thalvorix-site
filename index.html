@@ -286,7 +286,7 @@
               <p class="x-muted">Complete all 3 tasks to unlock the puzzle.</p>
               <div class="x-row" style="flex-wrap:wrap;gap:8px"><button class="btn" data-xtask="follow">1. Follow @THALVORIX</button><button class="btn" data-xtask="like">2. Like the post</button><button class="btn" data-xtask="rt">3. Retweet the post</button></div>
               <p class="x-muted" id="xTaskStatus"></p>
-              <p class="x-muted"><a href="https://x.com/THALVORIX/status/2118019521839816840?a=1VoJe5DVnAhY30VZwbw&amp;s=20" target="_blank" rel="noopener">View the post on X</a></p>
+              <p class="x-muted"><a href="https://x.com/THALVORIX/status/2118167559451316390?a=1VoJe5DVnAhY30VZwbw&amp;s=20" target="_blank" rel="noopener">View the post on X</a></p>
             </div>
             <div class="x-box" id="puzzleBox" hidden>
               <div class="puzzle-grid" id="puzzleGrid"></div>
@@ -888,7 +888,7 @@ function updateMintUI(){
 }
 
 /* X tasks gate (before puzzle): follow, like, retweet. Opens X intents; a task counts as done after the user opens it and comes back. */
-const XT_URL={follow:'https://x.com/intent/follow?screen_name=THALVORIX',like:'https://x.com/intent/like?tweet_id=2118019521839816840',rt:'https://x.com/intent/retweet?tweet_id=2118019521839816840'};
+const XT_URL={follow:'https://x.com/intent/follow?screen_name=THALVORIX',like:'https://x.com/intent/like?tweet_id=2118167559451316390',rt:'https://x.com/intent/retweet?tweet_id=2118167559451316390'};
 const XT_KEY=()=>'thx_xtasks_'+String(S.wallet||'').toLowerCase();
 function xtGet(){try{return JSON.parse(localStorage.getItem(XT_KEY())||'{}')}catch(e){return {}}}
 function xtSet(o){try{localStorage.setItem(XT_KEY(),JSON.stringify(o))}catch(e){}}
