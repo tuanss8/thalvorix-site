@@ -1084,7 +1084,7 @@ function nmShow(t){NM.tab=t;$$('#nmTabs button').forEach(b=>b.setAttribute('aria
 $$('#nmTabs button').forEach(b=>b.onclick=()=>nmShow(b.dataset.nm));
 $$('#nmChips button').forEach(b=>b.onclick=()=>{NM.ev=b.dataset.ev;$$('#nmChips button').forEach(x=>x.setAttribute('aria-pressed',x===b));nmRenderActivity()});
 /* ---------- Hero offers (THALVORIX Hero Offers contract, real BNB) ---------- */
-const HOFF='',HOFF_BLOCK=0;
+const HOFF='0xc0bdbb99e6718b331dba79587a789342b18bfb6f',HOFF_BLOCK=131888706;
 const HO={loaded:false,busy:false,last:0,offers:{},own:{},hid:{},at:0};
 async function hoRefresh(force){if(!HOFF||HO.busy)return;if(!force&&HO.loaded&&Date.now()-HO.at<60000)return;HO.busy=true;
  try{const to=await latestBlock();let from=HO.last?HO.last+1:HOFF_BLOCK;
