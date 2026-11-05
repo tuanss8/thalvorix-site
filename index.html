@@ -1003,7 +1003,7 @@ function updateMintUI(){
 }
 
 /* X tasks gate (before puzzle): follow, like, retweet. Opens X intents; a task counts as done after the user opens it and comes back. */
-const XT_URL={follow:'https://x.com/intent/follow?screen_name=THALVORIX',like:'https://x.com/intent/like?tweet_id=2118167559451316390',rt:'https://x.com/intent/retweet?tweet_id=2118167559451316390',quote:'https://x.com/intent/post?url='+encodeURIComponent('https://x.com/THALVORIX/status/2118167559451316390')};
+const XT_URL={follow:'https://x.com/intent/follow?screen_name=THALVORIX',like:'https://x.com/intent/like?tweet_id=2118167559451316390',rt:'https://x.com/intent/retweet?tweet_id=2118167559451316390',quote:'https://x.com/intent/post?text='+encodeURIComponent('Not just a game, a world we build together \u{1F6E1}\uFE0F\nEvery THALVORIX hero is more than an NFT: rare items, holder perks, and future token rewards \u{1F525}\nMint your hero and write your story. Who\'s ready? #THALVORIX')+'&url='+encodeURIComponent('https://x.com/THALVORIX/status/2118167559451316390')};
 const XT_KEY=()=>'thx_xtasks_'+String(S.wallet||'').toLowerCase();
 function xtGet(){try{return JSON.parse(localStorage.getItem(XT_KEY())||'{}')}catch(e){return {}}}
 function xtSet(o){try{localStorage.setItem(XT_KEY(),JSON.stringify(o))}catch(e){}}
