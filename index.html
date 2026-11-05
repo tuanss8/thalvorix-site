@@ -390,6 +390,8 @@
           <div class="x-box">
             <label class="x-muted">Music</label>
             <span class="x-music"><button id="musBtn" aria-pressed="false" aria-label="War music" title="War music">♪</button><button id="sfxBtn" aria-label="Sound effects" title="Sound effects">🔊</button><input class="x-vol" id="musVol" type="range" min="0" max="100" value="85" aria-label="Music volume" /></span>
+            <label class="x-muted" style="display:block;margin-top:12px">Music volume</label>
+            <div class="x-row" style="align-items:center;gap:10px"><button class="x-cta" id="volDown" type="button" aria-label="Volume down" style="min-width:48px;padding:8px 0;font-size:20px">−</button><b id="volPct" style="min-width:52px;text-align:center;font-size:18px">85%</b><button class="x-cta" id="volUp" type="button" aria-label="Volume up" style="min-width:48px;padding:8px 0;font-size:20px">+</button></div>
           </div>
         </section>
       </main>
@@ -1184,6 +1186,7 @@ function mTick(){while(M.next<M.ctx.currentTime+.15){sched(M.step,M.next);M.next
 $('#musBtn').onclick=()=>{M.on=!M.on;$('#musBtn').setAttribute('aria-pressed',M.on);
 if(M.on){if(!M.ctx)mInit();M.ctx.resume();const n=M.ctx.currentTime;M.master.gain.cancelScheduledValues(n);M.master.gain.setTargetAtTime(mvol(),n,.05);M.step=0;M.next=n+.08;clearInterval(M.timer);M.timer=setInterval(mTick,25);mTick()}
 else{clearInterval(M.timer);M.master.gain.setTargetAtTime(0,M.ctx.currentTime,.08);setTimeout(()=>{if(!M.on)M.ctx.suspend()},500)}try{nftMusicSync()}catch(e){}};
+(function(){const v=$('#musVol'),pct=$('#volPct');try{const sv=localStorage.getItem('thx_vol');if(sv!==null&&!isNaN(+sv))v.value=Math.max(0,Math.min(100,+sv))}catch(e){}const show=()=>{if(pct)pct.textContent=v.value+'%';try{localStorage.setItem('thx_vol',v.value)}catch(e){}};show();v.addEventListener('input',show);const step=d=>{v.value=Math.max(0,Math.min(100,(+v.value)+d));v.dispatchEvent(new Event('input'))};const dn=$('#volDown'),up=$('#volUp');if(dn)dn.onclick=()=>step(-10);if(up)up.onclick=()=>step(10)})();
 $('#musVol').oninput=()=>{if(M.on&&tab!=='nft'&&tab!=='play')M.master.gain.setTargetAtTime(mvol(),M.ctx.currentTime,.05);try{nftMusicSync()}catch(e){}};
 /* Play Game has its own battle track (CC0: "JRPG Epic Rock Battle Theme #1" by HydroGene, OpenGameArt); leaving Play Game restores the normal music */
 function playMusicSync(){const inPlay=tab==='play',want=inPlay&&M.on;
