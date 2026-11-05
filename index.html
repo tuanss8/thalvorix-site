@@ -214,6 +214,17 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
 #p-play .duel-speech p{position:relative;margin:0;background:#fff;color:#1a1530;font-weight:800;font-size:15px;line-height:1.35;padding:10px 14px;border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,.6);max-width:520px}
 #p-play .duel-speech p::before{content:'';position:absolute;left:-10px;top:50%;margin-top:-8px;border:8px solid transparent;border-right:10px solid #fff;border-left:0}
 #p-play .duel-speech.warn img{border-color:#ff5a6e;box-shadow:0 0 18px rgba(255,90,110,.8)}
+
+.live-bar{display:flex;align-items:center;gap:10px;margin:8px 0;padding:6px 8px;border-top:2px solid var(--x-gold,#c9a227);border-bottom:2px solid var(--x-gold,#c9a227);background:rgba(20,12,32,.85);overflow:hidden}
+.live-tag{flex:none;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;background:#000;color:#fff;font:700 13px/1 system-ui;letter-spacing:.5px}
+.live-tag i{width:8px;height:8px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b;animation:livePulse 1.2s infinite}
+@keyframes livePulse{50%{opacity:.25}}
+.live-view{flex:1;overflow:hidden;white-space:nowrap;mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent)}
+.live-track{display:inline-flex;gap:28px;padding-left:100%;animation:liveScroll var(--live-dur,40s) linear infinite;font:500 13px/1.6 ui-monospace,Menlo,monospace;color:#e9dfc6}
+.live-track span b{color:var(--x-gold,#e3b341)}
+.live-bar:hover .live-track{animation-play-state:paused}
+@keyframes liveScroll{to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.live-track{animation-duration:120s}}
 </style>
   <link rel="icon" href="/favicon.ico" sizes="any" /><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" /><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" /><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 </head>
@@ -232,6 +243,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
         <button data-t="settings">Settings</button>
         
       </nav>
+      <div class="live-bar" id="liveBar" aria-live="off"><span class="live-tag"><i></i>LIVE</span><div class="live-view"><div class="live-track" id="liveTrack"><span>Loading recent mints…</span></div></div></div>
       <main class="main">
         <div class="x-panel" id="p-home">
           
@@ -492,11 +504,16 @@ const bagKey=w=>'thalvorix_bag_'+String(w).toLowerCase();
 function bagCacheLoad(w){try{const a=JSON.parse(localStorage.getItem(bagKey(w))||'null');if(!Array.isArray(a))return[];return a.map(o=>({id:o.id,hero:HEROES[o.hi],rar:RAR[o.ri],listed:!!o.listed,price:o.price||0,priceWei:o.pw?BigInt(o.pw):0n,owner:String(w).toLowerCase()})).filter(n=>n.hero&&n.rar)}catch(e){return[]}}
 function bagCacheSave(w,list){try{localStorage.setItem(bagKey(w),JSON.stringify(list.map(n=>({id:n.id,hi:n.hero.id,ri:RAR.indexOf(n.rar),listed:!!n.listed,price:n.price||0,pw:n.priceWei?n.priceWei.toString():'0'}))))}catch(e){}}
 const itemKey=w=>'thalvorix_items_'+String(w).toLowerCase();
-function itemsLoad(w){try{rankLoad(w)}catch(e){}try{const raw=localStorage.getItem(itemKey(w));if(raw==null){itemsSave(w);return}const a=JSON.parse(raw);if(!Array.isArray(a))return;ITEMS.forEach(i=>i.owned=false);a.forEach(id=>{if(ITEMS[id])ITEMS[id].owned=true})}catch(e){}}
+function itemsLoad(w){try{rankLoad(w)}catch(e){}try{rankCloudPull(w)}catch(e){}try{const raw=localStorage.getItem(itemKey(w));if(raw==null){itemsSave(w);return}const a=JSON.parse(raw);if(!Array.isArray(a))return;ITEMS.forEach(i=>i.owned=false);a.forEach(id=>{if(ITEMS[id])ITEMS[id].owned=true})}catch(e){}}
 function itemsSave(w){try{localStorage.setItem(itemKey(w),JSON.stringify(ITEMS.filter(i=>i.owned).map(i=>i.id)))}catch(e){}}
 function rankKey(w){return 'thx_rank_'+String(w||'').toLowerCase()}
-function rankSave(w){try{if(w)localStorage.setItem(rankKey(w),JSON.stringify({rank:S.rank,streak:S.streak,mp:S.matchesPlayed}))}catch(e){}}
+function rankSave(w){try{if(w)localStorage.setItem(rankKey(w),JSON.stringify({rank:S.rank,streak:S.streak,mp:S.matchesPlayed}))}catch(e){}try{if(w)rankCloudPush(w)}catch(e){}}
 function rankLoad(w){try{const o=JSON.parse(localStorage.getItem(rankKey(w))||'null');if(o&&o.rank){S.rank=Object.assign({t:0,d:0,s:0,g:0,w:0,l:0,ts:0},o.rank);S.streak=o.streak||0;S.matchesPlayed=o.mp||0}else{S.rank={t:0,d:0,s:0,g:0,w:0,l:0,ts:0};S.streak=0;S.matchesPlayed=0}}catch(e){}}
+const SB_URL='https://sfguqwkbrdcttugnjfmf.supabase.co',SB_KEY='sb_publishable_4wBvWCdgdLhY1si1Kxpv9w_yGXcMOpC';
+async function rankCloudPull(w){if(!w||typeof fetch!=='function')return;const lw=String(w).toLowerCase();try{const r=await fetch(SB_URL+'/rest/v1/ranks?select=data&wallet=eq.'+lw,{headers:{apikey:SB_KEY}});const a=await r.json();const o=a&&a[0]&&a[0].data;if(!o||!o.rank)return;if(!S.wallet||S.wallet.toLowerCase()!==lw)return;if((o.mp||0)>=(S.matchesPlayed||0)){S.rank=Object.assign({t:0,d:0,s:0,g:0,w:0,l:0,ts:0},o.rank);S.streak=o.streak||0;S.matchesPlayed=o.mp||0;try{localStorage.setItem(rankKey(w),JSON.stringify({rank:S.rank,streak:S.streak,mp:S.matchesPlayed}))}catch(e){}try{render()}catch(e){}}else rankCloudPush(w)}catch(e){}}
+function rankSigKey(w){return 'thx_rsig_'+String(w).toLowerCase()}
+async function rankSig(w){try{const c=JSON.parse(localStorage.getItem(rankSigKey(w))||'null');if(c&&c.msg&&c.sig&&Date.now()-c.iss<29*864e5)return c}catch(e){}if(sessionStorage.getItem('thx_rsig_no'))return null;const p=prov();if(!p)return null;try{const acc=await p.request({method:'eth_accounts'});if(!acc||!acc.some(a=>String(a).toLowerCase()===String(w).toLowerCase()))return null;const iss=Date.now(),msg='Thalvorix: save my game rank\nWallet: '+w+'\nIssued: '+iss;const hex='0x'+Array.from(new TextEncoder().encode(msg)).map(b=>b.toString(16).padStart(2,'0')).join('');toast('Sign once in your wallet to save your rank online.');const sig=await p.request({method:'personal_sign',params:[hex,w]});const c={msg,sig,iss};localStorage.setItem(rankSigKey(w),JSON.stringify(c));return c}catch(e){sessionStorage.setItem('thx_rsig_no','1');toast('Rank saved on this device only.');return null}}
+let rankPushT=null;function rankCloudPush(w){clearTimeout(rankPushT);rankPushT=setTimeout(async()=>{if(!S.wallet||S.wallet.toLowerCase()!==String(w).toLowerCase())return;const c=await rankSig(w);if(!c)return;try{const r=await fetch(SB_URL+'/functions/v1/save-rank',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w,msg:c.msg,sig:c.sig,data:{rank:S.rank,streak:S.streak||0,mp:S.matchesPlayed||0}})});if(r.status===401)localStorage.removeItem(rankSigKey(w))}catch(e){}},800)}
 function saveItemsIfWallet(){if(S.wallet){itemsSave(S.wallet);rankSave(S.wallet)}}
 async function rpcCall(method,params){
   const p=prov();
@@ -1315,6 +1332,11 @@ render();
 /* Web3 init: read-only chain refresh + provider listeners (no wallet required) */
 attachProvListeners(prov());
 refreshChain().catch(()=>{});
-    </script>
+    
+const LIVE={items:[],busy:false};
+async function liveScan(){if(LIVE.busy)return;LIVE.busy=true;try{const total=Number(BigInt(await ethCall(HERO,SEL.totalMinted)));if(!total){liveRender();return}const top=LIVE.items.length?Math.max(...LIVE.items.map(x=>x.id)):0;const ids=[];for(let i=total;i>=Math.max(1,total-14)&&i>top;i--)ids.push(i);if(!ids.length){if(!LIVE.items.length)liveRender();return}const [hs,rs,os]=await Promise.all([mcallIds(SEL.heroIdOf,ids).catch(()=>[]),mcallIds(SEL.rarityOf,ids).catch(()=>[]),mcallIds(SEL.ownerOf,ids).catch(()=>[])]);const by={};try{const latest=await latestBlock(),T0='0x'+'0'.repeat(64),jobs=[];for(let k=0;k<6;k++){const t=latest-k*1000,f=t-999;jobs.push(rpcCall('eth_getLogs',[{fromBlock:'0x'+f.toString(16),toBlock:'0x'+t.toString(16),address:HERO,topics:[TOPIC_TRANSFER,T0]}]).catch(()=>[]))}(await Promise.all(jobs)).forEach(a=>(a||[]).forEach(l=>{by[Number(BigInt(l.topics[3]))]='0x'+l.topics[2].slice(26)}))}catch(e){}const nw=ids.map((id,k)=>{const x={id};try{x.hero=HEROES[Number(BigInt(hs[k]))];x.rar=RAR[Number(BigInt(rs[k]))]}catch(e){}let o=by[id]||(os[k]?'0x'+String(os[k]).slice(-40):'');if(o&&o.toLowerCase()===HERO.toLowerCase())o='';x.by=o;return x});LIVE.items=nw.concat(LIVE.items).sort((a,b)=>b.id-a.id).slice(0,15);liveRender()}catch(e){}finally{LIVE.busy=false}}
+function liveRender(){const tr=document.getElementById('liveTrack');if(!tr)return;const esc=v=>String(v).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]);const html=LIVE.items.length?LIVE.items.map(x=>'<span>'+(x.hero?'<b>'+esc(x.hero.name)+'</b>'+(x.rar?' · '+esc(x.rar[0]):''):'<b>Hero #'+x.id+'</b>')+(x.by?' minted by '+esc(shortAddr(x.by)):' minted')+' &#183;</span>').join(''):'<span>No mints yet. Be the first to mint a free hero!</span>';tr.innerHTML=html;tr.style.setProperty('--live-dur',Math.max(25,LIVE.items.length*6)+'s')}
+setTimeout(()=>{liveScan();setInterval(()=>{if(!document.hidden)liveScan()},60000)},1500);
+</script>
   </body>
 </html>
