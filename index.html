@@ -1198,13 +1198,13 @@ else{M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(0,n,.0
 /* NFT Market has its own music track (CC0: "Final Stand" by iamoneabe, OpenGameArt); leaving the market restores the war music */
 function nftMusicSync(){const inNft=tab==='nft',want=inNft&&M.on;
 if(!M.ctx){return}const C=M.ctx;
-if(!M.nftGain){M.nftGain=C.createGain();M.nftGain.gain.value=0;const lim=C.createDynamicsCompressor();lim.threshold.value=-2;lim.knee.value=0;lim.ratio.value=20;lim.attack.value=.002;lim.release.value=.1;M.nftGain.connect(lim);lim.connect(C.destination)}
-if(!M.nftBuf&&!M.nftLoading){M.nftLoading=true;fetch('nft-music-v2.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.nftBuf=buf;M.nftLoading=false;nftMusicSync()}).catch(()=>{M.nftLoading=false})}
+if(!M.nftGain){M.nftGain=C.createGain();M.nftGain.gain.value=0;const lp=C.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9000;lp.Q.value=0.5;const lim=C.createDynamicsCompressor();lim.threshold.value=-14;lim.knee.value=12;lim.ratio.value=3;lim.attack.value=.02;lim.release.value=.3;M.nftGain.connect(lp);lp.connect(lim);lim.connect(C.destination)}
+if(!M.nftBuf&&!M.nftLoading){M.nftLoading=true;fetch('nft-music-v3.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.nftBuf=buf;M.nftLoading=false;nftMusicSync()}).catch(()=>{M.nftLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
 if(want){if(M.master)M.master.gain.setTargetAtTime(0,n,.08);
 if(M.nftBuf&&!M.nftSrc){const sr=C.createBufferSource();sr.buffer=M.nftBuf;sr.loop=true;sr.loopStart=0.05;sr.loopEnd=M.nftBuf.duration-0.05;sr.connect(M.nftGain);sr.start(n,0.05);M.nftSrc=sr}
-M.nftGain.gain.setTargetAtTime(vol*3.2,n,.05)}
-else{M.nftGain.gain.setTargetAtTime(0,n,.05);if(M.nftSrc){const sr=M.nftSrc;M.nftSrc=null;try{sr.stop(n+.3)}catch(e){}}
+M.nftGain.gain.setTargetAtTime(vol*1.5,n,.4)}
+else{M.nftGain.gain.setTargetAtTime(0,n,.25);if(M.nftSrc){const sr=M.nftSrc;M.nftSrc=null;try{sr.stop(n+.3)}catch(e){}}
 if(M.on&&M.master&&tab!=='play')M.master.gain.setTargetAtTime(mvol(),n,.08)}try{playMusicSync()}catch(e){}}
 /* Music start: browsers (esp. iOS/Android) only allow sound after a real tap. Nothing is toggled on load (that left the button "ON" but silent, and the first tap on it turned music OFF). The first real tap/click/key anywhere starts music; a tap on the music button itself is left to the button. */
 try{if(navigator.audioSession)navigator.audioSession.type='playback'}catch(e){}
