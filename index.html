@@ -327,6 +327,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
               <li>Mythic items are the rarest of all, the true mark of a Thalvorian legend</li>
             </ul>
             <p>Choose your NFT hero, battle your way to the top rank, and claim rare items with every win.<br>Thalvorix awaits.</p>
+            <p class="x-muted" style="font-size:11px;opacity:.7">Music: &ldquo;Fate and Fortune&rdquo; by <a href="https://www.scottbuckley.com.au/library/fate-and-fortune/" target="_blank" rel="noopener">Scott Buckley</a>, CC BY 4.0.</p>
           </section>
           <p style="text-align:left"><a href="https://x.com/THALVORIX" target="_blank" rel="noopener" style="text-decoration:none"><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:0">𝕏</span> <span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:1">T</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:2">H</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:3">A</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:4">L</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:5">V</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:6">O</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:7">R</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:8">I</span><span class="glow-ch" style="--gc:hsl(28,100%,55%);--i:9">X</span></a></p>
 </div>
@@ -1271,7 +1272,7 @@ if(i===4||i===12)drum(t,190,120,.14,.12,1800);
 if(i===8)drum(t,110,45,.35,.18);
 if((bar===3||bar===7)&&i===14)drum(t,150,80,.20,.14);
 WAR_MEL[bar].forEach(([st,m,ds])=>{if(st===i)trumpet(t,m,ds*.167*.95,.12)})}
-function mTick(){while(M.next<M.ctx.currentTime+.15){sched(M.step,M.next);M.next+=.167;M.step=(M.step+1)%128}}
+function mTick(){/* synth replaced by web-music.m4a */}
 $('#musBtn').onclick=()=>{M.on=!M.on;$('#musBtn').setAttribute('aria-pressed',M.on);
 if(M.on){if(!M.ctx)mInit();M.ctx.resume();const n=M.ctx.currentTime;M.master.gain.cancelScheduledValues(n);M.master.gain.setTargetAtTime(mvol(),n,.05);M.step=0;M.next=n+.08;clearInterval(M.timer);M.timer=setInterval(mTick,25);mTick()}
 else{clearInterval(M.timer);M.master.gain.setTargetAtTime(0,M.ctx.currentTime,.08);setTimeout(()=>{if(!M.on)M.ctx.suspend()},500)}try{nftMusicSync()}catch(e){}};
@@ -1288,7 +1289,14 @@ if(M.plBuf&&!M.plSrc){const sr=C.createBufferSource();sr.buffer=M.plBuf;sr.loop=
 M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(vol*1.8,n,.08)}
 else{M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(0,n,.08);if(M.plSrc){const sr=M.plSrc;M.plSrc=null;try{sr.stop(n+.4)}catch(e){}}}}
 /* NFT Market has its own music track (original drum track, first 30 s looped); leaving the market restores the war music */
-function nftMusicSync(){const inNft=tab==='nft',want=inNft&&M.on;
+/* Site music outside Play Game and NFT Market: "Fate and Fortune" by Scott Buckley, CC BY 4.0 (www.scottbuckley.com.au) */
+function webMusicSync(){if(!M.ctx)return;const C=M.ctx,want=M.on&&tab!=='nft'&&tab!=='play';
+if(!M.webGain){M.webGain=C.createGain();M.webGain.gain.value=0;const lim=C.createDynamicsCompressor();lim.threshold.value=-10;lim.knee.value=6;lim.ratio.value=6;lim.attack.value=.005;lim.release.value=.25;M.webGain.connect(lim);lim.connect(C.destination)}
+if(!M.webBuf&&!M.webLoading){M.webLoading=true;fetch('web-music.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.webBuf=buf;M.webLoading=false;webMusicSync()}).catch(()=>{M.webLoading=false})}
+const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
+if(want){if(M.webBuf&&!M.webSrc){const sr=C.createBufferSource();sr.buffer=M.webBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=M.webBuf.duration-0.02;sr.connect(M.webGain);sr.start(n);M.webSrc=sr}M.webGain.gain.cancelScheduledValues(n);M.webGain.gain.setTargetAtTime(vol*1.1,n,.3)}
+else{M.webGain.gain.cancelScheduledValues(n);M.webGain.gain.setTargetAtTime(0,n,.2);if(M.webSrc){const sr=M.webSrc;M.webSrc=null;try{sr.stop(n+.4)}catch(e){}}}}
+function nftMusicSync(){try{webMusicSync()}catch(e){}const inNft=tab==='nft',want=inNft&&M.on;
 if(!M.ctx){return}const C=M.ctx;
 if(!M.nftGain){M.nftGain=C.createGain();M.nftGain.gain.value=0;const lp=C.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9000;lp.Q.value=0.5;const lim=C.createDynamicsCompressor();lim.threshold.value=-14;lim.knee.value=12;lim.ratio.value=3;lim.attack.value=.02;lim.release.value=.3;M.nftGain.connect(lp);lp.connect(lim);lim.connect(C.destination)}
 if(!M.nftBuf&&!M.nftLoading){M.nftLoading=true;fetch('nft-music-30s.m4a?v=3').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.nftBuf=buf;M.nftLoading=false;nftMusicSync()}).catch(()=>{M.nftLoading=false})}
