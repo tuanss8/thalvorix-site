@@ -1098,9 +1098,9 @@ function duelSfx2(kind){const C=DUEL_AC,t=C.currentTime,out=C.createGain();out.g
 const noise=(dur)=>{const b=C.createBuffer(1,Math.ceil(C.sampleRate*dur),C.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;const s=C.createBufferSource();s.buffer=b;return s};
 const env=(node,at,peak,a,d)=>{const g=C.createGain();g.gain.setValueAtTime(0.0001,t+at);g.gain.exponentialRampToValueAtTime(peak,t+at+a);g.gain.exponentialRampToValueAtTime(0.0001,t+at+a+d);node.connect(g);g.connect(out);return g};
 const osc=(type,f,at,peak,a,d,f2)=>{const o=C.createOscillator();o.type=type;o.frequency.setValueAtTime(f,t+at);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+at+a+d);env(o,at,peak,a,d);o.start(t+at);o.stop(t+at+a+d+.05)};
-if(kind==='card'){/* crisp card flick + bright pluck */
-const n=noise(.12),bp=C.createBiquadFilter();bp.type='bandpass';bp.frequency.setValueAtTime(5200,t);bp.frequency.exponentialRampToValueAtTime(2200,t+.08);bp.Q.value=1.4;n.connect(bp);env(bp,0,.5,.003,.07);n.start(t);n.stop(t+.12);
-osc('triangle',1760,0.005,.16,.004,.12);osc('sine',2637,0.01,.09,.003,.1);return}
+if(kind==='card'){/* retro PS1-style card select: short bright two-step blip with a tiny tick */
+const n=noise(.03),hp=C.createBiquadFilter();hp.type='highpass';hp.frequency.value=4000;n.connect(hp);env(hp,0,.18,.001,.02);n.start(t);n.stop(t+.03);
+osc('square',1046.5,0,.09,.002,.045);osc('square',1568,0.045,.08,.002,.07);osc('triangle',3136,0.045,.05,.002,.06);return}
 /* battle start: rising whoosh, heavy impact, metallic shimmer and power chord */
 const w=noise(.9),lp=C.createBiquadFilter();lp.type='bandpass';lp.Q.value=.9;lp.frequency.setValueAtTime(300,t);lp.frequency.exponentialRampToValueAtTime(6000,t+.6);w.connect(lp);env(lp,0,.45,.55,.25);w.start(t);w.stop(t+.9);
 osc('sine',110,.6,.9,.005,.9,38);osc('triangle',220,.6,.35,.005,.5,70);
@@ -1187,14 +1187,14 @@ if(M.on){if(!M.ctx)mInit();M.ctx.resume();const n=M.ctx.currentTime;M.master.gai
 else{clearInterval(M.timer);M.master.gain.setTargetAtTime(0,M.ctx.currentTime,.08);setTimeout(()=>{if(!M.on)M.ctx.suspend()},500)}try{nftMusicSync()}catch(e){}};
 (function(){const v=$('#musVol'),pct=$('#volPct');try{const sv=localStorage.getItem('thx_vol');if(sv!==null&&!isNaN(+sv))v.value=Math.max(0,Math.min(100,+sv))}catch(e){}const show=()=>{if(pct)pct.textContent=v.value+'%';try{localStorage.setItem('thx_vol',v.value)}catch(e){}};show();v.addEventListener('input',show);const step=d=>{v.value=Math.max(0,Math.min(100,(+v.value)+d));v.dispatchEvent(new Event('input'))};const dn=$('#volDown'),up=$('#volUp');if(dn)dn.onclick=()=>step(-10);if(up)up.onclick=()=>step(10)})();
 $('#musVol').oninput=()=>{if(M.on&&tab!=='nft'&&tab!=='play')M.master.gain.setTargetAtTime(mvol(),M.ctx.currentTime,.05);try{nftMusicSync()}catch(e){}};
-/* Play Game has its own battle track (CC0: "JRPG Epic Rock Battle Theme #1" by HydroGene, OpenGameArt); leaving Play Game restores the normal music */
+/* Play Game has its own battle track (CC0: "Chiptune Battle Music" by pmiller, OpenGameArt; loops from 7.5 s); leaving Play Game restores the normal music */
 function playMusicSync(){const inPlay=tab==='play',want=inPlay&&M.on;
 if(!M.ctx)return;const C=M.ctx;
 if(!M.plGain){M.plGain=C.createGain();M.plGain.gain.value=0;M.plGain.connect(C.destination)}
-if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
+if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music2.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
 if(want){if(M.master){M.master.gain.cancelScheduledValues(n);M.master.gain.setTargetAtTime(0,n,.08)}
-if(M.plBuf&&!M.plSrc){const sr=C.createBufferSource();sr.buffer=M.plBuf;sr.loop=true;sr.loopStart=0.05;sr.loopEnd=M.plBuf.duration-0.05;sr.connect(M.plGain);sr.start(n,0.05);M.plSrc=sr}
+if(M.plBuf&&!M.plSrc){const sr=C.createBufferSource();sr.buffer=M.plBuf;sr.loop=true;sr.loopStart=7.5;sr.loopEnd=M.plBuf.duration-0.02;sr.connect(M.plGain);sr.start(n,0.03);M.plSrc=sr}
 M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(vol*0.9,n,.08)}
 else{M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(0,n,.08);if(M.plSrc){const sr=M.plSrc;M.plSrc=null;try{sr.stop(n+.4)}catch(e){}}}}
 /* NFT Market has its own music track (original drum track, first 30 s looped); leaving the market restores the war music */
