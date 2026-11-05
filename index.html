@@ -1152,7 +1152,7 @@ const PROG=[[38,0],[38,0],[39,1],[38,0],[34,1],[36,1],[39,1],[33,1]];
 const OST=[0,3,1,3,2,3,1,3,0,3,1,3,2,1,2,3];
 const MEL=[74,76,79,77,76,74,72,74,76,79,77,76,74,72,71,72,74,76,79,77,76,74,72,71,72,74,76,0,0,0,0,0];
 
-const mf=m=>440*Math.pow(2,(m-69)/12),mvol=()=>Math.pow($('#musVol').value/100,1.3)*2.6;
+const mf=m=>440*Math.pow(2,(m-69)/12),mvol=()=>Math.pow($('#musVol').value/100,1.3)*1.2;
 function mInit(){const C=new(window.AudioContext||window.webkitAudioContext)();M.ctx=C;const comp=C.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=8;comp.knee.value=6;comp.attack.value=.003;comp.release.value=.2;
 M.master=C.createGain();M.master.gain.value=0;M.master.connect(comp);comp.connect(C.destination);
 const b=C.createBuffer(1,C.sampleRate,C.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;M.noise=b;
