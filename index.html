@@ -1290,15 +1290,15 @@ else{M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(0,n,.0
 /* NFT Market has its own music: original Thalvorix war-drum loop (100 bpm, 28.8 s), composed for this site */
 /* Site music outside Play Game and NFT Market: original Thalvorix theme (epic choir, D minor, 136 bpm), composed for this site */
 function webMusicSync(){if(!M.ctx)return;const C=M.ctx,want=M.on&&tab!=='nft'&&tab!=='play';
-if(!M.webGain){M.webGain=C.createGain();M.webGain.gain.value=0;const lim=C.createDynamicsCompressor();lim.threshold.value=-10;lim.knee.value=6;lim.ratio.value=6;lim.attack.value=.005;lim.release.value=.25;M.webGain.connect(lim);lim.connect(C.destination)}
-if(!M.webBuf&&!M.webLoading){M.webLoading=true;fetch('web-music.m4a?v=2').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.webBuf=buf;M.webLoading=false;webMusicSync()}).catch(()=>{M.webLoading=false})}
+if(!M.webGain){M.webGain=C.createGain();M.webGain.gain.value=0;const lim=C.createDynamicsCompressor();lim.threshold.value=-8;lim.knee.value=2;lim.ratio.value=14;lim.attack.value=.005;lim.release.value=.25;M.webGain.connect(lim);lim.connect(C.destination)}
+if(!M.webBuf&&!M.webLoading){M.webLoading=true;fetch('web-music.m4a?v=3').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.webBuf=buf;M.webLoading=false;webMusicSync()}).catch(()=>{M.webLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
-if(want){if(M.webBuf&&!M.webSrc){const sr=C.createBufferSource();sr.buffer=M.webBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=Math.min(M.webBuf.duration,56.4706);sr.connect(M.webGain);sr.start(n);M.webSrc=sr}M.webGain.gain.cancelScheduledValues(n);M.webGain.gain.setTargetAtTime(vol*1.1,n,.3)}
+if(want){if(M.webBuf&&!M.webSrc){const sr=C.createBufferSource();sr.buffer=M.webBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=Math.min(M.webBuf.duration,56.4706);sr.connect(M.webGain);sr.start(n);M.webSrc=sr}M.webGain.gain.cancelScheduledValues(n);M.webGain.gain.setTargetAtTime(vol*1.6,n,.3)}
 else{M.webGain.gain.cancelScheduledValues(n);M.webGain.gain.setTargetAtTime(0,n,.2);if(M.webSrc){const sr=M.webSrc;M.webSrc=null;try{sr.stop(n+.4)}catch(e){}}}}
 function nftMusicSync(){try{webMusicSync()}catch(e){}const inNft=tab==='nft',want=inNft&&M.on;
 if(!M.ctx){return}const C=M.ctx;
-if(!M.nftGain){M.nftGain=C.createGain();M.nftGain.gain.value=0;const lp=C.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9000;lp.Q.value=0.5;const lim=C.createDynamicsCompressor();lim.threshold.value=-14;lim.knee.value=12;lim.ratio.value=3;lim.attack.value=.02;lim.release.value=.3;M.nftGain.connect(lp);lp.connect(lim);lim.connect(C.destination)}
-if(!M.nftBuf&&!M.nftLoading){M.nftLoading=true;fetch('nft-music-orig.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.nftBuf=buf;M.nftLoading=false;nftMusicSync()}).catch(()=>{M.nftLoading=false})}
+if(!M.nftGain){M.nftGain=C.createGain();M.nftGain.gain.value=0;const lp=C.createBiquadFilter();lp.type='lowpass';lp.frequency.value=9000;lp.Q.value=0.5;const lim=C.createDynamicsCompressor();lim.threshold.value=-6;lim.knee.value=2;lim.ratio.value=16;lim.attack.value=.02;lim.release.value=.3;M.nftGain.connect(lp);lp.connect(lim);lim.connect(C.destination)}
+if(!M.nftBuf&&!M.nftLoading){M.nftLoading=true;fetch('nft-music-orig.m4a?v=2').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.nftBuf=buf;M.nftLoading=false;nftMusicSync()}).catch(()=>{M.nftLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
 if(want){if(M.master)M.master.gain.setTargetAtTime(0,n,.08);
 if(M.nftBuf&&!M.nftSrc){const sr=C.createBufferSource();sr.buffer=M.nftBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=Math.min(28.8,M.nftBuf.duration);sr.connect(M.nftGain);sr.start(n);M.nftSrc=sr}
