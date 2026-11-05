@@ -567,6 +567,8 @@ async function sessRestore(){const ss=sessGet();if(!ss||!ss.addr||S.wallet)retur
   itemsLoad(S.wallet);const b=$('#connectBtn');if(b)b.textContent='Connected '+shortAddr(S.wallet);
   if(typeof puzzleNew==='function'){puzzleNew();if(ss.ps)PUZZLE.solved=true}
   await refreshChain().catch(()=>{});try{updateMintUI();render()}catch(e){}}
+setTimeout(()=>{try{const pend=localStorage.getItem('thx_xtpend'),last=sessionStorage.getItem('thx_tab');if(pend||(last==='mint'))go('mint');else if(last&&last!=='home'&&document.getElementById('p-'+last))go(last)}catch(e){}},0);
+window.addEventListener('pageshow',e=>{try{if(XT_PENDING||localStorage.getItem('thx_xtpend')){if(!XT_PENDING)XT_PENDING=JSON.parse(localStorage.getItem('thx_xtpend'));xtBack()}}catch(err){}});
 setTimeout(()=>{sessRestore().catch(()=>{}).then(()=>{try{if(XT_PENDING)xtBack()}catch(e){}})},300);
 function doDisconnect(){
   sessClear();clearWalletState();updateMintUI();render();
@@ -868,7 +870,7 @@ const fmt=n=>n.toFixed(n>0&&n<.01?Math.min(6,2-Math.floor(Math.log10(n))):3).rep
 confirmDlg=(t,p,ok,label,extra='')=>openModal(`<h3>${t}</h3>${extra}<p>Price: <b class="x-gold">${fmt(p)}</b></p><div class="x-row">${ok}<button class="btn" data-close>Cancel</button></div>`),mine=()=>S.myNfts;const findNft=id=>S.myNfts.find(n=>n.id==id)||S.nfts.find(n=>n.id==id);
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,3500)}
 let tab='home';
-function go(t){tab=t;$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
+function go(t){tab=t;try{sessionStorage.setItem('thx_tab',t)}catch(e){}$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
 $('#tabs').onclick=e=>{const b=e.target.closest('button[data-t]');if(!b)return;go(b.dataset.t)};
 // ---------- Settings: language switcher (EN / ID / ZH / JA / HI) ----------
 const I18N={
