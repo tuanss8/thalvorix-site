@@ -339,7 +339,7 @@
 
         <section class="section x-panel" id="p-play" hidden>
           <div class="x-box" id="playComingSoon" hidden><h2>Coming Soon</h2></div>
-          <div class="x-box" style="margin-bottom:18px"><div class="x-rank" id="rankCard"></div><h3>Your hero</h3><ul id="teamList" class="x-muted"></ul></div>
+          <div class="x-box" id="playRankBox" style="margin-bottom:18px" hidden><div class="x-rank" id="rankCard"></div><h3>Your hero</h3><ul id="teamList" class="x-muted"></ul></div>
           <div class="head"><p class="head__eyebrow">Play Game</p><h2>Duel Arena &mdash; Card Battle.</h2></div>
           <div id="playArea">
             <div class="x-row" style="margin-bottom:12px"><p id="pickInfo" style="flex:1 1 220px"></p><button class="x-cta" id="startBtn">Start Duel Arena</button></div>
@@ -836,7 +836,8 @@ function glowText(s){let o='',i=0;for(const ch of s){if(ch===' '){o+=' ';continu
 function applyLang(code){const d=I18N[code]||I18N.en;document.documentElement.lang=code;$$('#tabs button[data-t]').forEach(b=>{const v=d.nav[b.dataset.t];if(v)b.textContent=v});const set=(sel,val)=>{const el=$(sel);if(el)el.textContent=val};set('#p-home .hero__sub',d.home_sub);set('#p-mint .head h2',d.mint_h2);set('#p-heroes .head h2',d.heroes_h2);set('#p-nft .head h2',d.nft_h2);set('#p-items .head h2',d.items_h2);set('#p-items .head .x-muted',d.items_note);set('#p-play .head h2',d.play_h2);set('#playComingSoon h2',d.coming_soon);set('#tokenComingSoon h2',d.coming_soon);set('#playArea .fineprint',d.play_fine);set('#p-inv .head h2',d.inv_h2);set('#invEyebrow',(INV_EYEBROW[code]||'my bag'));set('#settingsEyebrow',d.settings_h2);set('#settingsTitle',d.settings_h2);set('#settingsLangLabel',d.settings_label);const ms=$('#p-mint .head__sub');if(ms)ms.innerHTML=d.mint_sub+' <span id="mintCount"></span>';const ls=$('#langSelect');if(ls)ls.value=code;if(S.wallet){updateMintUI()}if(typeof render==='function')render()}
 applyLang('en');
 $('#langSelect').onchange=e=>applyLang(e.target.value);
-function render(){const mc=`Minted ${S.totalMinted.toLocaleString()} / 6,666`;const mcEl=$('#mintCount');if(mcEl)mcEl.textContent=mc;const hm=$('#homeMinted');if(hm)hm.textContent=mc+'.';try{if(typeof renderAct==='function')renderAct()}catch(e){}
+setInterval(()=>{try{const rb=document.getElementById('playRankBox');if(rb&&rb.hidden!==!S.wallet)rb.hidden=!S.wallet}catch(e){}},700);
+function render(){try{const rb=document.getElementById('playRankBox');if(rb)rb.hidden=!S.wallet}catch(e){}const mc=`Minted ${S.totalMinted.toLocaleString()} / 6,666`;const mcEl=$('#mintCount');if(mcEl)mcEl.textContent=mc;const hm=$('#homeMinted');if(hm)hm.textContent=mc+'.';try{if(typeof renderAct==='function')renderAct()}catch(e){}
 ({heroes:rHeroes,nft:rNft,items:rItems,play:rPlay,inv:rInv}[tab]||(()=>{}))()}
 const PSRC=HEROES.map(h=>{const e=document.getElementById('hp'+h.id);return e?e.getAttribute('src'):''});
 const PIMG=PSRC.map(s=>{const i=new Image();i.decoding='async';if(s)i.src=s;return i});
