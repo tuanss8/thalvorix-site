@@ -610,16 +610,17 @@ function clearWalletState(){
 }
 async function sessRestore(){const ss=sessGet();if(!ss||!ss.addr||S.wallet)return;const a=ss.addr;
   if(ss.mode==='api'){S.wallet=a;S.provider=null;S.signed=false;S.apiLogin=true;S.chainOk=true}
-  else{try{window.dispatchEvent(new CustomEvent('eip6963:requestProvider'))}catch(e){}await new Promise(r=>setTimeout(r,400));
+  else{try{window.dispatchEvent(new CustomEvent('eip6963:requestProvider'))}catch(e){}await new Promise(r=>setTimeout(r,150));
     const pi=EIP6963.find(x=>x.info&&x.info.rdns===ss.rdns);const pv=pi?pi.provider:window.ethereum||null;
     S.wallet=a;S.signed=true;
     if(pv){try{const accs=await pv.request({method:'eth_accounts'});if(accs&&accs.length){S.provider=pv;S.wallet=accs[0].toLowerCase();attachProvListeners(pv)}}catch(e){}}}
   itemsLoad(S.wallet);const b=$('#connectBtn');if(b)b.textContent='Connected '+shortAddr(S.wallet);
   if(typeof puzzleNew==='function'){puzzleNew();if(ss.ps)PUZZLE.solved=true}
+  try{if(XT_PENDING||localStorage.getItem('thx_xtpend'))xtBack();updateMintUI()}catch(e){}
   await refreshChain().catch(()=>{});try{updateMintUI();render()}catch(e){}}
 setTimeout(()=>{try{const pend=localStorage.getItem('thx_xtpend'),last=sessionStorage.getItem('thx_tab');if(pend||(last==='mint'))go('mint');else if(last&&last!=='home'&&document.getElementById('p-'+last))go(last)}catch(e){}},0);
 window.addEventListener('pageshow',e=>{try{if(XT_PENDING||localStorage.getItem('thx_xtpend')){if(!XT_PENDING)XT_PENDING=JSON.parse(localStorage.getItem('thx_xtpend'));xtBack()}}catch(err){}});
-setTimeout(()=>{sessRestore().catch(()=>{}).then(()=>{try{if(XT_PENDING)xtBack()}catch(e){}})},300);
+setTimeout(()=>{sessRestore().catch(()=>{}).then(()=>{try{if(XT_PENDING)xtBack()}catch(e){}})},0);
 function doDisconnect(){
   sessClear();clearWalletState();updateMintUI();render();
   const ls=$('#leftScreen');if(ls){ls.hidden=false;ls.style.display='flex';}
@@ -1007,12 +1008,14 @@ const XT_URL={follow:'https://x.com/intent/follow?screen_name=THALVORIX',like:'h
 const XT_KEY=()=>'thx_xtasks_'+String(S.wallet||'').toLowerCase();
 function xtGet(){try{return JSON.parse(localStorage.getItem(XT_KEY())||'{}')}catch(e){return {}}}
 function xtSet(o){try{localStorage.setItem(XT_KEY(),JSON.stringify(o))}catch(e){}}
+function xtKeyFor(w){return 'thx_xtasks_'+String(w||'').toLowerCase()}
+function xtMark(w,k,extra){try{const key=xtKeyFor(w);const o=JSON.parse(localStorage.getItem(key)||'{}');o[k]=true;if(extra)Object.assign(o,extra);localStorage.setItem(key,JSON.stringify(o))}catch(e){}}
 function xtAllDone(){const o=xtGet();return !!(o.follow&&o.like&&o.rt&&o.quote)}
 let XT_PENDING=(()=>{try{return JSON.parse(localStorage.getItem('thx_xtpend')||'null')}catch(e){return null}})();
 document.addEventListener('click',e=>{if(!e.target.closest||!e.target.closest('#xQuoteVerify'))return;const inp=document.getElementById('xQuoteIn'),msg=document.getElementById('xQuoteMsg');const v=(inp&&inp.value||'').trim();const m=v.match(/^https?:\/\/(www\.|mobile\.)?(x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/status\/(\d{5,25})/i);if(!m){if(msg)msg.textContent='Invalid link. Paste the link of your Quote post (https://x.com/username/status/...).';return}if(m[4]==='2118167559451316390'||m[3].toLowerCase()==='thalvorix'){if(msg)msg.textContent='That is the original post. Paste the link of YOUR Quote post.';return}const o=xtGet();o.quote=true;o.quoteLink=v;xtSet(o);if(msg)msg.textContent='Quote verified ✓';toast('Quote task done ✓');xtRender();updateMintUI()});
 function xtRender(){const o=xtGet();document.querySelectorAll('[data-xtask]').forEach(b=>{const k=b.dataset.xtask;const base=b.textContent.replace(/^✓ /,'');b.textContent=(o[k]?'✓ ':'')+base;b.className=o[k]?'x-cta':'btn'});const n=['follow','like','rt','quote'].filter(k=>o[k]).length;const st=document.getElementById('xTaskStatus');if(st)st.textContent=n===4?'All X tasks done. Now solve the puzzle to activate Mint.':`${n}/4 tasks done.`;const qb=document.getElementById('xQuoteBox');if(qb)qb.hidden=!(o.quoteOpened&&!o.quote)}
-document.querySelectorAll('[data-xtask]').forEach(b=>b.onclick=()=>{const k=b.dataset.xtask;XT_PENDING={k,t:Date.now()};try{localStorage.setItem('thx_xtpend',JSON.stringify(XT_PENDING))}catch(e){}window.open(XT_URL[k],'_blank','noopener')});
-function xtBack(){if(XT_PENDING&&XT_PENDING.k==='quote'){try{localStorage.removeItem('thx_xtpend')}catch(e){}const o=xtGet();o.quoteOpened=true;xtSet(o);XT_PENDING=null;try{if(typeof tab==='undefined'||tab!=='mint')go('mint')}catch(e){}xtRender();updateMintUI();setTimeout(()=>{const qi=document.getElementById('xQuoteIn');if(qi){qi.scrollIntoView({behavior:'smooth',block:'center'});qi.focus()}},200);return}if(!XT_PENDING)return;try{if(typeof tab==='undefined'||tab!=='mint')go('mint');setTimeout(()=>{const xb=document.querySelector('#p-mint [data-xtask]');if(xb)xb.scrollIntoView({behavior:'smooth',block:'center'})},150)}catch(e){}try{localStorage.removeItem('thx_xtpend')}catch(e){}if(Date.now()-XT_PENDING.t>=4000){const o=xtGet();o[XT_PENDING.k]=true;xtSet(o)}else{toast('Please complete the task on X, then come back.')}XT_PENDING=null;xtRender();updateMintUI()}
+document.querySelectorAll('[data-xtask]').forEach(b=>b.onclick=()=>{const k=b.dataset.xtask;XT_PENDING={k,t:Date.now(),w:String(S.wallet||'').toLowerCase()};try{localStorage.setItem('thx_xtpend',JSON.stringify(XT_PENDING))}catch(e){}window.open(XT_URL[k],'_blank','noopener')});
+function xtBack(){if(!XT_PENDING){try{XT_PENDING=JSON.parse(localStorage.getItem('thx_xtpend')||'null')}catch(e){}}if(XT_PENDING&&!XT_PENDING.w&&!S.wallet)return;const XW=(XT_PENDING&&XT_PENDING.w)||S.wallet;if(XT_PENDING&&XT_PENDING.k==='quote'){try{localStorage.removeItem('thx_xtpend')}catch(e){}try{const key=xtKeyFor(XW);const o=JSON.parse(localStorage.getItem(key)||'{}');o.quoteOpened=true;localStorage.setItem(key,JSON.stringify(o))}catch(e){}XT_PENDING=null;try{if(typeof tab==='undefined'||tab!=='mint')go('mint')}catch(e){}xtRender();updateMintUI();setTimeout(()=>{const qi=document.getElementById('xQuoteIn');if(qi){qi.scrollIntoView({behavior:'smooth',block:'center'});qi.focus()}},200);return}if(!XT_PENDING)return;try{if(typeof tab==='undefined'||tab!=='mint')go('mint');setTimeout(()=>{const xb=document.querySelector('#p-mint [data-xtask]');if(xb)xb.scrollIntoView({behavior:'smooth',block:'center'})},150)}catch(e){}try{localStorage.removeItem('thx_xtpend')}catch(e){}if(Date.now()-XT_PENDING.t>=2500){xtMark(XW,XT_PENDING.k);toast('Task done ✓')}else{toast('Please complete the task on X, then come back.')}XT_PENDING=null;xtRender();updateMintUI()}
 window.addEventListener('focus',xtBack);document.addEventListener('visibilitychange',()=>{if(!document.hidden)xtBack()});
 $('#connectBtn').onclick=()=>{if(S.wallet){openDisconnectDlg();return}openWalletPicker();};
 try{const cb=$('#connectBtn'),pb=$('#connectBtnPlay');if(cb&&pb){pb.onclick=()=>cb.click();const sync=()=>{pb.textContent=cb.textContent};sync();new MutationObserver(sync).observe(cb,{childList:true,characterData:true,subtree:true})}}catch(e){}
