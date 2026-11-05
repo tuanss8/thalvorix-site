@@ -541,14 +541,27 @@ async function ensureBsc(){
   }catch(e){S.chainOk=false;return false}
 }
 const hexMsg=s=>{let h='0x';for(let i=0;i<s.length;i++)h+=s.charCodeAt(i).toString(16).padStart(2,'0');return h};
+function sessSave(x){try{const o=Object.assign(sessGet()||{},x);localStorage.setItem('thx_session',JSON.stringify(o))}catch(e){}}
+function sessGet(){try{return JSON.parse(localStorage.getItem('thx_session')||'null')}catch(e){return null}}
+function sessClear(){try{localStorage.removeItem('thx_session')}catch(e){}}
 function clearWalletState(){
   S.wallet=null;S.provider=null;S.signed=false;S.apiLogin=false;S.invError=false;S.chainOk=false;S.freeLeft=null;S.hasAgent=null;S.myNfts=[];S.bal=null;S.thxBal=null;ITEMS.forEach(i=>i.owned=false);
   const b=$('#connectBtn');if(b)b.textContent='Connect Wallet';
   const m=$('#walletMsg');if(m)m.textContent='Connect your wallet to check free mint eligibility.';
   const nt=$('#invNote');if(nt)nt.textContent='';
 }
+async function sessRestore(){const ss=sessGet();if(!ss||!ss.addr||S.wallet)return;const a=ss.addr;
+  if(ss.mode==='api'){S.wallet=a;S.provider=null;S.signed=false;S.apiLogin=true;S.chainOk=true}
+  else{try{window.dispatchEvent(new CustomEvent('eip6963:requestProvider'))}catch(e){}await new Promise(r=>setTimeout(r,400));
+    const pi=EIP6963.find(x=>x.info&&x.info.rdns===ss.rdns);const pv=pi?pi.provider:window.ethereum||null;
+    S.wallet=a;S.signed=true;
+    if(pv){try{const accs=await pv.request({method:'eth_accounts'});if(accs&&accs.length){S.provider=pv;S.wallet=accs[0].toLowerCase();attachProvListeners(pv)}}catch(e){}}}
+  itemsLoad(S.wallet);const b=$('#connectBtn');if(b)b.textContent='Connected '+shortAddr(S.wallet);
+  if(typeof puzzleNew==='function'){puzzleNew();if(ss.ps)PUZZLE.solved=true}
+  await refreshChain().catch(()=>{});try{updateMintUI();render()}catch(e){}}
+setTimeout(()=>{sessRestore().catch(()=>{}).then(()=>{try{if(XT_PENDING)xtBack()}catch(e){}})},300);
 function doDisconnect(){
-  clearWalletState();updateMintUI();render();
+  sessClear();clearWalletState();updateMintUI();render();
   const ls=$('#leftScreen');if(ls){ls.hidden=false;ls.style.display='flex';}
   toast('You have left Thalvorix.');
 }
@@ -557,7 +570,7 @@ function openDisconnectDlg(){
 }
 function attachProvListeners(p){
   if(!p||!p.on||p.__thx)return;try{p.__thx=true;
-  p.on('accountsChanged',async accs=>{if(!accs||!accs.length){clearWalletState();updateMintUI();render();return}S.wallet=accs[0].toLowerCase();await ensureBsc().catch(()=>{});await refreshChain().catch(()=>{});});
+  p.on('accountsChanged',async accs=>{if(!accs||!accs.length){return}S.wallet=accs[0].toLowerCase();sessSave({addr:S.wallet});await ensureBsc().catch(()=>{});await refreshChain().catch(()=>{});});
   p.on('chainChanged',async cid=>{S.chainOk=(cid==='0x38');if(S.wallet)await refreshChain().catch(()=>{});});
   }catch(e){}
 }
@@ -575,7 +588,7 @@ async function connectWith(provider){
     let sig=null;
     try{sig=await provider.request({method:'personal_sign',params:[hexMsg(msg),addr]})}catch(e){sig=null}
     if(!sig){m.textContent='Signature required to connect. Please sign the login message to continue.';S.wallet=null;S.provider=null;S.signed=false;return false}
-    S.signed=true;itemsLoad(addr);
+    S.signed=true;itemsLoad(addr);{const pi=EIP6963.find(x=>x.provider===provider);sessSave({addr,mode:'wallet',rdns:pi?pi.info.rdns:'injected',ps:false})}
     const b=$('#connectBtn');if(b)b.textContent='Connected '+shortAddr(addr);
     return true;
   }catch(e){m.textContent='Wallet connection was cancelled.';S.wallet=null;S.provider=null;return false}
@@ -586,7 +599,7 @@ async function apiLogin(addr){
   if(!/^0x[0-9a-f]{40}$/.test(a)){const msg='Invalid wallet address. Enter a BSC wallet address (0x…).';if(m)m.textContent=msg;toast(msg);return false}
   try{
     if(!(await checkElig(a))){const msg='Not eligible. Free mint is for Binance Agent ID holders or BNB Smart Chain users (min. 5 transactions).';if(m)m.textContent=msg;toast(msg);return false}
-    S.wallet=a;S.provider=null;S.signed=false;S.apiLogin=true;S.chainOk=true;itemsLoad(a);
+    S.wallet=a;S.provider=null;S.signed=false;S.apiLogin=true;S.chainOk=true;itemsLoad(a);sessSave({addr:a,mode:'api',ps:false});
     const btn=$('#connectBtn');if(btn)btn.textContent='Connected '+shortAddr(a);
     return true;
   }catch(e){const msg='Could not verify eligibility. Please try again.';if(m)m.textContent=msg;toast(msg);return false}
@@ -911,7 +924,7 @@ function puzzleShuffleMoves(){return 250}
 function puzzleRender(){const g=$('#puzzleGrid');g.innerHTML=PUZZLE.tiles.map((v,i)=>v===-1?`<div class="puzzle-tile puzzle-empty" data-pos="${i}"></div>`:`<div class="puzzle-tile" data-pos="${i}" style="background-position:${-(v%5)*48}px ${-Math.floor(v/5)*30}px">${v+1}</div>`).join('')}
 function puzzleSolvedCheck(){return PUZZLE.tiles.every((v,i)=>v===(i===39?-1:i))}
 function puzzleNew(){PUZZLE.wallet=S.wallet;PUZZLE.tiles=Array.from({length:39},(_,i)=>i).concat([-1]);PUZZLE.empty=39;PUZZLE.solved=false;PUZZLE.moves=0;const moves=puzzleShuffleMoves();let prev=-1;for(let s=0;s<moves;s++){const e=PUZZLE.empty,r=Math.floor(e/5),c=e%5,opts=[];if(r>0)opts.push(e-5);if(r<7)opts.push(e+5);if(c>0)opts.push(e-1);if(c<4)opts.push(e+1);const cand=opts.filter(o=>o!==prev);const nxt=cand[Math.floor(Math.random()*cand.length)];prev=e;PUZZLE.tiles[e]=PUZZLE.tiles[nxt];PUZZLE.tiles[nxt]=-1;PUZZLE.empty=nxt}if(puzzleSolvedCheck())puzzleNew();puzzleRender();$('#puzzleStatus').textContent='New puzzle ready. Arrange the tiles until the picture is complete.';$('#puzzleResult').textContent=''}
-function puzzleClick(pos){if(PUZZLE.solved||!S.wallet)return;const e=PUZZLE.empty,dr=Math.abs(Math.floor(pos/5)-Math.floor(e/5)),dc=Math.abs((pos%5)-(e%5));if(dr+dc!==1)return;PUZZLE.tiles[e]=PUZZLE.tiles[pos];PUZZLE.tiles[pos]=-1;PUZZLE.empty=pos;PUZZLE.moves++;if(!SFX_MUTED&&!(D&&D.muted))clickSfx();puzzleRender();if(puzzleSolvedCheck()){PUZZLE.solved=true;$('#puzzleStatus').textContent='Puzzle solved!';$('#puzzleResult').textContent=`Picture complete in ${PUZZLE.moves} moves. Now complete the X tasks to unlock Mint.`;updateMintUI()}else{$('#puzzleStatus').textContent=`Moves: ${PUZZLE.moves}. Keep going until the picture is complete.`}}
+function puzzleClick(pos){if(PUZZLE.solved||!S.wallet)return;const e=PUZZLE.empty,dr=Math.abs(Math.floor(pos/5)-Math.floor(e/5)),dc=Math.abs((pos%5)-(e%5));if(dr+dc!==1)return;PUZZLE.tiles[e]=PUZZLE.tiles[pos];PUZZLE.tiles[pos]=-1;PUZZLE.empty=pos;PUZZLE.moves++;if(!SFX_MUTED&&!(D&&D.muted))clickSfx();puzzleRender();if(puzzleSolvedCheck()){PUZZLE.solved=true;sessSave({ps:true});$('#puzzleStatus').textContent='Puzzle solved!';$('#puzzleResult').textContent=`Picture complete in ${PUZZLE.moves} moves. Now complete the X tasks to unlock Mint.`;updateMintUI()}else{$('#puzzleStatus').textContent=`Moves: ${PUZZLE.moves}. Keep going until the picture is complete.`}}
 document.getElementById('puzzleGrid').onclick=e=>{const el=e.target.closest('[data-pos]');if(el)puzzleClick(+el.dataset.pos)};
 const _psb=document.getElementById('puzzleShuffleBtn');if(_psb)_psb.onclick=()=>{if(S.wallet)puzzleNew()};
 const NE_MSG='Not eligible. Free mint is for Binance Agent ID holders or BNB Smart Chain users (min. 5 transactions).';
@@ -935,10 +948,10 @@ const XT_KEY=()=>'thx_xtasks_'+String(S.wallet||'').toLowerCase();
 function xtGet(){try{return JSON.parse(localStorage.getItem(XT_KEY())||'{}')}catch(e){return {}}}
 function xtSet(o){try{localStorage.setItem(XT_KEY(),JSON.stringify(o))}catch(e){}}
 function xtAllDone(){const o=xtGet();return !!(o.follow&&o.like&&o.rt)}
-let XT_PENDING=null;
+let XT_PENDING=(()=>{try{return JSON.parse(localStorage.getItem('thx_xtpend')||'null')}catch(e){return null}})();
 function xtRender(){const o=xtGet();document.querySelectorAll('[data-xtask]').forEach(b=>{const k=b.dataset.xtask;const base=b.textContent.replace(/^✓ /,'');b.textContent=(o[k]?'✓ ':'')+base;b.className=o[k]?'x-cta':'btn'});const n=['follow','like','rt'].filter(k=>o[k]).length;const st=document.getElementById('xTaskStatus');if(st)st.textContent=n===3?'All X tasks done. Now solve the puzzle to activate Mint.':`${n}/3 tasks done.`}
-document.querySelectorAll('[data-xtask]').forEach(b=>b.onclick=()=>{const k=b.dataset.xtask;XT_PENDING={k,t:Date.now()};window.open(XT_URL[k],'_blank','noopener')});
-function xtBack(){if(!XT_PENDING)return;if(Date.now()-XT_PENDING.t>=4000){const o=xtGet();o[XT_PENDING.k]=true;xtSet(o)}else{toast('Please complete the task on X, then come back.')}XT_PENDING=null;xtRender();updateMintUI()}
+document.querySelectorAll('[data-xtask]').forEach(b=>b.onclick=()=>{const k=b.dataset.xtask;XT_PENDING={k,t:Date.now()};try{localStorage.setItem('thx_xtpend',JSON.stringify(XT_PENDING))}catch(e){}window.open(XT_URL[k],'_blank','noopener')});
+function xtBack(){if(!XT_PENDING)return;try{localStorage.removeItem('thx_xtpend')}catch(e){}if(Date.now()-XT_PENDING.t>=4000){const o=xtGet();o[XT_PENDING.k]=true;xtSet(o)}else{toast('Please complete the task on X, then come back.')}XT_PENDING=null;xtRender();updateMintUI()}
 window.addEventListener('focus',xtBack);document.addEventListener('visibilitychange',()=>{if(!document.hidden)xtBack()});
 $('#connectBtn').onclick=()=>{if(S.wallet){openDisconnectDlg();return}openWalletPicker();};
 try{const cb=$('#connectBtn'),pb=$('#connectBtnPlay');if(cb&&pb){pb.onclick=()=>cb.click();const sync=()=>{pb.textContent=cb.textContent};sync();new MutationObserver(sync).observe(cb,{childList:true,characterData:true,subtree:true})}}catch(e){}
