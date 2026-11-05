@@ -14,7 +14,7 @@ const ch=await P.request({method:'eth_chainId'});if(ch!=='0x38'){say('Please swi
 if(acc.toLowerCase()!==OWNER){say('Connected '+acc+'<br>This is not the owner wallet 0x1bbb…32af. Switch account to deploy as owner.','err');return}
 say('Connected as owner '+acc+'. Ready to deploy.','ok');document.getElementById('d').disabled=false}catch(e){say(e.message||String(e),'err')}};
 document.getElementById('d').onclick=async()=>{const b=document.getElementById('d');b.disabled=true;try{say('Confirm the transaction in your wallet…');
-const tx=await P.request({method:'eth_sendTransaction',params:[{from:acc,data:DATA}]});say('Sent: <a style="color:#e2b54a" href="https://bscscan.com/tx/'+tx+'" target="_blank">'+tx+'</a><br>Waiting for confirmation…');
+const tx=await P.request({method:'eth_sendTransaction',params:[{from:acc,data:DATA,gas:'0x33e140',gasPrice:'0x2faf080'}]});say('Sent: <a style="color:#e2b54a" href="https://bscscan.com/tx/'+tx+'" target="_blank">'+tx+'</a><br>Waiting for confirmation…');
 for(let i=0;i<60;i++){await new Promise(r=>setTimeout(r,3000));const r=await P.request({method:'eth_getTransactionReceipt',params:[tx]});if(r){if(r.status==='0x1'){say('Deployed! New contract address:<br><b style="font-size:18px">'+r.contractAddress+'</b><br><br>Copy this address and send it to Hark.','ok')}else{say('Transaction failed on chain. Tx: '+tx,'err');b.disabled=false}return}}
 say('Still pending. Check the tx on BscScan: '+tx)}catch(e){say(e.message||String(e),'err');b.disabled=false}};
 </script></body></html>
