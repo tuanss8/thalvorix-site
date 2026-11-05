@@ -732,7 +732,7 @@ async function refreshMarket(){
     const out=[];
     if(act.length){
       const aid=act.map(a=>a.id),hs=await mcallIds(SEL.heroIdOf,aid),rs=await mcallIds(SEL.rarityOf,aid);
-      act.forEach((a,k)=>{if(!hs[k]||!rs[k])return;const hero=HEROES[Number(BigInt(hs[k]))],rar=RAR[Number(BigInt(rs[k]))];if(!hero||!rar)return;if(a.price<1000000000000000n)return;out.push({id:a.id,hero,rar,price:parseFloat(weiToBnb(a.price)),priceWei:a.price,owner:a.seller,listed:true})});
+      act.forEach((a,k)=>{if(!hs[k]||!rs[k])return;const hero=HEROES[Number(BigInt(hs[k]))],rar=RAR[Number(BigInt(rs[k]))];if(!hero||!rar)return;if(a.price<4000000000000000n)return;out.push({id:a.id,hero,rar,price:parseFloat(weiToBnb(a.price)),priceWei:a.price,owner:a.seller,listed:true})});
     }
     S.nfts=out;{const ln=$('#nftListedN');if(ln)ln.textContent=String(out.length)}refreshVolume().catch(()=>{});
     if(S.wallet&&S.myNfts&&S.myNfts.length){const w=S.wallet.toLowerCase();S.myNfts.forEach(m=>{const l=out.find(x=>x.id===m.id&&x.owner===w);m.listed=!!l;m.price=l?l.price:0;if(l)m.priceWei=l.priceWei});try{bagCacheSave(S.wallet,S.myNfts)}catch(e){}try{rInv()}catch(e){}}
@@ -874,7 +874,7 @@ async function doList(n,priceBnb){
     else{toast('Listing could not be confirmed. Check the transaction on BscScan.')}
   }catch(e){toast('Listing failed. Please try again.')}
 }
-const PR={Common:[.01,.05],Uncommon:[.02,.1],Rare:[.03,.2],Epic:[.045,.4],Legendary:[.08,.9]};
+const PR={Common:[.004,.05],Uncommon:[.004,.1],Rare:[.004,.2],Epic:[.004,.4],Legendary:[.004,.9]};
 let ACT=[];try{const _sa=JSON.parse(localStorage.getItem('thalvorix_activity')||'[]');if(Array.isArray(_sa))ACT=_sa.slice(0,50)}catch(e){}
 const shortAddr=a=>a&&a.length>12?a.slice(0,6)+'…'+a.slice(-4):(a||'You');
 const whoMe=()=>S.wallet?shortAddr(S.wallet)+' (You)':'You';
