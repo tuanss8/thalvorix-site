@@ -339,6 +339,7 @@
 
         <section class="section x-panel" id="p-play" hidden>
           <div class="x-box" id="playComingSoon" hidden><h2>Coming Soon</h2></div>
+          <div class="x-row" style="margin-bottom:12px"><button class="x-cta" id="connectBtnPlay">Connect Wallet</button><span class="x-muted" style="flex:1 1 200px">Connect your wallet to load your NFT heroes.</span></div>
           <div class="x-box" style="margin-bottom:18px"><div class="x-rank" id="rankCard"></div><h3>Your hero</h3><ul id="teamList" class="x-muted"></ul></div>
           <div class="head"><p class="head__eyebrow">Play Game</p><h2>Duel Arena &mdash; Card Battle.</h2></div>
           <div id="playArea">
@@ -898,6 +899,7 @@ document.querySelectorAll('[data-xtask]').forEach(b=>b.onclick=()=>{const k=b.da
 function xtBack(){if(!XT_PENDING)return;if(Date.now()-XT_PENDING.t>=4000){const o=xtGet();o[XT_PENDING.k]=true;xtSet(o)}else{toast('Please complete the task on X, then come back.')}XT_PENDING=null;xtRender();updateMintUI()}
 window.addEventListener('focus',xtBack);document.addEventListener('visibilitychange',()=>{if(!document.hidden)xtBack()});
 $('#connectBtn').onclick=()=>{if(S.wallet){openDisconnectDlg();return}openWalletPicker();};
+try{const cb=$('#connectBtn'),pb=$('#connectBtnPlay');if(cb&&pb){pb.onclick=()=>cb.click();const sync=()=>{pb.textContent=cb.textContent};sync();new MutationObserver(sync).observe(cb,{childList:true,characterData:true,subtree:true})}}catch(e){}
 $('#mintBtn').onclick=async()=>{
   const m=$('#walletMsg');
   if(!S.wallet){m.textContent='Connect your wallet first.';return}
