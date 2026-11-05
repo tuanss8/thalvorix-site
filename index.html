@@ -1111,7 +1111,7 @@ function rpgBattle(cfg){
 }
 
 function sizeCv(){}
-document.getElementById('startBtn').onclick=duelStart;
+document.getElementById('startBtn').onclick=()=>{if(!S.wallet){openWalletPicker();return}duelStart()};
 // Play Game start: NFT owners only (free roster removed).
 function rpgRankedStart(){
   const n=pickedNft();if(!n){$('#rpgResult').innerHTML='<p class="x-muted">Play Game is for NFT owners only. Mint a free NFT or buy one on the NFT Market first.</p>';return}
