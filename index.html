@@ -167,8 +167,8 @@
       .duel-banner.duel-anim{animation:duelPop .7s ease}
       @keyframes duelPop{0%{transform:scale(.6);opacity:0}50%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}
       .duel-mid{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:6px 0}
-      .puzzle-grid{display:grid;grid-template-columns:repeat(5,48px);gap:3px;width:252px;margin:4px 0}
-      .puzzle-tile{width:48px;height:30px;background-image:url(thalvorix-hero.png);background-size:240px 240px;border:1px solid var(--x-line);border-radius:6px;cursor:pointer;color:#fff;text-shadow:0 1px 3px #000;font:700 13px/1 system-ui;padding:4px;text-align:left}
+      .puzzle-grid{display:grid;grid-template-columns:repeat(3,80px);gap:3px;width:246px;margin:4px 0}
+      .puzzle-tile{width:80px;height:80px;background-image:url(thalvorix-hero.png);background-size:240px 240px;border:1px solid var(--x-line);border-radius:6px;cursor:pointer;color:#fff;text-shadow:0 1px 3px #000;font:700 13px/1 system-ui;padding:4px;text-align:left}
       .puzzle-empty{background:#14101c;border:1px dashed var(--x-line);cursor:default}
     #p-play.play-closed>:not(#playComingSoon){display:none!important}
 
@@ -326,8 +326,9 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
             <p class="x-muted" id="walletMsg">Connect your wallet to check free mint eligibility.</p>
             <div class="x-box" id="xTaskBox" hidden>
               <p><b>X tasks</b></p>
-              <p class="x-muted">Complete all 3 tasks to unlock the puzzle.</p>
-              <div class="x-row" style="flex-wrap:wrap;gap:8px"><button class="btn" data-xtask="follow">1. Follow @THALVORIX</button><button class="btn" data-xtask="like">2. Like the post</button><button class="btn" data-xtask="rt">3. Retweet the post</button></div>
+              <p class="x-muted">Complete all 4 tasks to unlock the puzzle.</p>
+              <div class="x-row" style="flex-wrap:wrap;gap:8px"><button class="btn" data-xtask="follow">1. Follow @THALVORIX</button><button class="btn" data-xtask="like">2. Like the post</button><button class="btn" data-xtask="rt">3. Retweet the post</button><button class="btn" data-xtask="quote">4. Quote the post</button></div>
+              <div class="x-box" id="xQuoteBox" style="margin-top:8px" hidden><p class="x-muted">Paste the link of your Quote post below, then press Verify.</p><div class="x-row" style="gap:8px;flex-wrap:wrap"><input class="x-in" id="xQuoteIn" placeholder="Paste your Quote link (https://x.com/you/status/...)" style="flex:1 1 240px"><button class="x-cta" id="xQuoteVerify">Verify</button></div><p class="x-muted" id="xQuoteMsg"></p></div>
               <p class="x-muted" id="xTaskStatus"></p>
               <p class="x-muted"><a href="https://x.com/THALVORIX/status/2118167559451316390?a=1VoJe5DVnAhY30VZwbw&amp;s=20" target="_blank" rel="noopener">View the post on X</a></p>
             </div>
@@ -926,12 +927,12 @@ const itemDetail=i=>`<div class="x-irow">${ico(i,1)}<div><h3>${i.name}</h3><p cl
 // 2000 player mints (player mints = site minted counter minus the 1200
 // initial seed: 1140 + 60 market listings popped at load). No UI text
 // mentions this escalation.
-let PUZZLE={wallet:'',tiles:Array.from({length:39},(_,i)=>i).concat([-1]),empty:39,solved:false,moves:0};
-function puzzleShuffleMoves(){return 250}
-function puzzleRender(){const g=$('#puzzleGrid');g.innerHTML=PUZZLE.tiles.map((v,i)=>v===-1?`<div class="puzzle-tile puzzle-empty" data-pos="${i}"></div>`:`<div class="puzzle-tile" data-pos="${i}" style="background-position:${-(v%5)*48}px ${-Math.floor(v/5)*30}px">${v+1}</div>`).join('')}
-function puzzleSolvedCheck(){return PUZZLE.tiles.every((v,i)=>v===(i===39?-1:i))}
-function puzzleNew(){PUZZLE.wallet=S.wallet;PUZZLE.tiles=Array.from({length:39},(_,i)=>i).concat([-1]);PUZZLE.empty=39;PUZZLE.solved=false;PUZZLE.moves=0;const moves=puzzleShuffleMoves();let prev=-1;for(let s=0;s<moves;s++){const e=PUZZLE.empty,r=Math.floor(e/5),c=e%5,opts=[];if(r>0)opts.push(e-5);if(r<7)opts.push(e+5);if(c>0)opts.push(e-1);if(c<4)opts.push(e+1);const cand=opts.filter(o=>o!==prev);const nxt=cand[Math.floor(Math.random()*cand.length)];prev=e;PUZZLE.tiles[e]=PUZZLE.tiles[nxt];PUZZLE.tiles[nxt]=-1;PUZZLE.empty=nxt}if(puzzleSolvedCheck())puzzleNew();puzzleRender();$('#puzzleStatus').textContent='New puzzle ready. Arrange the tiles until the picture is complete.';$('#puzzleResult').textContent=''}
-function puzzleClick(pos){if(PUZZLE.solved||!S.wallet)return;const e=PUZZLE.empty,dr=Math.abs(Math.floor(pos/5)-Math.floor(e/5)),dc=Math.abs((pos%5)-(e%5));if(dr+dc!==1)return;PUZZLE.tiles[e]=PUZZLE.tiles[pos];PUZZLE.tiles[pos]=-1;PUZZLE.empty=pos;PUZZLE.moves++;if(!SFX_MUTED&&!(D&&D.muted))clickSfx();puzzleRender();if(puzzleSolvedCheck()){PUZZLE.solved=true;sessSave({ps:true});$('#puzzleStatus').textContent='Puzzle solved!';$('#puzzleResult').textContent=`Picture complete in ${PUZZLE.moves} moves. Now complete the X tasks to unlock Mint.`;updateMintUI()}else{$('#puzzleStatus').textContent=`Moves: ${PUZZLE.moves}. Keep going until the picture is complete.`}}
+let PUZZLE={wallet:'',tiles:Array.from({length:8},(_,i)=>i).concat([-1]),empty:8,solved:false,moves:0};
+function puzzleShuffleMoves(){return 60}
+function puzzleRender(){const g=$('#puzzleGrid');g.innerHTML=PUZZLE.tiles.map((v,i)=>v===-1?`<div class="puzzle-tile puzzle-empty" data-pos="${i}"></div>`:`<div class="puzzle-tile" data-pos="${i}" style="background-position:${-(v%3)*80}px ${-Math.floor(v/3)*80}px">${v+1}</div>`).join('')}
+function puzzleSolvedCheck(){return PUZZLE.tiles.every((v,i)=>v===(i===8?-1:i))}
+function puzzleNew(){PUZZLE.wallet=S.wallet;PUZZLE.tiles=Array.from({length:8},(_,i)=>i).concat([-1]);PUZZLE.empty=8;PUZZLE.solved=false;PUZZLE.moves=0;const moves=puzzleShuffleMoves();let prev=-1;for(let s=0;s<moves;s++){const e=PUZZLE.empty,r=Math.floor(e/3),c=e%3,opts=[];if(r>0)opts.push(e-3);if(r<2)opts.push(e+3);if(c>0)opts.push(e-1);if(c<2)opts.push(e+1);const cand=opts.filter(o=>o!==prev);const nxt=cand[Math.floor(Math.random()*cand.length)];prev=e;PUZZLE.tiles[e]=PUZZLE.tiles[nxt];PUZZLE.tiles[nxt]=-1;PUZZLE.empty=nxt}if(puzzleSolvedCheck())puzzleNew();puzzleRender();$('#puzzleStatus').textContent='New puzzle ready. Arrange the tiles until the picture is complete.';$('#puzzleResult').textContent=''}
+function puzzleClick(pos){if(PUZZLE.solved||!S.wallet)return;const e=PUZZLE.empty,dr=Math.abs(Math.floor(pos/3)-Math.floor(e/3)),dc=Math.abs((pos%3)-(e%3));if(dr+dc!==1)return;PUZZLE.tiles[e]=PUZZLE.tiles[pos];PUZZLE.tiles[pos]=-1;PUZZLE.empty=pos;PUZZLE.moves++;if(!SFX_MUTED&&!(D&&D.muted))clickSfx();puzzleRender();if(puzzleSolvedCheck()){PUZZLE.solved=true;sessSave({ps:true});$('#puzzleStatus').textContent='Puzzle solved!';$('#puzzleResult').textContent=`Picture complete in ${PUZZLE.moves} moves. Now complete the X tasks to unlock Mint.`;updateMintUI()}else{$('#puzzleStatus').textContent=`Moves: ${PUZZLE.moves}. Keep going until the picture is complete.`}}
 document.getElementById('puzzleGrid').onclick=e=>{const el=e.target.closest('[data-pos]');if(el)puzzleClick(+el.dataset.pos)};
 const _psb=document.getElementById('puzzleShuffleBtn');if(_psb)_psb.onclick=()=>{if(S.wallet)puzzleNew()};
 const NE_MSG='Not eligible. Free mint is for Binance Agent ID holders or BNB Smart Chain users (min. 5 transactions).';
@@ -950,22 +951,23 @@ function updateMintUI(){
 }
 
 /* X tasks gate (before puzzle): follow, like, retweet. Opens X intents; a task counts as done after the user opens it and comes back. */
-const XT_URL={follow:'https://x.com/intent/follow?screen_name=THALVORIX',like:'https://x.com/intent/like?tweet_id=2118167559451316390',rt:'https://x.com/intent/retweet?tweet_id=2118167559451316390'};
+const XT_URL={follow:'https://x.com/intent/follow?screen_name=THALVORIX',like:'https://x.com/intent/like?tweet_id=2118167559451316390',rt:'https://x.com/intent/retweet?tweet_id=2118167559451316390',quote:'https://x.com/intent/post?url='+encodeURIComponent('https://x.com/THALVORIX/status/2118167559451316390')};
 const XT_KEY=()=>'thx_xtasks_'+String(S.wallet||'').toLowerCase();
 function xtGet(){try{return JSON.parse(localStorage.getItem(XT_KEY())||'{}')}catch(e){return {}}}
 function xtSet(o){try{localStorage.setItem(XT_KEY(),JSON.stringify(o))}catch(e){}}
-function xtAllDone(){const o=xtGet();return !!(o.follow&&o.like&&o.rt)}
+function xtAllDone(){const o=xtGet();return !!(o.follow&&o.like&&o.rt&&o.quote)}
 let XT_PENDING=(()=>{try{return JSON.parse(localStorage.getItem('thx_xtpend')||'null')}catch(e){return null}})();
-function xtRender(){const o=xtGet();document.querySelectorAll('[data-xtask]').forEach(b=>{const k=b.dataset.xtask;const base=b.textContent.replace(/^✓ /,'');b.textContent=(o[k]?'✓ ':'')+base;b.className=o[k]?'x-cta':'btn'});const n=['follow','like','rt'].filter(k=>o[k]).length;const st=document.getElementById('xTaskStatus');if(st)st.textContent=n===3?'All X tasks done. Now solve the puzzle to activate Mint.':`${n}/3 tasks done.`}
+document.addEventListener('click',e=>{if(!e.target.closest||!e.target.closest('#xQuoteVerify'))return;const inp=document.getElementById('xQuoteIn'),msg=document.getElementById('xQuoteMsg');const v=(inp&&inp.value||'').trim();const m=v.match(/^https?:\/\/(www\.|mobile\.)?(x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/status\/(\d{5,25})/i);if(!m){if(msg)msg.textContent='Invalid link. Paste the link of your Quote post (https://x.com/username/status/...).';return}if(m[4]==='2118167559451316390'||m[3].toLowerCase()==='thalvorix'){if(msg)msg.textContent='That is the original post. Paste the link of YOUR Quote post.';return}const o=xtGet();o.quote=true;o.quoteLink=v;xtSet(o);if(msg)msg.textContent='Quote verified ✓';toast('Quote task done ✓');xtRender();updateMintUI()});
+function xtRender(){const o=xtGet();document.querySelectorAll('[data-xtask]').forEach(b=>{const k=b.dataset.xtask;const base=b.textContent.replace(/^✓ /,'');b.textContent=(o[k]?'✓ ':'')+base;b.className=o[k]?'x-cta':'btn'});const n=['follow','like','rt','quote'].filter(k=>o[k]).length;const st=document.getElementById('xTaskStatus');if(st)st.textContent=n===4?'All X tasks done. Now solve the puzzle to activate Mint.':`${n}/4 tasks done.`;const qb=document.getElementById('xQuoteBox');if(qb)qb.hidden=!(o.quoteOpened&&!o.quote)}
 document.querySelectorAll('[data-xtask]').forEach(b=>b.onclick=()=>{const k=b.dataset.xtask;XT_PENDING={k,t:Date.now()};try{localStorage.setItem('thx_xtpend',JSON.stringify(XT_PENDING))}catch(e){}window.open(XT_URL[k],'_blank','noopener')});
-function xtBack(){if(!XT_PENDING)return;try{if(typeof tab==='undefined'||tab!=='mint')go('mint');setTimeout(()=>{const xb=document.querySelector('#p-mint [data-xtask]');if(xb)xb.scrollIntoView({behavior:'smooth',block:'center'})},150)}catch(e){}try{localStorage.removeItem('thx_xtpend')}catch(e){}if(Date.now()-XT_PENDING.t>=4000){const o=xtGet();o[XT_PENDING.k]=true;xtSet(o)}else{toast('Please complete the task on X, then come back.')}XT_PENDING=null;xtRender();updateMintUI()}
+function xtBack(){if(XT_PENDING&&XT_PENDING.k==='quote'){try{localStorage.removeItem('thx_xtpend')}catch(e){}const o=xtGet();o.quoteOpened=true;xtSet(o);XT_PENDING=null;try{if(typeof tab==='undefined'||tab!=='mint')go('mint')}catch(e){}xtRender();updateMintUI();setTimeout(()=>{const qi=document.getElementById('xQuoteIn');if(qi){qi.scrollIntoView({behavior:'smooth',block:'center'});qi.focus()}},200);return}if(!XT_PENDING)return;try{if(typeof tab==='undefined'||tab!=='mint')go('mint');setTimeout(()=>{const xb=document.querySelector('#p-mint [data-xtask]');if(xb)xb.scrollIntoView({behavior:'smooth',block:'center'})},150)}catch(e){}try{localStorage.removeItem('thx_xtpend')}catch(e){}if(Date.now()-XT_PENDING.t>=4000){const o=xtGet();o[XT_PENDING.k]=true;xtSet(o)}else{toast('Please complete the task on X, then come back.')}XT_PENDING=null;xtRender();updateMintUI()}
 window.addEventListener('focus',xtBack);document.addEventListener('visibilitychange',()=>{if(!document.hidden)xtBack()});
 $('#connectBtn').onclick=()=>{if(S.wallet){openDisconnectDlg();return}openWalletPicker();};
 try{const cb=$('#connectBtn'),pb=$('#connectBtnPlay');if(cb&&pb){pb.onclick=()=>cb.click();const sync=()=>{pb.textContent=cb.textContent};sync();new MutationObserver(sync).observe(cb,{childList:true,characterData:true,subtree:true})}}catch(e){}
 $('#mintBtn').onclick=async()=>{
   const m=$('#walletMsg');
   if(!S.wallet){m.textContent='Connect your wallet first.';return}
-  if(!xtAllDone()){m.textContent='Complete the 3 X tasks first: follow, like and retweet.';return}
+  if(!xtAllDone()){m.textContent='Complete the 4 X tasks first: follow, like, retweet and quote.';return}
   if(!(PUZZLE.solved&&PUZZLE.wallet===S.wallet)){m.textContent='Solve the puzzle first.';return}
     if(!prov()){m.textContent='Connect a wallet to send this transaction.';openWalletPicker();return}
   if(S.hasAgent===false){m.textContent=NE_MSG;updateMintUI();return}
