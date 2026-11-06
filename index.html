@@ -284,7 +284,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
             <div class="cards">
               <div><h3>1 · Claim</h3><p>Connect your wallet and mint free heroes. Rarity adds up to +15% HP and damage in matches.</p></div>
               <div><h3>2 · Battle</h3><p>Ranked Matches Across Three Lanes<br>Face off against fellow Thalvorix players in Ranked mode, Play your NFT hero to earn bonus.</p></div>
-              <div><h3>3 · Climb</h3><p>8 tiers from Ashen Recruit to Mythic Thalvorian, 10 divisions each. 3 wins in a row pays out loot; 10 in a row pays out again.</p></div>
+              <div><h3>3 · Climb</h3><p>8 tiers from Ashen Recruit to Mythic Thalvorian, 10 divisions each.</p></div>
             </div>
           </section>
           <section class="section" id="ranks">
@@ -309,7 +309,6 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
             <h3>Phase 3: Rise of Champions</h3>
 <ul>
               <li>Full ranked ladder: 8 tiers, from Ashen Recruit to Mythic Thalvorian</li>
-              <li>Promotion rewards: random item drops from Gold Champion and above</li>
               <li>Seasonal leaderboards and community tournaments</li>
             </ul>
             <h3>Phase 4: The Thalvorix Coin</h3>
@@ -335,7 +334,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
 <ul>
               <li>5 rarities: Common, Rare, Epic, Legendary and Mythic</li>
               <li>Equip and gear up: crowns, swords, shields, bows, staves and more</li>
-              <li>Earn through battle: climb the ranks and unlock item drops on promotion, with better odds at higher ranks</li>
+              <li>Earn through battle: climb the ranks and collect loot as you play</li>
               <li>Trade freely: buy and sell items on the Item Market</li>
               <li>Mythic items are the rarest of all, the true mark of a Thalvorian legend</li>
             </ul>
@@ -452,11 +451,10 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
             <div class="x-picker" id="myPick" role="group" aria-label="My NFT heroes"></div>
             <p class="fineprint">Click your NFT on the 5-slot board, then click the enemy NFT you want to fight.</p>
           </div>
-          <aside class="callout" aria-label="Ranked rules" style="margin:18px 0"><p class="callout__head">Rules</p><p class="callout__lead"><strong>Win +1 star, loss −1 star.</strong> 25 stars clear a division; clearing division I promotes you to the next tier's X.</p><p class="fineprint">No demotion below a tier's division X, and Ashen Recruit never loses stars. Past Mythic Thalvorian I, stars count as Mythic Glory points. 3 wins in a row drops a random Epic, Legendary or Mythic item; a 10-win streak drops another. From Gold Champion up, every division promotion drops a random item.</p></aside>
+          <aside class="callout" aria-label="Ranked rules" style="margin:18px 0"><p class="callout__head">Rules</p><p class="callout__lead"><strong>Win +1 star, loss −1 star.</strong> 25 stars clear a division; clearing division I promotes you to the next tier's X.</p><p class="fineprint">No demotion below a tier's division X, and Ashen Recruit never loses stars. Past Mythic Thalvorian I, stars count as Mythic Glory points.</p></aside>
           <h3>Rank ladder</h3>
           <p class="x-muted">8 tiers × 10 divisions, X lowest to I highest. 25 stars per division.</p>
           <ol class="x-ladder" id="ladder"></ol>
-          <div class="table-wrap"><table><caption>Rank reward odds: one random item per division promotion. Ashen Recruit to Silver Sentinel give no drops.</caption><thead><tr><th scope="col">Tier</th><th scope="col" class="t-Common">Common</th><th scope="col" class="t-Rare">Rare</th><th scope="col" class="t-Epic">Epic</th><th scope="col" class="t-Legendary">Legendary</th><th scope="col" class="t-Mythic">Mythic</th></tr></thead><tbody id="oddsBody"></tbody></table></div>
           <div class="table-wrap"><table><caption>Leaderboard</caption><thead><tr><th scope="col">Team</th><th scope="col">Rank</th><th scope="col">Stars</th><th scope="col">Win rate</th></tr></thead><tbody id="lbBody"></tbody></table></div>
         </section>
 
@@ -517,7 +515,7 @@ Tank:[T('Bulwark~Gain a {e} shield of {n}% max HP every 10s.|Thick Hide~{e} skin
 const HEROES=NAMES.map((name,i)=>{const r=Math.floor(i/20),j=i%20,role=ROLES[r],R=rng(i*97+13),s=RS[role],e=(j+r*3)%16,el=ELEM[e],t=SK[role],v=a=>Math.round(a[0]+R()*(a[1]-a[0]));
 const fx=(tp,b)=>({name:el+' '+tp[0],fx:tp[1].replace('{e}',el.toLowerCase()).replace('{n}',Math.round(b*(.8+R()*.4)))});
 return{id:i,name,role,el,col:ECOL[e],hp:v(s[0]),atk:v(s[1]),def:v(s[2]),spd:v(s[3]),range:s[4],emb:`hsl(${hash(name)%360} 55% 32%)`,sk:[['Passive',fx(t[0][j%4],15)],['Skill',fx(t[1][Math.floor(j/4)%5],180)],['Ultimate',fx(t[2][(j+Math.floor(j/4))%4],420)]]}});
-const S={bal:null,thxBal:null,totalMinted:0,freeLeft:null,hasAgent:null,nfts:[],myNfts:[],streak:0,rank:{t:0,d:0,s:0,g:0,w:0,l:0,ts:0},wallet:null,chainOk:false,pick:null,matchesPlayed:0,provider:null,signed:false,apiLogin:false,invError:false};
+const S={bal:null,thxBal:null,totalMinted:0,freeLeft:null,hasAgent:null,nfts:[],myNfts:[],streak:0,rank:{t:0,d:0,s:0,g:0,w:0,l:0,ts:0,tenWinDone:false},wallet:null,chainOk:false,pick:null,matchesPlayed:0,provider:null,signed:false,apiLogin:false,invError:false};
 /* ---------- Real Web3 on BSC mainnet: hand-rolled ABI calls, no libraries ---------- */
 const HERO='0x6D862c8B847323961FCD349ffFbee0133F6B929A',THX='0x4fCdA9835B50BDF454BA96a813d564Ad3060c540',HERO_DEPLOY_BLOCK=131023134,PUB_RPC='https://bsc-mainnet.public.blastapi.io',BSCSCAN='https://bscscan.com';
 const AI_REG='0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F';
@@ -915,8 +913,8 @@ const EGLYPH=[chev(28),chev(22)+chev(32),chev(18)+chev(28)+chev(38),`<path d="M3
 let eid=0;const emb=(t,z)=>{const c=TC[t],id='eg'+(++eid);return`<svg class="x-emb--${t}" width="${z}" height="${z}" viewBox="0 0 64 64" role="img" aria-label="${TIERS[t]} emblem" style="flex:none"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c[0]}"/><stop offset="1" stop-color="${c[1]}"/></linearGradient></defs><g fill="url(#${id})" stroke="${c[2]}" stroke-width="2" stroke-linejoin="round">${EPLATE[t]}</g><g fill="${c[3]}" stroke="${c[3]}">${EGLYPH[t]}</g></svg>`};
 try{const rs=document.getElementById('rankShow');if(rs)rs.innerHTML=TIERS.map((t,i)=>`<li>${emb(i,60)}<b>${t}</b><small>Tier ${i+1}</small></li>`).join('')}catch(e){}
 const SPD=25,starsHtml=s=>(s=Math.min(SPD,s),`<span class="x-stars" role="img" aria-label="${s} of ${SPD} stars"><b>★</b>${s}/${SPD}<span class="x-bar"><i style="width:${s/SPD*100}%"></i></span></span>`);
-/* Division-promotion drop odds from Gold Champion (tier index 4) up: Common/Rare/Epic/Legendary/Mythic % */
-const DROP={4:[50,30,15,4,1],5:[35,33,20,9,3],6:[20,32,28,14,6],7:[5,25,35,23,12]};
+/* Drop odds per rank tier (Common/Rare/Epic/Legendary/Mythic %): tiers 0-3 cap at Epic, 4-5 cap at Legendary, 6-7 up to Mythic. */
+const DROP={0:[50,30,20,0,0],1:[50,30,20,0,0],2:[50,30,20,0,0],3:[50,30,20,0,0],4:[50,30,15,5,0],5:[35,33,20,12,0],6:[20,32,28,14,6],7:[5,25,35,23,12]};
 const MATES=[...Array(4)].map((_,i)=>{const r=rng(500+i);return{tag:pick(['Grim','Night','Ash','Rune','Iron','Storm','Void','Ember'],r)+pick(['fang','howl','blade','veil','born','bane','wing'],r)+Math.floor(r()*99),h:HEROES[Math.floor(r()*100)]}});
 const LA='Crimson,Obsidian,Astral,Hollow,Iron,Ashen,Gilded,Feral,Silent,Storm,Void,Ember,Dread,Lunar'.split(','),LN='Wardens,Reapers,Covenant,Legion,Ravens,Titans,Order,Vanguard,Serpents,Oath,Hounds,Crown'.split(',');
 const LB=[...Array(20)].map((_,i)=>{const r=rng(900+i);return{n:LA[i%14]+' '+LN[(i*5)%12],t:2+Math.floor(r()*6),d:Math.floor(r()*10),s:Math.floor(r()*25),wr:52+Math.floor(r()*20)}});
@@ -1262,25 +1260,26 @@ const duelLPMax=()=>1000+200*(S.rank&&S.rank.t||0);
 function pickInfo(){const n=pickedNft(),cb=comboNfts();$('#pickInfo').innerHTML=n?`Deck combo: <b>${cb.length} NFT${cb.length>1?'s':''}</b> · ${cb.slice(0,6).map(x=>x.hero.name).join(', ')}${cb.length>6?' …':''} · Starting LP <b>${duelLPMax()}</b><br><span class="x-muted">Tap an NFT to add or remove it from your deck.</span>`:`<span class="x-muted">No NFT hero selected. Mint a free NFT or buy one on the NFT Market to play.</span>`;
 const ids=new Set(cb.map(x=>String(x.id)));$$('#playArea [data-pick]').forEach(b=>{const on=ids.has(b.dataset.pick);b.setAttribute('aria-pressed',on);b.style.opacity=on?'1':'.45'})}
 function rPlay(){const m=mine(),R=S.rank,top=R.t===7&&R.d===9;S.pick=m.length?{nft:m[0].id}:null;if(!S.pick){$('#rankCard').innerHTML=`<div><p class="x-muted">Current rank</p><h3>${rankName()}</h3></div>`;$('#teamList').innerHTML=`<li class="x-muted">No NFT hero yet — mint or buy one to play.</li>`;$('#myPick').innerHTML='<p class="x-muted">No NFT heroes yet. <a class="link" href="#" data-go="mint">Mint one free</a> or buy one on the NFT Market.</p>';pickInfo();return}
-$('#rankCard').innerHTML=`${emb(R.t,88)}<div><p class="x-muted">Current rank</p><h3>${rankName()}</h3>${starsHtml(R.s)}${top?`<p class="x-gold">Mythic Glory points: ${R.g}</p>`:''}<p class="x-muted">${R.w}W · ${R.l}L${R.w+R.l?` · ${Math.round(R.w/(R.w+R.l)*100)}% wins`:''} · loot streak ${R.ts%3}/3 · win streak ${S.streak}/10</p></div>`;
+$('#rankCard').innerHTML=`${emb(R.t,88)}<div><p class="x-muted">Current rank</p><h3>${rankName()}</h3>${starsHtml(R.s)}${top?`<p class="x-gold">Mythic Glory points: ${R.g}</p>`:''}<p class="x-muted">${R.w}W · ${R.l}L${R.w+R.l?` · ${Math.round(R.w/(R.w+R.l)*100)}% wins`:''}</p></div>`;
 const n0=pickedNft(),ph=n0?n0.hero:null;
 $('#teamList').innerHTML=`<li>You — ${ph?`${comboNfts().length} NFT combo deck · Starting LP ${duelLPMax()}`:'No NFT hero selected'}</li><li>Enemy opponent</li>`;
 $('#myPick').innerHTML=m.map(n=>`<button data-pick="${n.id}" aria-pressed="false" aria-label="#${n.id} ${n.hero.name}, ${n.rar[0]}, +${n.rar[3]}%">${por(n.hero,72,n.rar[0])}<span class="x-nm">${n.hero.name}</span><span class="t-${n.rar[0]}">${n.rar[0]} ${nftStarsHtml(n.rar[0])}</span></button>`).join('')||'<p class="x-muted">No NFT heroes yet. <a class="link" href="#" data-go="mint">Mint one free</a> or buy one on the NFT Market for a match bonus.</p>';
 pickInfo();
 $('#ladder').innerHTML=TIERS.map((t,i)=>i).reverse().map(i=>`<li class="${i===R.t?'is-cur':''}">${emb(i,44)}<div><b>${TIERS[i]}</b><div class="x-divs">${DIV.map((d,j)=>`<span class="${i===R.t&&j===R.d?'is-cur':i<R.t||(i===R.t&&j<R.d)?'is-done':''}"${i===R.t&&j===R.d?' aria-current="true"':''}>${d}</span>`).join('')}</div>${i===7?'<span class="x-muted">After I: stars count as Mythic Glory points</span>':''}</div></li>`).join('');
-$('#oddsBody').innerHTML=[7,6,5,4].map(t=>`<tr${t===R.t?' class="is-highlight"':''}><th scope="row">${TIERS[t]}</th>${DROP[t].map(p=>`<td class="num">${p}%</td>`).join('')}</tr>`).join('');
 const sc=x=>x.t*250+x.d*25+x.s+(x.g||0),me={n:'Your Team',t:R.t,d:R.d,s:R.s,g:R.g,wr:R.w+R.l?Math.round(R.w/(R.w+R.l)*100):0,me:1},rows=[...LB,me].sort((a,b)=>sc(b)-sc(a));
 $('#lbBody').innerHTML=rows.map((x,i)=>`<tr${x.me?' class="is-highlight"':''}><th scope="row">${i+1}. ${x.n}</th><td>${rankName(x.t,x.d)}</td><td class="num">${Math.min(SPD,x.s)}/${SPD}${x.g?` +${x.g} Glory`:''}</td><td class="num">${x.wr}%</td></tr>`).join('');
 sizeCv()}
-function rewardItem(k){let c=ITEMS.filter(i=>!i.owned&&(k==null?i.tk>=2:i.tk===k));if(!c.length)c=ITEMS.filter(i=>!i.owned);const it=c[Math.floor(Math.random()*c.length)];it.owned=true;return it}
-const rollDrop=t=>{let x=Math.random()*100,k=0;for(;k<4;k++){x-=DROP[t][k];if(x<0)break}return rewardItem(k)};let drops=[];
+function rewardItem(k){let c=ITEMS.filter(i=>!i.owned&&(k==null?i.tk>=2:i.tk===k));if(!c.length)c=ITEMS.filter(i=>!i.owned&&(k==null||i.tk<=k));if(!c.length)c=ITEMS.filter(i=>!i.owned);const it=c[Math.floor(Math.random()*c.length)];it.owned=true;return it}
+const rollDrop=t=>{let x=Math.random()*100,k=0;for(;k<5;k++){x-=DROP[t][k];if(x<0)break}return rewardItem(k)};let drops=[];
 function onEnd(win){const R=S.rank,top=R.t===7&&R.d===9;let m='';drops=[];
-if(win){R.w++;R.ts++;S.streak++;
+if(win){R.w++;S.streak++;
+let promoted=false;
 if(top&&R.s>=SPD){R.g++;m+=' +1 Mythic Glory point.'}
-else{R.s++;m+=' +1 star.';if(R.s>=SPD&&!top){R.s=0;if(R.d<9)R.d++;else{R.t++;R.d=0}m+=` Promoted to ${rankName()}!`;if(R.t>=4){const it=rollDrop(R.t);drops.push(it);m+=` Rank reward: ${it.tier} ${it.name}.`}}else if(top&&R.s===SPD)m+=' Top of the ladder: further wins earn Mythic Glory points.'}
-if(R.ts%3===0){const it=rewardItem();m+=` 3-win streak loot: ${it.tier} ${it.name}.`}
-if(S.streak>=10){const it=rewardItem();S.streak=0;m+=` 10-win streak! Loot: ${it.tier} ${it.name}.`}}
-else{R.l++;R.ts=0;S.streak=0;
+else{R.s++;m+=' +1 star.';if(R.s>=SPD&&!top){R.s=0;if(R.d<9)R.d++;else{R.t++;R.d=0}promoted=true;m+=` Promoted to ${rankName()}!`;}else if(top&&R.s===SPD)m+=' Top of the ladder: further wins earn Mythic Glory points.'}
+if(promoted){const it=rollDrop(R.t);drops.push(it);m+=` Rank reward: ${it.tier} ${it.name}.`;}
+else if(S.streak>=10&&!R.tenWinDone){R.tenWinDone=true;S.streak=0;const it=rollDrop(R.t);drops.push(it);m+=` 10-win streak! Loot: ${it.tier} ${it.name}.`;}
+else if(S.streak>=10){S.streak=0;}}
+else{R.l++;S.streak=0;
 if(R.t===0)m+=' No stars lost in Ashen Recruit.';
 else if(top&&R.g>0){R.g--;m+=' −1 Mythic Glory point.'}
 else if(R.s>0){R.s--;m+=' −1 star.'}
@@ -1331,7 +1330,7 @@ function rpgBattle(cfg){
   const el=cfg.el;
   const log=m=>{if(el.log)el.log.innerHTML='<div>'+m+'</div>'+el.log.innerHTML};
   const render=()=>{if(el.player)el.player.innerHTML=rpgCard(P,'You');if(el.bot)el.bot.innerHTML=rpgCard(B,'Enemy');if(el.cd)el.cd.textContent=`Turn ${st.turn} · Skill ${P.cdS>0?P.cdS+' turns left':'ready'} · Ultimate ${P.cdU>0?P.cdU+' turns left':'ready'}`};
-  const finish=win=>{st.over=true;if(el.result)el.result.innerHTML=`<h3 class="x-gold">${win?'Victory!':'Defeat.'}</h3><p class="x-muted">${win?'Your hero defeated the enemy.':'The enemy defeated your hero.'}</p>`;if(cfg.mode==='ranked'){S.matchesPlayed++;let m=onEnd(win);saveItemsIfWallet();if(el.result)el.result.innerHTML+=`<p>${m}</p>`;render();if(drops.length)openModal(`<div class="x-drop"><p class="callout__head">Rank reward · ${rankName()}</p>${drops.map(it=>`${ico(it,1)}<h3>${it.name}</h3><p class="t-${it.tier}" style="font:var(--type-heading)">${it.tier}</p><p class="x-muted">${it.type} · ${it.el} · value ${fmt(it.price)}. Added to your inventory. Claim it in the Item Market to sell it for BNB.</p>`).join('')}<button class="x-cta" data-close>Collect</button></div>`)}};
+  const finish=win=>{st.over=true;if(el.result)el.result.innerHTML=`<h3 class="x-gold">${win?'Victory!':'Defeat.'}</h3><p class="x-muted">${win?'Your hero defeated the enemy.':'The enemy defeated your hero.'}</p>`;if(cfg.mode==='ranked'){S.matchesPlayed++;let m=onEnd(win);saveItemsIfWallet();if(el.result)el.result.innerHTML+=`<p>${m}</p>`;render();if(drops.length)openModal(`<div class="x-drop"><p class="callout__head">Reward · ${rankName()}</p>${drops.map(it=>`${ico(it,1)}<h3>${it.name}</h3><p class="t-${it.tier}" style="font:var(--type-heading)">${it.tier}</p><p class="x-muted">${it.type} · ${it.el} · value ${fmt(it.price)}. Added to your inventory. Claim it in the Item Market to sell it for BNB.</p>`).join('')}<button class="x-cta" data-close>Collect</button></div>`)}};
   const botTurn=()=>{
     if(st.over)return;
     let kind='basic',mult=1;
@@ -1432,7 +1431,7 @@ function duelVoice(h,text,id){const S2=window.speechSynthesis;if(!S2||!h||(typeo
  try{S2.cancel()}catch(e){}S2.speak(u);setTimeout(()=>{try{S2.cancel()}catch(e){}},7000)}
 try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices()}}catch(e){}
 function duelCheck(){if(!D||!D.active)return;if(D.lpB>0&&D.lpB<=300&&!D.saidB&&D.lpP>0){D.saidB=true;duelSpeak(false)}else if(D.lpP>0&&D.lpP<=300&&!D.saidP&&D.lpB>0){D.saidP=true;duelSpeak(true)}if(D.lpB<=0){duelFinish(true);return}if(D.lpP<=0){duelFinish(false);return}const oP=!duelLeft('P'),oB=!duelLeft('B');if(oP&&oB){D.outWhy='both';const w=D.lpP>D.lpB;if(w)D.lpB=0;else D.lpP=0;try{duelRender()}catch(e){}duelFinish(w)}else if(oP){D.outWhy='P';D.lpP=0;try{duelRender()}catch(e){}duelLog('You have no cards left. Your LP drops to 0.');duelFinish(false)}else if(oB){D.outWhy='B';D.lpB=0;try{duelRender()}catch(e){}duelLog('The enemy has no cards left. Enemy LP drops to 0.');duelFinish(true)}}
-function duelFinish(win){if(!D||!D.active)return;duelHideCursor();setTimeout(()=>{const nb=document.getElementById('duelNextBtn'),pb=document.getElementById('duelBanner');if(nb&&win){nb.hidden=false;if(pb)nb.style.top=(pb.offsetTop+pb.offsetHeight/2)+'px'}},50);D.active=false;D.phase='Over';D.sel=null;duelBanner(win?'Victory!':'Defeat');duelSfx(win?'win':'lose');S.matchesPlayed++;const m=onEnd(win);saveItemsIfWallet();$('#duelResult').innerHTML=`<h3 class="x-gold">${win?'Victory!':'Defeat.'}</h3><p>${D.outWhy==='B'?'The enemy ran out of cards and cannot continue. You win!':D.outWhy==='P'?'You ran out of cards and cannot continue. The enemy wins.':D.outWhy==='both'?'Both sides ran out of cards. '+(win?'Your LP is higher, you win!':'Your LP is not higher, the enemy wins.'):win?'Enemy LP depleted. Duel Arena won.':'Your LP depleted. The enemy won the duel.'}</p><p>${m}</p>`;render();if(drops.length)openModal(`<div class="x-drop"><p class="callout__head">Rank reward · ${rankName()}</p>${drops.map(it=>`${ico(it,1)}<h3>${it.name}</h3><p class="t-${it.tier}" style="font:var(--type-heading)">${it.tier}</p><p class="x-muted">${it.type} · ${it.el} · value ${fmt(it.price)}. Added to your inventory. Claim it in the Item Market to sell it for BNB.</p>`).join('')}<button class="x-cta" data-close>Collect</button></div>`);duelRender()}
+function duelFinish(win){if(!D||!D.active)return;duelHideCursor();setTimeout(()=>{const nb=document.getElementById('duelNextBtn'),pb=document.getElementById('duelBanner');if(nb&&win){nb.hidden=false;if(pb)nb.style.top=(pb.offsetTop+pb.offsetHeight/2)+'px'}},50);D.active=false;D.phase='Over';D.sel=null;duelBanner(win?'Victory!':'Defeat');duelSfx(win?'win':'lose');S.matchesPlayed++;const m=onEnd(win);saveItemsIfWallet();$('#duelResult').innerHTML=`<h3 class="x-gold">${win?'Victory!':'Defeat.'}</h3><p>${D.outWhy==='B'?'The enemy ran out of cards and cannot continue. You win!':D.outWhy==='P'?'You ran out of cards and cannot continue. The enemy wins.':D.outWhy==='both'?'Both sides ran out of cards. '+(win?'Your LP is higher, you win!':'Your LP is not higher, the enemy wins.'):win?'Enemy LP depleted. Duel Arena won.':'Your LP depleted. The enemy won the duel.'}</p><p>${m}</p>`;render();if(drops.length)openModal(`<div class="x-drop"><p class="callout__head">Reward · ${rankName()}</p>${drops.map(it=>`${ico(it,1)}<h3>${it.name}</h3><p class="t-${it.tier}" style="font:var(--type-heading)">${it.tier}</p><p class="x-muted">${it.type} · ${it.el} · value ${fmt(it.price)}. Added to your inventory. Claim it in the Item Market to sell it for BNB.</p>`).join('')}<button class="x-cta" data-close>Collect</button></div>`);duelRender()}
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#duelNextBtn')){duelStart();const bx=document.querySelector('.duel-box');if(bx)bx.scrollIntoView({behavior:'smooth',block:'start'})}});
 function duelPoint(sel,i,tap,en){const bx=document.querySelector('#p-play .duel-box'),cu=document.getElementById('duelCursor'),f=document.querySelector(sel);if(!bx||!cu||!f||!f.children[i])return;const a=bx.getBoundingClientRect(),r=f.children[i].getBoundingClientRect(),cx=r.left-a.left+r.width/2,cy=r.top-a.top+r.height*0.5;cu.classList.toggle('enemy',!!en);cu.style.left=(en?cx-35:cx-13)+'px';cu.style.top=(en?cy-54:cy-2)+'px';cu.classList.add('on');if(tap){cu.classList.remove('tap');void cu.offsetWidth;cu.classList.add('tap')}}
 function duelHideCursor(){const cu=document.getElementById('duelCursor');if(cu)cu.classList.remove('on')}
