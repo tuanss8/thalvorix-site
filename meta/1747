@@ -1,0 +1,28 @@
+{
+  "name": "Jharvok #1747",
+  "description": "Thalvorix Hero NFT. Jharvok is a Tank of Common rarity, wielding Shadow power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h87.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Jharvok"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Tank"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Shadow"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 87
+    }
+  ]
+}

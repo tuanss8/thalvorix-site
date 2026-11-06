@@ -1,0 +1,28 @@
+{
+  "name": "Rhazelle #1042",
+  "description": "Thalvorix Hero NFT. Rhazelle is a Mage of Legendary rarity, wielding Frost power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h17.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Rhazelle"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Mage"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 17
+    }
+  ]
+}

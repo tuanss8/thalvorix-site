@@ -1,0 +1,28 @@
+{
+  "name": "Wolfrath #927",
+  "description": "Thalvorix Hero NFT. Wolfrath is a Fighter of Uncommon rarity, wielding Crystal power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h48.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Wolfrath"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Fighter"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Crystal"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 48
+    }
+  ]
+}

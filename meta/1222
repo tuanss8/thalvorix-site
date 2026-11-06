@@ -1,0 +1,28 @@
+{
+  "name": "Irixa #1222",
+  "description": "Thalvorix Hero NFT. Irixa is a Tank of Common rarity, wielding Storm power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h86.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Irixa"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Tank"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Storm"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 86
+    }
+  ]
+}

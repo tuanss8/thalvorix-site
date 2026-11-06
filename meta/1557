@@ -1,0 +1,28 @@
+{
+  "name": "Cyrelle #1557",
+  "description": "Thalvorix Hero NFT. Cyrelle is a Marksman of Epic rarity, wielding Wind power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h28.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Cyrelle"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Marksman"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 28
+    }
+  ]
+}

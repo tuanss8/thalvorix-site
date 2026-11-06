@@ -1,0 +1,28 @@
+{
+  "name": "Quintara #945",
+  "description": "Thalvorix Hero NFT. Quintara is a Tank of Uncommon rarity, wielding Earth power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h94.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Quintara"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Tank"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Earth"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 94
+    }
+  ]
+}

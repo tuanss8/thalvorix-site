@@ -1,0 +1,28 @@
+{
+  "name": "Faelith #1038",
+  "description": "Thalvorix Hero NFT. Faelith is a Marksman of Common rarity, wielding Crystal power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h31.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Faelith"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Marksman"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Crystal"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 31
+    }
+  ]
+}

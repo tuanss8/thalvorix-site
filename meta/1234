@@ -1,0 +1,28 @@
+{
+  "name": "Korvessa #1234",
+  "description": "Thalvorix Hero NFT. Korvessa is a Assassin of Epic rarity, wielding Wind power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h62.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Korvessa"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 62
+    }
+  ]
+}

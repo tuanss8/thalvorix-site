@@ -1,0 +1,28 @@
+{
+  "name": "Mordekai #1485",
+  "description": "Thalvorix Hero NFT. Mordekai is a Tank of Rare rarity, wielding Time power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h90.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Mordekai"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Tank"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Time"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 90
+    }
+  ]
+}

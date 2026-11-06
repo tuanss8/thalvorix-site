@@ -1,0 +1,28 @@
+{
+  "name": "Elyndor #1032",
+  "description": "Thalvorix Hero NFT. Elyndor is a Mage of Common rarity, wielding Nature power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h4.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Elyndor"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Mage"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Nature"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 4
+    }
+  ]
+}

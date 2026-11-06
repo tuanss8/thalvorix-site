@@ -1,0 +1,28 @@
+{
+  "name": "Sylvaris #1305",
+  "description": "Thalvorix Hero NFT. Sylvaris is a Mage of Common rarity, wielding Storm power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h18.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Sylvaris"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Mage"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Storm"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 18
+    }
+  ]
+}

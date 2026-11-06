@@ -1,0 +1,28 @@
+{
+  "name": "Skarlith #1329",
+  "description": "Thalvorix Hero NFT. Skarlith is a Assassin of Common rarity, wielding Shadow power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h70.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Skarlith"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Shadow"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 70
+    }
+  ]
+}

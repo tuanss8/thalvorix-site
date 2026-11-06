@@ -1,0 +1,28 @@
+{
+  "name": "Quessa #1530",
+  "description": "Thalvorix Hero NFT. Quessa is a Assassin of Common rarity, wielding Frost power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h68.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Quessa"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 68
+    }
+  ]
+}

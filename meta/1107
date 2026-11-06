@@ -1,0 +1,28 @@
+{
+  "name": "Ashkarra #1107",
+  "description": "Thalvorix Hero NFT. Ashkarra is a Marksman of Uncommon rarity, wielding Sound power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h26.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Ashkarra"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Marksman"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 26
+    }
+  ]
+}

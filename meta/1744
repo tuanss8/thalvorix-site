@@ -1,0 +1,28 @@
+{
+  "name": "Jaskarn #1744",
+  "description": "Thalvorix Hero NFT. Jaskarn is a Marksman of Common rarity, wielding Storm power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h35.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Jaskarn"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Marksman"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Storm"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 35
+    }
+  ]
+}
