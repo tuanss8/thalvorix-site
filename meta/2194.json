@@ -1,0 +1,28 @@
+{
+  "name": "Wyrmhal #2194",
+  "description": "Thalvorix Hero NFT. Wyrmhal is a Marksman of Common rarity, wielding Blood power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h22.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Wyrmhal"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Marksman"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Blood"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 22
+    }
+  ]
+}

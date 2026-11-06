@@ -1,0 +1,28 @@
+{
+  "name": "Orrikan #1942",
+  "description": "Thalvorix Hero NFT. Orrikan is a Mage of Common rarity, wielding Crystal power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h14.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Orrikan"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Mage"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Crystal"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 14
+    }
+  ]
+}

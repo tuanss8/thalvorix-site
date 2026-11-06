@@ -1,0 +1,28 @@
+{
+  "name": "Bryndis #2145",
+  "description": "Thalvorix Hero NFT. Bryndis is a Fighter of Uncommon rarity, wielding Shadow power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h53.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Bryndis"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Fighter"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Shadow"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 53
+    }
+  ]
+}

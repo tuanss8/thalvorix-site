@@ -1,0 +1,28 @@
+{
+  "name": "Eshvara #2154",
+  "description": "Thalvorix Hero NFT. Eshvara is a Tank of Common rarity, wielding Crystal power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h82.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Eshvara"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Tank"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Crystal"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 82
+    }
+  ]
+}

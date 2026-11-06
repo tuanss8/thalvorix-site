@@ -1,0 +1,28 @@
+{
+  "name": "Gorvalis #1953",
+  "description": "Thalvorix Hero NFT. Gorvalis is a Mage of Epic rarity, wielding Time power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h6.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Gorvalis"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Mage"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Time"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 6
+    }
+  ]
+}

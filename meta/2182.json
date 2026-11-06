@@ -1,0 +1,28 @@
+{
+  "name": "Vexmora #2182",
+  "description": "Thalvorix Hero NFT. Vexmora is a Fighter of Epic rarity, wielding Arcane power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h47.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Vexmora"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Fighter"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Arcane"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 47
+    }
+  ]
+}
