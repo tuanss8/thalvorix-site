@@ -552,6 +552,8 @@ function rankSigKey(w){return 'thx_rsig_'+String(w).toLowerCase()}
 async function rankSig(w){try{const c=JSON.parse(localStorage.getItem(rankSigKey(w))||'null');if(c&&c.msg&&c.sig&&Date.now()-c.iss<29*864e5)return c}catch(e){}if(sessionStorage.getItem('thx_rsig_no'))return null;const p=prov();if(!p)return null;try{const acc=await p.request({method:'eth_accounts'});if(!acc||!acc.some(a=>String(a).toLowerCase()===String(w).toLowerCase()))return null;const iss=Date.now(),msg='Thalvorix: save my game rank\nWallet: '+w+'\nIssued: '+iss;const hex='0x'+Array.from(new TextEncoder().encode(msg)).map(b=>b.toString(16).padStart(2,'0')).join('');toast('Sign once in your wallet to save your rank online.');const sig=await p.request({method:'personal_sign',params:[hex,w]});const c={msg,sig,iss};localStorage.setItem(rankSigKey(w),JSON.stringify(c));return c}catch(e){sessionStorage.setItem('thx_rsig_no','1');toast('Rank saved on this device only.');return null}}
 let rankPushT=null;function rankCloudPush(w){clearTimeout(rankPushT);rankPushT=setTimeout(async()=>{if(!S.wallet||S.wallet.toLowerCase()!==String(w).toLowerCase())return;const c=await rankSig(w);if(!c)return;try{const r=await fetch(SB_URL+'/functions/v1/save-rank',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w,msg:c.msg,sig:c.sig,data:{rank:S.rank,streak:S.streak||0,mp:S.matchesPlayed||0}})});if(r.status===401)localStorage.removeItem(rankSigKey(w))}catch(e){}},800)}
 function saveItemsIfWallet(){if(S.wallet){itemsSave(S.wallet);rankSave(S.wallet)}}
+let LB_REAL=[];
+async function loadLeaderboard(){if(typeof fetch!=='function')return;try{const r=await fetch(SB_URL+'/rest/v1/ranks?select=wallet,data&limit=100',{headers:{apikey:SB_KEY}});const a=await r.json();if(!Array.isArray(a))return;LB_REAL=a.filter(x=>x&&x.data&&x.data.rank).map(x=>{const rk=x.data.rank,w=rk.w||0,l=rk.l||0;return{n:shortAddr(x.wallet),wallet:String(x.wallet).toLowerCase(),t:rk.t||0,d:rk.d||0,s:rk.s||0,g:rk.g||0,wr:(w+l)?Math.round(w/(w+l)*100):0}})}catch(e){}try{if(tab==='play')render()}catch(e){}}
 const boxKey=w=>'thalvorix_boxes_'+String(w).toLowerCase();
 function boxesLoad(w){try{const a=JSON.parse(localStorage.getItem(boxKey(w))||'[]');if(!Array.isArray(a))return;S.boxes=a.filter(id=>ITEMS[id]);S.boxes.forEach(id=>{ITEMS[id].boxed=true})}catch(e){S.boxes=[]}}
 function boxesSave(w){try{localStorage.setItem(boxKey(w),JSON.stringify(S.boxes))}catch(e){}}
@@ -925,13 +927,11 @@ const SPD=25,starsHtml=s=>(s=Math.min(SPD,s),`<span class="x-stars" role="img" a
 /* Drop odds per rank tier (Common/Rare/Epic/Legendary/Mythic %): tiers 0-3 cap at Epic, 4-5 cap at Legendary, 6-7 up to Mythic. */
 const DROP={0:[50,30,20,0,0],1:[50,30,20,0,0],2:[50,30,20,0,0],3:[50,30,20,0,0],4:[50,30,15,5,0],5:[35,33,20,12,0],6:[20,32,28,14,6],7:[5,25,35,23,12]};
 const MATES=[...Array(4)].map((_,i)=>{const r=rng(500+i);return{tag:pick(['Grim','Night','Ash','Rune','Iron','Storm','Void','Ember'],r)+pick(['fang','howl','blade','veil','born','bane','wing'],r)+Math.floor(r()*99),h:HEROES[Math.floor(r()*100)]}});
-const LA='Crimson,Obsidian,Astral,Hollow,Iron,Ashen,Gilded,Feral,Silent,Storm,Void,Ember,Dread,Lunar'.split(','),LN='Wardens,Reapers,Covenant,Legion,Ravens,Titans,Order,Vanguard,Serpents,Oath,Hounds,Crown'.split(',');
-const LB=[...Array(20)].map((_,i)=>{const r=rng(900+i);return{n:LA[i%14]+' '+LN[(i*5)%12],t:2+Math.floor(r()*6),d:Math.floor(r()*10),s:Math.floor(r()*25),wr:52+Math.floor(r()*20)}});
 const fmt=n=>n.toFixed(n>0&&n<.01?Math.min(6,2-Math.floor(Math.log10(n))):3).replace(/(\.\d{3}\d*?)0+$/,'$1')+' BNB',FEE=.025,feeOf=p=>p*FEE,netOf=p=>p-p*FEE,feeTxt=p=>``,
 confirmDlg=(t,p,ok,label,extra='')=>openModal(`<h3>${t}</h3>${extra}<p>Price: <b class="x-gold">${fmt(p)}</b></p><div class="x-row">${ok}<button class="btn" data-close>Cancel</button></div>`),mine=()=>S.myNfts;const findNft=id=>S.myNfts.find(n=>n.id==id)||S.nfts.find(n=>n.id==id);
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,3500)}
 let tab='home';
-function go(t){tab=t;try{sessionStorage.setItem('thx_tab',t)}catch(e){}$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
+function go(t){tab=t;try{sessionStorage.setItem('thx_tab',t)}catch(e){}$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}try{loadLeaderboard()}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
 $('#tabs').onclick=e=>{const b=e.target.closest('button[data-t]');if(!b)return;go(b.dataset.t)};
 // ---------- Settings: language switcher (EN / ID / ZH / JA / HI) ----------
 const I18N={
@@ -1276,7 +1276,7 @@ $('#teamList').innerHTML=`<li>You — ${ph?`${comboNfts().length} NFT combo deck
 $('#myPick').innerHTML=m.map(n=>`<button data-pick="${n.id}" aria-pressed="false" aria-label="#${n.id} ${n.hero.name}, ${n.rar[0]}, +${n.rar[3]}%">${por(n.hero,72,n.rar[0])}<span class="x-nm">${n.hero.name}</span><span class="t-${n.rar[0]}">${n.rar[0]} ${nftStarsHtml(n.rar[0])}</span></button>`).join('')||'<p class="x-muted">No NFT heroes yet. <a class="link" href="#" data-go="mint">Mint one free</a> or buy one on the NFT Market for a match bonus.</p>';
 pickInfo();
 $('#ladder').innerHTML=TIERS.map((t,i)=>i).reverse().map(i=>`<li class="${i===R.t?'is-cur':''}">${emb(i,44)}<div><b>${TIERS[i]}</b><div class="x-divs">${DIV.map((d,j)=>`<span class="${i===R.t&&j===R.d?'is-cur':i<R.t||(i===R.t&&j<R.d)?'is-done':''}"${i===R.t&&j===R.d?' aria-current="true"':''}>${d}</span>`).join('')}</div>${i===7?'<span class="x-muted">After I: stars count as Mythic Glory points</span>':''}</div></li>`).join('');
-const sc=x=>x.t*250+x.d*25+x.s+(x.g||0),me={n:'Your Team',t:R.t,d:R.d,s:R.s,g:R.g,wr:R.w+R.l?Math.round(R.w/(R.w+R.l)*100):0,me:1},rows=[...LB,me].sort((a,b)=>sc(b)-sc(a));
+const sc=x=>x.t*250+x.d*25+x.s+(x.g||0),me={n:'Your Team',t:R.t,d:R.d,s:R.s,g:R.g,wr:R.w+R.l?Math.round(R.w/(R.w+R.l)*100):0,me:1};let rows;const _mine=S.wallet?LB_REAL.find(x=>x.wallet===S.wallet):null;if(_mine){_mine.n='Your Team';_mine.me=1;rows=[...LB_REAL].sort((a,b)=>sc(b)-sc(a))}else rows=[...LB_REAL,me].sort((a,b)=>sc(b)-sc(a));rows=rows.slice(0,20);
 $('#lbBody').innerHTML=rows.map((x,i)=>`<tr${x.me?' class="is-highlight"':''}><th scope="row">${i+1}. ${x.n}</th><td>${rankName(x.t,x.d)}</td><td class="num">${Math.min(SPD,x.s)}/${SPD}${x.g?` +${x.g} Glory`:''}</td><td class="num">${x.wr}%</td></tr>`).join('');
 sizeCv()}
 function rewardItem(k){let c=ITEMS.filter(i=>!i.owned&&!i.boxed&&(k==null?i.tk>=2:i.tk===k));if(!c.length)c=ITEMS.filter(i=>!i.owned&&!i.boxed&&(k==null||i.tk<=k));if(!c.length)c=ITEMS.filter(i=>!i.owned&&!i.boxed);const it=c[Math.floor(Math.random()*c.length)];it.owned=true;return it}
@@ -1661,6 +1661,7 @@ let oriF=0,oriOn=false;const onOri=e=>{if(RM.matches||e.beta==null||oriF)return;
 function askTilt(){if(oriOn||RM.matches||!window.DeviceOrientationEvent)return;oriOn=true;if(typeof DeviceOrientationEvent.requestPermission==='function')DeviceOrientationEvent.requestPermission().then(r=>{if(r==='granted')addEventListener('deviceorientation',onOri)}).catch(()=>{});else addEventListener('deviceorientation',onOri)}
 if(window.DeviceOrientationEvent&&typeof DeviceOrientationEvent.requestPermission!=='function'&&matchMedia('(pointer:coarse)').matches)askTilt();
 render();
+try{loadLeaderboard()}catch(e){}
 /* Web3 init: read-only chain refresh + provider listeners (no wallet required) */
 attachProvListeners(prov());
 refreshChain().catch(()=>{});
