@@ -143,6 +143,9 @@
       .x-stars{display:flex;align-items:center;gap:8px;font:var(--type-label);color:var(--text-primary);min-width:180px}
       .x-stars b{color:var(--x-gold)}.x-stars .x-bar{flex:1;min-width:100px}
       .x-drop{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+      .x-mbox{font-size:72px;line-height:1;cursor:pointer;animation:x-mbox-bounce 1s ease-in-out infinite;filter:drop-shadow(0 0 18px rgba(255,200,60,.55))}
+      @keyframes x-mbox-bounce{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-14px) scale(1.1)}}
+      .x-congrats{animation:glowPulse 1.8s ease-in-out infinite}
       .x-emb--7{animation:x-mglow 3s ease-in-out infinite}
       @keyframes x-mglow{50%{filter:drop-shadow(0 0 8px #ff7a3d)}}
       .x-rankshow{list-style:none;margin:12px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}@media(min-width:900px){.x-rankshow{grid-template-columns:repeat(8,1fr)}}.x-rankshow li{display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px;border-radius:var(--r-m);border:1px solid var(--x-line);background:var(--x-panel);text-align:center}.x-rankshow b{font-size:12px;line-height:1.2}.x-rankshow small{font-size:11px;opacity:.65}
@@ -467,6 +470,8 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
           <div class="x-grid" id="invHeroes"></div>
           <h3>Items</h3>
           <div class="x-grid" id="invItems"></div>
+          <h3>Mystery Boxes</h3>
+          <div class="x-grid" id="invBoxes"></div>
         </section>
         <section class="section x-panel" id="p-token" hidden>
           <div class="x-box" id="tokenComingSoon"><h2>Coming Soon</h2></div>
@@ -515,7 +520,7 @@ Tank:[T('Bulwark~Gain a {e} shield of {n}% max HP every 10s.|Thick Hide~{e} skin
 const HEROES=NAMES.map((name,i)=>{const r=Math.floor(i/20),j=i%20,role=ROLES[r],R=rng(i*97+13),s=RS[role],e=(j+r*3)%16,el=ELEM[e],t=SK[role],v=a=>Math.round(a[0]+R()*(a[1]-a[0]));
 const fx=(tp,b)=>({name:el+' '+tp[0],fx:tp[1].replace('{e}',el.toLowerCase()).replace('{n}',Math.round(b*(.8+R()*.4)))});
 return{id:i,name,role,el,col:ECOL[e],hp:v(s[0]),atk:v(s[1]),def:v(s[2]),spd:v(s[3]),range:s[4],emb:`hsl(${hash(name)%360} 55% 32%)`,sk:[['Passive',fx(t[0][j%4],15)],['Skill',fx(t[1][Math.floor(j/4)%5],180)],['Ultimate',fx(t[2][(j+Math.floor(j/4))%4],420)]]}});
-const S={bal:null,thxBal:null,totalMinted:0,freeLeft:null,hasAgent:null,nfts:[],myNfts:[],streak:0,rank:{t:0,d:0,s:0,g:0,w:0,l:0,ts:0,tenWinDone:false},wallet:null,chainOk:false,pick:null,matchesPlayed:0,provider:null,signed:false,apiLogin:false,invError:false};
+const S={bal:null,thxBal:null,totalMinted:0,freeLeft:null,hasAgent:null,nfts:[],myNfts:[],boxes:[],streak:0,rank:{t:0,d:0,s:0,g:0,w:0,l:0,ts:0,tenWinDone:false},wallet:null,chainOk:false,pick:null,matchesPlayed:0,provider:null,signed:false,apiLogin:false,invError:false};
 /* ---------- Real Web3 on BSC mainnet: hand-rolled ABI calls, no libraries ---------- */
 const HERO='0x6D862c8B847323961FCD349ffFbee0133F6B929A',THX='0x4fCdA9835B50BDF454BA96a813d564Ad3060c540',HERO_DEPLOY_BLOCK=131023134,PUB_RPC='https://bsc-mainnet.public.blastapi.io',BSCSCAN='https://bscscan.com';
 const AI_REG='0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F';
@@ -547,6 +552,10 @@ function rankSigKey(w){return 'thx_rsig_'+String(w).toLowerCase()}
 async function rankSig(w){try{const c=JSON.parse(localStorage.getItem(rankSigKey(w))||'null');if(c&&c.msg&&c.sig&&Date.now()-c.iss<29*864e5)return c}catch(e){}if(sessionStorage.getItem('thx_rsig_no'))return null;const p=prov();if(!p)return null;try{const acc=await p.request({method:'eth_accounts'});if(!acc||!acc.some(a=>String(a).toLowerCase()===String(w).toLowerCase()))return null;const iss=Date.now(),msg='Thalvorix: save my game rank\nWallet: '+w+'\nIssued: '+iss;const hex='0x'+Array.from(new TextEncoder().encode(msg)).map(b=>b.toString(16).padStart(2,'0')).join('');toast('Sign once in your wallet to save your rank online.');const sig=await p.request({method:'personal_sign',params:[hex,w]});const c={msg,sig,iss};localStorage.setItem(rankSigKey(w),JSON.stringify(c));return c}catch(e){sessionStorage.setItem('thx_rsig_no','1');toast('Rank saved on this device only.');return null}}
 let rankPushT=null;function rankCloudPush(w){clearTimeout(rankPushT);rankPushT=setTimeout(async()=>{if(!S.wallet||S.wallet.toLowerCase()!==String(w).toLowerCase())return;const c=await rankSig(w);if(!c)return;try{const r=await fetch(SB_URL+'/functions/v1/save-rank',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w,msg:c.msg,sig:c.sig,data:{rank:S.rank,streak:S.streak||0,mp:S.matchesPlayed||0}})});if(r.status===401)localStorage.removeItem(rankSigKey(w))}catch(e){}},800)}
 function saveItemsIfWallet(){if(S.wallet){itemsSave(S.wallet);rankSave(S.wallet)}}
+const boxKey=w=>'thalvorix_boxes_'+String(w).toLowerCase();
+function boxesLoad(w){try{const a=JSON.parse(localStorage.getItem(boxKey(w))||'[]');if(!Array.isArray(a))return;S.boxes=a.filter(id=>ITEMS[id]);S.boxes.forEach(id=>{ITEMS[id].boxed=true})}catch(e){S.boxes=[]}}
+function boxesSave(w){try{localStorage.setItem(boxKey(w),JSON.stringify(S.boxes))}catch(e){}}
+function saveBoxesIfWallet(){if(S.wallet)boxesSave(S.wallet)}
 async function rpcCall(method,params){
   const p=prov();
   if(p&&S.wallet&&S.chainOk){
@@ -650,7 +659,7 @@ async function connectWith(provider){
     let sig=null;
     try{sig=await provider.request({method:'personal_sign',params:[hexMsg(msg),addr]})}catch(e){sig=null}
     if(!sig){m.textContent='Signature required to connect. Please sign the login message to continue.';S.wallet=null;S.provider=null;S.signed=false;return false}
-    S.signed=true;itemsLoad(addr);{const pi=EIP6963.find(x=>x.provider===provider);sessSave({addr,mode:'wallet',rdns:pi?pi.info.rdns:'injected',ps:false})}
+    S.signed=true;itemsLoad(addr);boxesLoad(addr);{const pi=EIP6963.find(x=>x.provider===provider);sessSave({addr,mode:'wallet',rdns:pi?pi.info.rdns:'injected',ps:false})}
     const b=$('#connectBtn');if(b)b.textContent='Connected '+shortAddr(addr);
     return true;
   }catch(e){m.textContent='Wallet connection was cancelled.';S.wallet=null;S.provider=null;return false}
@@ -661,7 +670,7 @@ async function apiLogin(addr){
   if(!/^0x[0-9a-f]{40}$/.test(a)){const msg='Invalid wallet address. Enter a BSC wallet address (0x…).';if(m)m.textContent=msg;toast(msg);return false}
   try{
     if(!(await checkElig(a))){const msg='Not eligible. Free mint is for Binance Agent ID holders or BNB Smart Chain users (min. 5 transactions).';if(m)m.textContent=msg;toast(msg);return false}
-    S.wallet=a;S.provider=null;S.signed=false;S.apiLogin=true;S.chainOk=true;itemsLoad(a);sessSave({addr:a,mode:'api',ps:false});
+    S.wallet=a;S.provider=null;S.signed=false;S.apiLogin=true;S.chainOk=true;itemsLoad(a);boxesLoad(a);sessSave({addr:a,mode:'api',ps:false});
     const btn=$('#connectBtn');if(btn)btn.textContent='Connected '+shortAddr(a);
     return true;
   }catch(e){const msg='Could not verify eligibility. Please try again.';if(m)m.textContent=msg;toast(msg);return false}
@@ -1253,7 +1262,8 @@ $('#itemBody').innerHTML=L.slice(ip*50,ip*50+50).map(i=>`<tr><th scope="row"><di
 $('#iPage').textContent=`Page ${ip+1} / ${pg} · ${L.length.toLocaleString()} items`}
 $('#iPrev').onclick=()=>{ip--;rItems()};$('#iNext').onclick=()=>{ip++;rItems()};$('#iSearch').oninput=$('#iTier').onchange=$('#iSort').onchange=$('#iShow').onchange=()=>{ip=0;rItems()};
 function rInv(){const ra=$('#invRar')?$('#invRar').value:'';if(!S.wallet){$('#invHeroes').innerHTML='<p class="x-muted">Connect your wallet to see your heroes.</p>';}else{const _all=mine(),_vis=_all.filter(n=>!n.listed&&(!ra||n.rar[0]===ra));$('#invHeroes').innerHTML=_vis.map(n=>nftCard(n,`<button class="btn" data-list="${n.id}">List for sale</button>`)).join('')||(S.invError?'<p class="x-muted">Inventory could not be loaded. Please reopen the bag to try again.</p>':(_all.length>0&&_all.every(n=>n.listed)?'<p class="x-muted">All your heroes are listed for sale. Find them in the NFT Market.</p>':'<p class="x-muted">No heroes yet.</p>'));}
-const its=ITEMS.filter(i=>i.owned).sort((a,b)=>b.tk-a.tk||b.price-a.price);$('#invItems').innerHTML=its.map(i=>`<div class="x-card r-${i.tier}"><button class="x-ibtn" data-idet="${i.id}" aria-label="Details for ${i.name}">${ico(i)}</button><b>${i.name}</b><span class="x-muted">${i.type} · ${i.el}</span><span class="t-${i.tier}">${i.tier}</span><span class="x-muted">Value ${fmt(i.price)}</span>${feeTxt(i.price)}${imAct(i)}</div>`).join('')||'<p class="x-muted">No items yet. Buy some or earn them in battle.</p>'}
+const its=ITEMS.filter(i=>i.owned).sort((a,b)=>b.tk-a.tk||b.price-a.price);$('#invItems').innerHTML=its.map(i=>`<div class="x-card r-${i.tier}"><button class="x-ibtn" data-idet="${i.id}" aria-label="Details for ${i.name}">${ico(i)}</button><b>${i.name}</b><span class="x-muted">${i.type} · ${i.el}</span><span class="t-${i.tier}">${i.tier}</span><span class="x-muted">Value ${fmt(i.price)}</span>${feeTxt(i.price)}${imAct(i)}</div>`).join('')||'<p class="x-muted">No items yet. Buy some or earn them in battle.</p>'
+const _bx=$('#invBoxes');if(_bx)_bx.innerHTML=S.boxes.map(id=>`<div class="x-card"><button class="x-ibtn" data-mboxopen="${id}" aria-label="Open Mystery Box"><span class="x-mbox" style="font-size:44px">🎁</span></button><b>Mystery Box</b><span class="x-muted">Tap Open to reveal your reward</span><button class="btn" data-mboxopen="${id}">Open</button></div>`).join('')||'<p class="x-muted">No mystery boxes yet. Win a reward in battle to get one.</p>'}
 const comboNfts=()=>{const m=mine();if(!S.deckOff)S.deckOff=new Set();const c=m.filter(n=>!S.deckOff.has(n.id));return c.length?c:m};
 const pickedNft=()=>{const c=comboNfts();return c.length?c[0]:null};
 const duelLPMax=()=>1000+200*(S.rank&&S.rank.t||0);
@@ -1269,15 +1279,16 @@ $('#ladder').innerHTML=TIERS.map((t,i)=>i).reverse().map(i=>`<li class="${i===R.
 const sc=x=>x.t*250+x.d*25+x.s+(x.g||0),me={n:'Your Team',t:R.t,d:R.d,s:R.s,g:R.g,wr:R.w+R.l?Math.round(R.w/(R.w+R.l)*100):0,me:1},rows=[...LB,me].sort((a,b)=>sc(b)-sc(a));
 $('#lbBody').innerHTML=rows.map((x,i)=>`<tr${x.me?' class="is-highlight"':''}><th scope="row">${i+1}. ${x.n}</th><td>${rankName(x.t,x.d)}</td><td class="num">${Math.min(SPD,x.s)}/${SPD}${x.g?` +${x.g} Glory`:''}</td><td class="num">${x.wr}%</td></tr>`).join('');
 sizeCv()}
-function rewardItem(k){let c=ITEMS.filter(i=>!i.owned&&(k==null?i.tk>=2:i.tk===k));if(!c.length)c=ITEMS.filter(i=>!i.owned&&(k==null||i.tk<=k));if(!c.length)c=ITEMS.filter(i=>!i.owned);const it=c[Math.floor(Math.random()*c.length)];it.owned=true;return it}
-const rollDrop=t=>{let x=Math.random()*100,k=0;for(;k<5;k++){x-=DROP[t][k];if(x<0)break}return rewardItem(k)};let drops=[];
+function rewardItem(k){let c=ITEMS.filter(i=>!i.owned&&!i.boxed&&(k==null?i.tk>=2:i.tk===k));if(!c.length)c=ITEMS.filter(i=>!i.owned&&!i.boxed&&(k==null||i.tk<=k));if(!c.length)c=ITEMS.filter(i=>!i.owned&&!i.boxed);const it=c[Math.floor(Math.random()*c.length)];it.owned=true;return it}
+function rollBoxItem(t){let x=Math.random()*100,k=0;for(;k<5;k++){x-=DROP[t][k];if(x<0)break}let c=ITEMS.filter(i=>!i.owned&&!i.boxed&&i.tk===k);if(!c.length)c=ITEMS.filter(i=>!i.owned&&!i.boxed&&i.tk<=k);if(!c.length)c=ITEMS.filter(i=>!i.owned&&!i.boxed);const it=c[Math.floor(Math.random()*c.length)];it.boxed=true;return it}
+const rollDrop=t=>rollBoxItem(t);let drops=[];
 function onEnd(win){const R=S.rank,top=R.t===7&&R.d===9;let m='';drops=[];
 if(win){R.w++;S.streak++;
 let promoted=false;
 if(top&&R.s>=SPD){R.g++;m+=' +1 Mythic Glory point.'}
 else{R.s++;m+=' +1 star.';if(R.s>=SPD&&!top){R.s=0;if(R.d<9)R.d++;else{R.t++;R.d=0}promoted=true;m+=` Promoted to ${rankName()}!`;}else if(top&&R.s===SPD)m+=' Top of the ladder: further wins earn Mythic Glory points.'}
-if(promoted){const it=rollDrop(R.t);drops.push(it);m+=` Rank reward: ${it.tier} ${it.name}.`;}
-else if(S.streak>=10&&!R.tenWinDone){R.tenWinDone=true;S.streak=0;const it=rollDrop(R.t);drops.push(it);m+=` 10-win streak! Loot: ${it.tier} ${it.name}.`;}
+if(promoted){const it=rollDrop(R.t);drops.push(it);m+=` Rank reward: a Mystery Box!`;}
+else if(S.streak>=10&&!R.tenWinDone){R.tenWinDone=true;S.streak=0;const it=rollDrop(R.t);drops.push(it);m+=` 10-win streak! A Mystery Box!`;}
 else if(S.streak>=10){S.streak=0;}}
 else{R.l++;S.streak=0;
 if(R.t===0)m+=' No stars lost in Ashen Recruit.';
@@ -1286,7 +1297,15 @@ else if(R.s>0){R.s--;m+=' −1 star.'}
 else if(R.d>0){R.d--;R.s=SPD-1;m+=` −1 star. Dropped to ${rankName()}.`}
 else m+=` No demotion below ${TIERS[R.t]} X.`}
 return m}
+function bagToast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,10000)}
+function showMysteryAnim(){if(!drops.length)return;S.mboxPending=true;openModal(`<div class="x-drop" data-mbox="show"><div class="x-mbox">🎁</div><h3 class="x-gold x-congrats">Congratulations!</h3><p>You got a reward!</p><p class="x-muted">Tap the box to see it.</p></div>`)}
+function showMysteryBox(){if(!drops.length)return;openModal(`<div class="x-drop"><div class="x-mbox">🎁</div><h3>Mystery Box</h3><p class="x-muted">A reward is waiting inside. Claim it to put the box in your bag.</p><button class="x-cta" data-mbox="claim">Claim</button></div>`)}
+function claimMysteryBox(){if(!drops.length)return;const it=drops[0];S.boxes.push(it.id);saveBoxesIfWallet();drops=[];S.mboxPending=false;$('#modal').hidden=true;bagToast('Your reward is now in your bag!');render()}
+function openMysteryBox(id){const i=ITEMS[id];if(!i||!S.boxes.includes(id))return;i.boxed=false;i.owned=true;S.boxes=S.boxes.filter(x=>x!==id);saveBoxesIfWallet();saveItemsIfWallet();render();openModal(`<div class="x-drop"><p class="callout__head">Reward · ${rankName()}</p>${ico(i,1)}<h3>${i.name}</h3><p class="t-${i.tier}" style="font:var(--type-heading)">${i.tier}</p><p class="x-muted">${i.type} · ${i.el} · value ${fmt(i.price)}. Added to your inventory.</p><button class="x-cta" data-close>Collect</button></div>`)}
 document.addEventListener('click',async e=>{const g=k=>{const el=e.target.closest(`[data-${k}]`);return el&&el.dataset[k]};let v;
+if((v=g('mbox'))){if(v==='show')return showMysteryBox();if(v==='claim')return claimMysteryBox();return}
+if((v=g('mboxopen')))return openMysteryBox(+v);
+if(S.mboxPending&&(e.target.id==='modal'))return;
 if((v=g('go'))){e.preventDefault();go(v);return}
 if(e.target.closest('[data-flip]')){const el=$('#dlg [data-spin]');if(el){const ry=(parseFloat(el.dataset.ry)||0)+180;el.dataset.ry=ry;el.style.setProperty('--ry',ry+'deg')}return}
 if(e.target.id==='modal'||e.target.closest('[data-close]')){$('#modal').hidden=true;return}
@@ -1330,7 +1349,7 @@ function rpgBattle(cfg){
   const el=cfg.el;
   const log=m=>{if(el.log)el.log.innerHTML='<div>'+m+'</div>'+el.log.innerHTML};
   const render=()=>{if(el.player)el.player.innerHTML=rpgCard(P,'You');if(el.bot)el.bot.innerHTML=rpgCard(B,'Enemy');if(el.cd)el.cd.textContent=`Turn ${st.turn} · Skill ${P.cdS>0?P.cdS+' turns left':'ready'} · Ultimate ${P.cdU>0?P.cdU+' turns left':'ready'}`};
-  const finish=win=>{st.over=true;if(el.result)el.result.innerHTML=`<h3 class="x-gold">${win?'Victory!':'Defeat.'}</h3><p class="x-muted">${win?'Your hero defeated the enemy.':'The enemy defeated your hero.'}</p>`;if(cfg.mode==='ranked'){S.matchesPlayed++;let m=onEnd(win);saveItemsIfWallet();if(el.result)el.result.innerHTML+=`<p>${m}</p>`;render();if(drops.length)openModal(`<div class="x-drop"><p class="callout__head">Reward · ${rankName()}</p>${drops.map(it=>`${ico(it,1)}<h3>${it.name}</h3><p class="t-${it.tier}" style="font:var(--type-heading)">${it.tier}</p><p class="x-muted">${it.type} · ${it.el} · value ${fmt(it.price)}. Added to your inventory. Claim it in the Item Market to sell it for BNB.</p>`).join('')}<button class="x-cta" data-close>Collect</button></div>`)}};
+  const finish=win=>{st.over=true;if(el.result)el.result.innerHTML=`<h3 class="x-gold">${win?'Victory!':'Defeat.'}</h3><p class="x-muted">${win?'Your hero defeated the enemy.':'The enemy defeated your hero.'}</p>`;if(cfg.mode==='ranked'){S.matchesPlayed++;let m=onEnd(win);saveItemsIfWallet();if(el.result)el.result.innerHTML+=`<p>${m}</p>`;render();if(drops.length)showMysteryAnim()}};
   const botTurn=()=>{
     if(st.over)return;
     let kind='basic',mult=1;
@@ -1431,7 +1450,7 @@ function duelVoice(h,text,id){const S2=window.speechSynthesis;if(!S2||!h||(typeo
  try{S2.cancel()}catch(e){}S2.speak(u);setTimeout(()=>{try{S2.cancel()}catch(e){}},7000)}
 try{if(window.speechSynthesis){speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices()}}catch(e){}
 function duelCheck(){if(!D||!D.active)return;if(D.lpB>0&&D.lpB<=300&&!D.saidB&&D.lpP>0){D.saidB=true;duelSpeak(false)}else if(D.lpP>0&&D.lpP<=300&&!D.saidP&&D.lpB>0){D.saidP=true;duelSpeak(true)}if(D.lpB<=0){duelFinish(true);return}if(D.lpP<=0){duelFinish(false);return}const oP=!duelLeft('P'),oB=!duelLeft('B');if(oP&&oB){D.outWhy='both';const w=D.lpP>D.lpB;if(w)D.lpB=0;else D.lpP=0;try{duelRender()}catch(e){}duelFinish(w)}else if(oP){D.outWhy='P';D.lpP=0;try{duelRender()}catch(e){}duelLog('You have no cards left. Your LP drops to 0.');duelFinish(false)}else if(oB){D.outWhy='B';D.lpB=0;try{duelRender()}catch(e){}duelLog('The enemy has no cards left. Enemy LP drops to 0.');duelFinish(true)}}
-function duelFinish(win){if(!D||!D.active)return;duelHideCursor();setTimeout(()=>{const nb=document.getElementById('duelNextBtn'),pb=document.getElementById('duelBanner');if(nb&&win){nb.hidden=false;if(pb)nb.style.top=(pb.offsetTop+pb.offsetHeight/2)+'px'}},50);D.active=false;D.phase='Over';D.sel=null;duelBanner(win?'Victory!':'Defeat');duelSfx(win?'win':'lose');S.matchesPlayed++;const m=onEnd(win);saveItemsIfWallet();$('#duelResult').innerHTML=`<h3 class="x-gold">${win?'Victory!':'Defeat.'}</h3><p>${D.outWhy==='B'?'The enemy ran out of cards and cannot continue. You win!':D.outWhy==='P'?'You ran out of cards and cannot continue. The enemy wins.':D.outWhy==='both'?'Both sides ran out of cards. '+(win?'Your LP is higher, you win!':'Your LP is not higher, the enemy wins.'):win?'Enemy LP depleted. Duel Arena won.':'Your LP depleted. The enemy won the duel.'}</p><p>${m}</p>`;render();if(drops.length)openModal(`<div class="x-drop"><p class="callout__head">Reward · ${rankName()}</p>${drops.map(it=>`${ico(it,1)}<h3>${it.name}</h3><p class="t-${it.tier}" style="font:var(--type-heading)">${it.tier}</p><p class="x-muted">${it.type} · ${it.el} · value ${fmt(it.price)}. Added to your inventory. Claim it in the Item Market to sell it for BNB.</p>`).join('')}<button class="x-cta" data-close>Collect</button></div>`);duelRender()}
+function duelFinish(win){if(!D||!D.active)return;duelHideCursor();setTimeout(()=>{const nb=document.getElementById('duelNextBtn'),pb=document.getElementById('duelBanner');if(nb&&win){nb.hidden=false;if(pb)nb.style.top=(pb.offsetTop+pb.offsetHeight/2)+'px'}},50);D.active=false;D.phase='Over';D.sel=null;duelBanner(win?'Victory!':'Defeat');duelSfx(win?'win':'lose');S.matchesPlayed++;const m=onEnd(win);saveItemsIfWallet();$('#duelResult').innerHTML=`<h3 class="x-gold">${win?'Victory!':'Defeat.'}</h3><p>${D.outWhy==='B'?'The enemy ran out of cards and cannot continue. You win!':D.outWhy==='P'?'You ran out of cards and cannot continue. The enemy wins.':D.outWhy==='both'?'Both sides ran out of cards. '+(win?'Your LP is higher, you win!':'Your LP is not higher, the enemy wins.'):win?'Enemy LP depleted. Duel Arena won.':'Your LP depleted. The enemy won the duel.'}</p><p>${m}</p>`;render();if(drops.length)showMysteryAnim();duelRender()}
 document.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('#duelNextBtn')){duelStart();const bx=document.querySelector('.duel-box');if(bx)bx.scrollIntoView({behavior:'smooth',block:'start'})}});
 function duelPoint(sel,i,tap,en){const bx=document.querySelector('#p-play .duel-box'),cu=document.getElementById('duelCursor'),f=document.querySelector(sel);if(!bx||!cu||!f||!f.children[i])return;const a=bx.getBoundingClientRect(),r=f.children[i].getBoundingClientRect(),cx=r.left-a.left+r.width/2,cy=r.top-a.top+r.height*0.5;cu.classList.toggle('enemy',!!en);cu.style.left=(en?cx-35:cx-13)+'px';cu.style.top=(en?cy-54:cy-2)+'px';cu.classList.add('on');if(tap){cu.classList.remove('tap');void cu.offsetWidth;cu.classList.add('tap')}}
 function duelHideCursor(){const cu=document.getElementById('duelCursor');if(cu)cu.classList.remove('on')}
