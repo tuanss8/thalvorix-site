@@ -143,7 +143,9 @@
       .x-stars{display:flex;align-items:center;gap:8px;font:var(--type-label);color:var(--text-primary);min-width:180px}
       .x-stars b{color:var(--x-gold)}.x-stars .x-bar{flex:1;min-width:100px}
       .x-drop{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
-      .x-mbox{font-size:72px;line-height:1;cursor:pointer;animation:x-mbox-bounce 1s ease-in-out infinite;filter:drop-shadow(0 0 18px rgba(255,200,60,.55))}
+      .x-mbox{cursor:pointer;animation:x-mbox-bounce 1s ease-in-out infinite;filter:drop-shadow(0 0 18px rgba(255,200,60,.55))}
+      .x-mbox img{width:120px;height:120px;object-fit:contain;display:block}
+      .x-mbox--sm img{width:56px;height:56px}
       @keyframes x-mbox-bounce{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-14px) scale(1.1)}}
       .x-congrats{animation:glowPulse 1.8s ease-in-out infinite}
       .x-emb--7{animation:x-mglow 3s ease-in-out infinite}
@@ -1264,7 +1266,7 @@ $('#iPage').textContent=`Page ${ip+1} / ${pg} · ${L.length.toLocaleString()} it
 $('#iPrev').onclick=()=>{ip--;rItems()};$('#iNext').onclick=()=>{ip++;rItems()};$('#iSearch').oninput=$('#iTier').onchange=$('#iSort').onchange=$('#iShow').onchange=()=>{ip=0;rItems()};
 function rInv(){const ra=$('#invRar')?$('#invRar').value:'';if(!S.wallet){$('#invHeroes').innerHTML='<p class="x-muted">Connect your wallet to see your heroes.</p>';}else{const _all=mine(),_vis=_all.filter(n=>!n.listed&&(!ra||n.rar[0]===ra));$('#invHeroes').innerHTML=_vis.map(n=>nftCard(n,`<button class="btn" data-list="${n.id}">List for sale</button>`)).join('')||(S.invError?'<p class="x-muted">Inventory could not be loaded. Please reopen the bag to try again.</p>':(_all.length>0&&_all.every(n=>n.listed)?'<p class="x-muted">All your heroes are listed for sale. Find them in the NFT Market.</p>':'<p class="x-muted">No heroes yet.</p>'));}
 const its=ITEMS.filter(i=>i.owned).sort((a,b)=>b.tk-a.tk||b.price-a.price);$('#invItems').innerHTML=its.map(i=>`<div class="x-card r-${i.tier}"><button class="x-ibtn" data-idet="${i.id}" aria-label="Details for ${i.name}">${ico(i)}</button><b>${i.name}</b><span class="x-muted">${i.type} · ${i.el}</span><span class="t-${i.tier}">${i.tier}</span><span class="x-muted">Value ${fmt(i.price)}</span>${feeTxt(i.price)}${imAct(i)}</div>`).join('')||'<p class="x-muted">No items yet. Buy some or earn them in battle.</p>'
-const _bx=$('#invBoxes');if(_bx)_bx.innerHTML=S.boxes.map(id=>`<div class="x-card"><button class="x-ibtn" data-mboxopen="${id}" aria-label="Open Mystery Box"><span class="x-mbox" style="font-size:44px">🎁</span></button><b>Mystery Box</b><span class="x-muted">Tap Open to reveal your reward</span><button class="btn" data-mboxopen="${id}">Open</button></div>`).join('')||'<p class="x-muted">No mystery boxes yet. Win a reward in battle to get one.</p>'}
+const _bx=$('#invBoxes');if(_bx)_bx.innerHTML=S.boxes.map(id=>`<div class="x-card"><button class="x-ibtn" data-mboxopen="${id}" aria-label="Open Mystery Box"><span class="x-mbox x-mbox--sm"><img src="mbox.webp" alt="Mystery Box"></span></button><b>Mystery Box</b><span class="x-muted">Tap Open to reveal your reward</span><button class="btn" data-mboxopen="${id}">Open</button></div>`).join('')||'<p class="x-muted">No mystery boxes yet. Win a reward in battle to get one.</p>'}
 const comboNfts=()=>{const m=mine();if(!S.deckOff)S.deckOff=new Set();const c=m.filter(n=>!S.deckOff.has(n.id));return c.length?c:m};
 const pickedNft=()=>{const c=comboNfts();return c.length?c[0]:null};
 const duelLPMax=()=>1000+200*(S.rank&&S.rank.t||0);
@@ -1299,8 +1301,8 @@ else if(R.d>0){R.d--;R.s=SPD-1;m+=` −1 star. Dropped to ${rankName()}.`}
 else m+=` No demotion below ${TIERS[R.t]} X.`}
 return m}
 function bagToast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,10000)}
-function showMysteryAnim(){if(!drops.length)return;S.mboxPending=true;openModal(`<div class="x-drop" data-mbox="show"><div class="x-mbox">🎁</div><h3 class="x-gold x-congrats">Congratulations!</h3><p>You got a reward!</p><p class="x-muted">Tap the box to see it.</p></div>`)}
-function showMysteryBox(){if(!drops.length)return;openModal(`<div class="x-drop"><div class="x-mbox">🎁</div><h3>Mystery Box</h3><p class="x-muted">A reward is waiting inside. Claim it to put the box in your bag.</p><button class="x-cta" data-mbox="claim">Claim</button></div>`)}
+function showMysteryAnim(){if(!drops.length)return;S.mboxPending=true;openModal(`<div class="x-drop" data-mbox="show"><div class="x-mbox"><img src="mbox.webp" alt="Mystery Box"></div><h3 class="x-gold x-congrats">Congratulations!</h3><p>You got a reward!</p><p class="x-muted">Tap the box to see it.</p></div>`)}
+function showMysteryBox(){if(!drops.length)return;openModal(`<div class="x-drop"><div class="x-mbox"><img src="mbox.webp" alt="Mystery Box"></div><h3>Mystery Box</h3><p class="x-muted">A reward is waiting inside. Claim it to put the box in your bag.</p><button class="x-cta" data-mbox="claim">Claim</button></div>`)}
 function claimMysteryBox(){if(!drops.length)return;const it=drops[0];S.boxes.push(it.id);saveBoxesIfWallet();drops=[];S.mboxPending=false;$('#modal').hidden=true;bagToast('Your reward is now in your bag!');render()}
 function openMysteryBox(id){const i=ITEMS[id];if(!i||!S.boxes.includes(id))return;i.boxed=false;i.owned=true;S.boxes=S.boxes.filter(x=>x!==id);saveBoxesIfWallet();saveItemsIfWallet();render();openModal(`<div class="x-drop"><p class="callout__head">Reward · ${rankName()}</p>${ico(i,1)}<h3>${i.name}</h3><p class="t-${i.tier}" style="font:var(--type-heading)">${i.tier}</p><p class="x-muted">${i.type} · ${i.el} · value ${fmt(i.price)}. Added to your inventory.</p><button class="x-cta" data-close>Collect</button></div>`)}
 document.addEventListener('click',async e=>{const g=k=>{const el=e.target.closest(`[data-${k}]`);return el&&el.dataset[k]};let v;
