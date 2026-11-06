@@ -1,1 +1,28 @@
-{"name": "Rivenhal #789", "description": "Thalvorix Hero NFT. Rivenhal is a Tank hero playable in Thalvorix Ranked 5v5. Claim your hero. Conquer the lanes. Earn legendary loot.", "image": "https://thalvorix.xyz/h95.webp", "external_url": "https://thalvorix.xyz", "attributes": [{"trait_type": "Hero", "value": "Rivenhal"}, {"trait_type": "Role", "value": "Tank"}, {"trait_type": "Rarity", "value": "Uncommon"}, {"display_type": "boost_percentage", "trait_type": "Battle Bonus", "value": 3}]}
+{
+  "name": "Rivenhal #789",
+  "description": "Thalvorix Hero NFT. Rivenhal is a Tank of Uncommon rarity, wielding Wind power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h95.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Rivenhal"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Tank"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 95
+    }
+  ]
+}

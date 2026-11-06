@@ -1,1 +1,28 @@
-{"name": "Myrkhal #825", "description": "Thalvorix Hero NFT. Myrkhal is an Assassin hero playable in Thalvorix Ranked 5v5. Claim your hero. Conquer the lanes. Earn legendary loot.", "image": "https://thalvorix.xyz/h64.webp", "external_url": "https://thalvorix.xyz", "attributes": [{"trait_type": "Hero", "value": "Myrkhal"}, {"trait_type": "Role", "value": "Assassin"}, {"trait_type": "Rarity", "value": "Epic"}, {"display_type": "boost_percentage", "trait_type": "Battle Bonus", "value": 10}]}
+{
+  "name": "Myrkhal #825",
+  "description": "Thalvorix Hero NFT. Myrkhal is a Assassin of Epic rarity, wielding Arcane power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h64.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Myrkhal"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Arcane"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 64
+    }
+  ]
+}

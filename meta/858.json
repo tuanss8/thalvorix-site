@@ -1,1 +1,28 @@
-{"name": "Tyvandra #858", "description": "Thalvorix Hero NFT. Tyvandra is an Assassin hero playable in Thalvorix Ranked 5v5. Claim your hero. Conquer the lanes. Earn legendary loot.", "image": "https://thalvorix.xyz/h71.webp", "external_url": "https://thalvorix.xyz", "attributes": [{"trait_type": "Hero", "value": "Tyvandra"}, {"trait_type": "Role", "value": "Assassin"}, {"trait_type": "Rarity", "value": "Common"}, {"display_type": "boost_percentage", "trait_type": "Battle Bonus", "value": 0}]}
+{
+  "name": "Tyvandra #858",
+  "description": "Thalvorix Hero NFT. Tyvandra is a Assassin of Common rarity, wielding Nature power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/h71.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Tyvandra"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Assassin"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Nature"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 71
+    }
+  ]
+}
