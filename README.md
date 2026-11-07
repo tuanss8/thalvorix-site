@@ -11,4 +11,4 @@ Live site: https://thalvorix.xyz/
 
 Contracts (BNB Smart Chain, chain ID 56):
 - Thalvorix Hero (THX-HERO): 0x6D862c8B847323961FCD349ffFbee0133F6B929A
-- Thalvorix Token: official symbol THAL (coming soon)
+- Thalvorix Token: official symbol THX (coming soon)

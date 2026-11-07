@@ -327,7 +327,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
             </ul>
             <h3>Phase 4: The THALVORIX Token</h3>
 <ul>
-              <li>Official THALVORIX token: THAL, coming soon</li>
+              <li>Official THALVORIX token: THX, coming soon</li>
               <li>More details will be announced first to holders</li>
             </ul>
             <h3>Phase 5: Expansion</h3>
@@ -478,8 +478,8 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
           <div class="x-burn" id="burnBox"></div>
         </section>
         <section class="section x-panel" id="p-stake" hidden>
-          <div class="head"><p class="head__eyebrow">Earn THAL</p><h2>Stake Items</h2></div>
-          <p class="x-muted" id="stakeNote">Stake your items to earn THAL every day. Higher rarity earns more. THAL is recorded to your wallet and can be claimed when the THAL token launches. Staked items cannot be sold, listed or claimed until you unstake them.</p>
+          <div class="head"><p class="head__eyebrow">Earn THX</p><h2>Stake Items</h2></div>
+          <p class="x-muted" id="stakeNote">Stake your items to earn THX every day. Higher rarity earns more. THX is recorded to your wallet and can be claimed when the THX token launches. Staked items cannot be sold, listed or claimed until you unstake them.</p>
           <div class="x-row" id="stakeBar"></div>
           <h3>Staked</h3>
           <div class="x-grid" id="stakeOn"></div>
@@ -497,7 +497,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
           <div class="x-grid" id="invBoxes"></div>
         </section>
         <section class="section x-panel" id="p-token" hidden>
-          <div class="x-box" id="tokenComingSoon"><h2>Coming Soon</h2><p><b class="x-gold">THAL</b> is the official THALVORIX token symbol.</p><p class="x-muted">Burn Box rewards are recorded in THAL and can be claimed when the token launches. Only trust announcements from thalvorix.xyz and @THALVORIX on X.</p></div>
+          <div class="x-box" id="tokenComingSoon"><h2>Coming Soon</h2><p><b class="x-gold">THX</b> is the official THALVORIX token symbol.</p><p class="x-muted">Burn Box rewards are recorded in THX and can be claimed when the token launches. Only trust announcements from thalvorix.xyz and @THALVORIX on X.</p></div>
         </section>
         <section class="section x-panel" id="p-settings" hidden>
           <div class="head"><p class="head__eyebrow" id="settingsEyebrow">Settings</p><h2 id="settingsTitle">Settings</h2></div>
@@ -579,27 +579,27 @@ const boxKey=w=>'thalvorix_boxes_'+String(w).toLowerCase();
 function boxesLoad(w){try{const a=JSON.parse(localStorage.getItem(boxKey(w))||'[]');if(!Array.isArray(a))return;S.boxes=a.filter(id=>ITEMS[id]);S.boxes.forEach(id=>{ITEMS[id].boxed=true})}catch(e){S.boxes=[]}}
 function boxesSave(w){try{localStorage.setItem(boxKey(w),JSON.stringify(S.boxes))}catch(e){}}
 function saveBoxesIfWallet(){if(S.wallet)boxesSave(S.wallet)}
-/* Burn Box: burn Mystery Boxes for THAL (amount kept server-side, not shown). Deadline 2026-11-21 20:00 WIB. */
+/* Burn Box: burn Mystery Boxes for THX (amount kept server-side, not shown). Deadline 2026-11-21 20:00 WIB. */
 /* one-time: in-game reward items (not on-chain, not staked) become Mystery Boxes */
 function rewardsToBoxes(){if(!S.wallet)return;const k='thx_rew2box_'+S.wallet.toLowerCase();if(localStorage.getItem(k)||window.ITEMS_LOADED_W!==S.wallet.toLowerCase())return;const c=ITEMS.filter(i=>i.owned&&!i.co&&!(typeof STAKED!=='undefined'&&STAKED.has(i.id)));c.forEach(i=>{i.owned=false;i.boxed=true;S.boxes.push(i.id)});localStorage.setItem(k,'1');if(c.length){saveBoxesIfWallet();saveItemsIfWallet();bagToast(c.length+' game reward'+(c.length>1?'s are':' is')+' now '+(c.length>1?'Mystery Boxes':'a Mystery Box')+'. Check Burn Box or your bag.');try{render()}catch(e){}}}
 const BURN_END=Date.parse('2026-11-21T13:00:00Z');let BURNED=0,BURN_W='',BURN_BUSY=false;
 function burnLeft(){const ms=BURN_END-Date.now();if(ms<=0)return'';const d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4);return d?d+'d '+h+'h':h+'h '+m+'m'}
 async function burnFetch(){if(!S.wallet||typeof fetch!=='function')return;const w=S.wallet.toLowerCase();try{const r=await fetch(SB_URL+'/functions/v1/burn-box',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w})});const o=await r.json();if(typeof o.burned==='number'){BURNED=o.burned;BURN_W=w;burnRender()}}catch(e){}}
 function burnRender(){const el=document.getElementById('burnBox');if(!el)return;const n=(S.boxes||[]).length;if(S.wallet&&BURN_W!==S.wallet.toLowerCase()){BURN_W=S.wallet.toLowerCase();BURNED=0;burnFetch()}
- el.hidden=false;if(!S.wallet){el.innerHTML=`<div class="x-burn-head"><img src="mbox.webp" alt=""><div><div class="x-burn-when">Before 21 Nov 2026, 20:00 WIB${burnLeft()?' · '+burnLeft()+' left':' · closed'}</div><div class="x-burn-title">Burn your box for THAL</div></div></div><div class="x-burn-warn">Unburned boxes earn no THAL.</div><p class="x-muted" style="margin:0">Connect your wallet to see your Mystery Boxes and burn them.</p>`;return}const left=burnLeft(),open=!!left;
- el.innerHTML=`<div class="x-burn-head"><img src="mbox.webp" alt=""><div><div class="x-burn-when">Before 21 Nov 2026, 20:00 WIB${open?' · '+left+' left':' · closed'}</div><div class="x-burn-title">Burn your box for THAL</div></div></div>
- <div class="x-burn-warn">Unburned boxes earn no THAL.</div>
+ el.hidden=false;if(!S.wallet){el.innerHTML=`<div class="x-burn-head"><img src="mbox.webp" alt=""><div><div class="x-burn-when">Before 21 Nov 2026, 20:00 WIB${burnLeft()?' · '+burnLeft()+' left':' · closed'}</div><div class="x-burn-title">Burn your box for THX</div></div></div><div class="x-burn-warn">Unburned boxes earn no THX.</div><p class="x-muted" style="margin:0">Connect your wallet to see your Mystery Boxes and burn them.</p>`;return}const left=burnLeft(),open=!!left;
+ el.innerHTML=`<div class="x-burn-head"><img src="mbox.webp" alt=""><div><div class="x-burn-when">Before 21 Nov 2026, 20:00 WIB${open?' · '+left+' left':' · closed'}</div><div class="x-burn-title">Burn your box for THX</div></div></div>
+ <div class="x-burn-warn">Unburned boxes earn no THX.</div>
  <div class="x-burn-row"><div><small>Your boxes</small><b>${n}</b></div><span class="x-burn-arrow">→</span><div class="r"><small>Boxes burned</small><b>${BURNED}</b></div></div>
  <button class="x-cta" id="burnOne" ${!open||!n||BURN_BUSY?'disabled':''}>${!open?'Burn closed':BURN_BUSY?'Burning…':n?'Burn 1 box · '+left+' left':'No boxes to burn'}</button>${n>1&&open?`<button class="btn" id="burnAll" ${BURN_BUSY?'disabled':''}>Burn all ${n} boxes</button>`:''}
- <p class="x-muted" style="margin:0">THAL is recorded to your wallet and can be claimed when the THAL token launches. Burned boxes are gone and cannot be opened.</p>`}
+ <p class="x-muted" style="margin:0">THX is recorded to your wallet and can be claimed when the THX token launches. Burned boxes are gone and cannot be opened.</p>`}
 async function burnBoxes(k){if(BURN_BUSY||!S.wallet)return;const n=(S.boxes||[]).length;k=Math.min(k,n);if(k<1)return;if(Date.now()>BURN_END){toast('Burn is closed.');return}
- if(!confirm('Burn '+k+' Mystery Box'+(k>1?'es':'')+' for THAL? Burned boxes cannot be opened.'))return;
+ if(!confirm('Burn '+k+' Mystery Box'+(k>1?'es':'')+' for THX? Burned boxes cannot be opened.'))return;
  sessionStorage.removeItem('thx_rsig_no');BURN_BUSY=true;burnRender();try{const w=S.wallet;const c=await rankSig(w);if(!c){toast('Please sign in your wallet to burn.');return}
  const r=await fetch(SB_URL+'/functions/v1/burn-box',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'burn',wallet:w.toLowerCase(),msg:c.msg,sig:c.sig,n:k})});const o=await r.json();
  if(r.status===401)localStorage.removeItem(rankSigKey(w));
  if(!o.ok){toast(o.error==='over cap'?'Burn limit reached for this wallet. Play more matches first.':o.error==='burn closed'?'Burn is closed.':'Burn failed. Please try again.');if(typeof o.burned==='number')BURNED=o.burned;return}
- const gone=S.boxes.slice(0,k);gone.forEach(id=>{if(ITEMS[id])ITEMS[id].boxed=false});S.boxes=S.boxes.slice(k);BURNED=o.burned;saveBoxesIfWallet();duelSfx('destroy');const rw=Array.isArray(o.rewards)?o.rewards:[],tot=rw.reduce((a,b)=>a+b,0),jp=rw.some(x=>x>=1e6);openModal(`<div class="x-drop"><div class="x-mbox"><img src="mbox.webp" alt="Mystery Box"></div><h3 class="x-gold x-congrats">${jp?'JACKPOT!':'Box burned!'}</h3><p>You got <b class="x-gold">${tot.toLocaleString('en-US')} THAL</b>${rw.length>1?' from '+rw.length+' boxes':''}.</p>${rw.length>1?`<p class="x-muted">${rw.map(x=>x.toLocaleString('en-US')).join(' · ')}</p>`:''}<p class="x-muted">THAL is recorded to your wallet and can be claimed when the token launches.</p><button class="x-cta" data-close>OK</button></div>`);if(jp)try{duelSfx('win')}catch(e){}}catch(e){toast('Burn failed. Please try again.')}finally{BURN_BUSY=false;render()}}
-/* Stake Items: stake owned items to earn THAL (rates kept server-side in stake-item). */
+ const gone=S.boxes.slice(0,k);gone.forEach(id=>{if(ITEMS[id])ITEMS[id].boxed=false});S.boxes=S.boxes.slice(k);BURNED=o.burned;saveBoxesIfWallet();duelSfx('destroy');const rw=Array.isArray(o.rewards)?o.rewards:[],tot=rw.reduce((a,b)=>a+b,0),jp=rw.some(x=>x>=1e6);openModal(`<div class="x-drop"><div class="x-mbox"><img src="mbox.webp" alt="Mystery Box"></div><h3 class="x-gold x-congrats">${jp?'JACKPOT!':'Box burned!'}</h3><p>You got <b class="x-gold">${tot.toLocaleString('en-US')} THX</b>${rw.length>1?' from '+rw.length+' boxes':''}.</p>${rw.length>1?`<p class="x-muted">${rw.map(x=>x.toLocaleString('en-US')).join(' · ')}</p>`:''}<p class="x-muted">THX is recorded to your wallet and can be claimed when the token launches.</p><button class="x-cta" data-close>OK</button></div>`);if(jp)try{duelSfx('win')}catch(e){}}catch(e){toast('Burn failed. Please try again.')}finally{BURN_BUSY=false;render()}}
+/* Stake Items: stake owned items to earn THX (rates kept server-side in stake-item). */
 const STAKE_RATE=[50,125,300,750,2000];let STAKED=new Map(),STAKE_W='',STAKE_BUSY=false;
 async function stakeFetch(){if(!S.wallet||typeof fetch!=='function'){stakeRender();return}const w=S.wallet.toLowerCase();try{const r=await fetch(SB_URL+'/functions/v1/stake-item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w})});const o=await r.json();if(Array.isArray(o.staked)){STAKED=new Map(o.staked.map(x=>[x.id,x.at]));STAKE_W=w;render()}}catch(e){}}
 function stakeDays(at){const d=(Date.now()-at)/864e5;return d<1?Math.max(1,Math.floor(d*24))+'h':Math.floor(d)+'d'}
@@ -613,10 +613,10 @@ async function stakeDo(action,ids){if(STAKE_BUSY||!S.wallet||!ids.length)return;
  const r=await fetch(SB_URL+'/functions/v1/stake-item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,wallet:w.toLowerCase(),msg:c.msg,sig:c.sig,ids:ids.slice(0,50)})});const o=await r.json();if(r.status===401)localStorage.removeItem(rankSigKey(w));
  if(Array.isArray(o.staked))STAKED=new Map(o.staked.map(x=>[x.id,x.at]));
  if(!o.ok){toast(o.error==='over cap'?'Stake limit reached. Win more matches to stake more items.':'Could not '+action+'. Please try again.');return}
- bagToast(action==='stake'?'Item staked! It now earns THAL every day.':'Item unstaked. Your THAL earnings are saved.')}catch(e){toast('Could not '+action+'. Please try again.')}finally{STAKE_BUSY=false;render()}}
+ bagToast(action==='stake'?'Item staked! It now earns THX every day.':'Item unstaked. Your THX earnings are saved.')}catch(e){toast('Could not '+action+'. Please try again.')}finally{STAKE_BUSY=false;render()}}
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-stake],[data-unstake],[data-stakeall],[data-unstakeall]');if(!t)return;
- if(t.dataset.stake!=null)stakeDo('stake',[+t.dataset.stake]);else if(t.dataset.unstake!=null){if(confirm('Unstake this item? It stops earning THAL.'))stakeDo('unstake',[+t.dataset.unstake])}
- else if(t.hasAttribute('data-stakeall'))stakeDo('stake',ITEMS.filter(i=>i.owned&&!i.boxed&&!STAKED.has(i.id)&&!i.listed).map(i=>i.id));else if(confirm('Unstake all items? They stop earning THAL.'))stakeDo('unstake',[...STAKED.keys()])});
+ if(t.dataset.stake!=null)stakeDo('stake',[+t.dataset.stake]);else if(t.dataset.unstake!=null){if(confirm('Unstake this item? It stops earning THX.'))stakeDo('unstake',[+t.dataset.unstake])}
+ else if(t.hasAttribute('data-stakeall'))stakeDo('stake',ITEMS.filter(i=>i.owned&&!i.boxed&&!STAKED.has(i.id)&&!i.listed).map(i=>i.id));else if(confirm('Unstake all items? They stop earning THX.'))stakeDo('unstake',[...STAKED.keys()])});
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#burnOne,#burnAll');if(!t)return;burnBoxes(t.id==='burnAll'?(S.boxes||[]).length:1)});
 setInterval(()=>{const el=document.getElementById('burnBox');if(el&&!el.hidden&&!BURN_BUSY)burnRender()},60000);
 async function checkBoxGrants(){if(!S.wallet||typeof fetch!=='function')return;const w=S.wallet.toLowerCase();try{const r=await fetch('box-grants.json');const j=await r.json();const g=(j&&j.grants||[]).find(x=>String(x.wallet||'').toLowerCase()===w);if(!g||!(g.boxes>0))return;const ck='thalvorix_boxgrants_'+w;let claimed=0;try{claimed=parseInt(localStorage.getItem(ck)||'0',10)||0}catch(e){}const owed=Math.max(0,Math.min(g.boxes,99)-claimed);if(!owed)return;for(let i=0;i<owed;i++){const it=rollBoxItem(S.rank.t||0);if(it)S.boxes.push(it.id)}try{localStorage.setItem(ck,String(claimed+owed))}catch(e){}saveBoxesIfWallet();render();bagToast('You received a Mystery Box reward'+(g.reason?' for '+g.reason:'')+'! Check your bag.')}catch(e){}}
