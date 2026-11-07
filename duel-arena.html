@@ -355,6 +355,14 @@ html.da-compact #duelHand{grid-row:1 / span 4!important}
 .da-out-B{animation:daOutB .8s cubic-bezier(.5,0,.9,.5) forwards}
 @keyframes daOutP{0%{transform:none;opacity:1;filter:brightness(2.5) saturate(0)}20%{transform:scale(1.12) rotate(-4deg);filter:brightness(1.6) sepia(1) hue-rotate(-30deg)}100%{transform:translate(-280px,140px) rotate(-60deg) scale(.4);opacity:0;filter:brightness(.6)}}
 @keyframes daOutB{0%{transform:none;opacity:1;filter:brightness(2.5) saturate(0)}20%{transform:scale(1.12) rotate(4deg);filter:brightness(1.6) sepia(1) hue-rotate(-30deg)}100%{transform:translate(280px,-160px) rotate(60deg) scale(.4);opacity:0;filter:brightness(.6)}}
+
+.da-flash{position:absolute;z-index:41;pointer-events:none;border-radius:6px;background:radial-gradient(circle,#fff 0,rgba(255,220,140,.9) 30%,rgba(255,120,40,0) 70%);animation:daFlash .5s ease-out forwards}
+@keyframes daFlash{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.8);opacity:0}}
+#p-play .duel-card.da-down{position:relative}
+#p-play .duel-card.da-down>*{visibility:hidden}
+#p-play .duel-card.da-down::after{content:"";position:absolute;inset:0;border:2px solid #8a5a2b;border-radius:4px;background:radial-gradient(circle,#000 0 12%,#2a0d05 22%,transparent 60%),repeating-conic-gradient(from 0deg,#7a3412 0 12deg,#3a1206 12deg 24deg),#4a1a08;box-shadow:inset 0 0 0 3px #3a1508,inset 0 0 0 4px #c58a3e}
+#p-play .duel-card.da-flip{animation:daFlip .32s ease-in-out}
+@keyframes daFlip{0%{transform:rotateY(0)}50%{transform:rotateY(90deg)}100%{transform:rotateY(0)}}
 </style>
 </head>
   <body>
@@ -1798,7 +1806,7 @@ $('#musVol').oninput=()=>{if(M.on&&tab!=='nft'&&tab!=='play')M.master.gain.setTa
 function playMusicSync(){const inPlay=tab==='play',want=inPlay&&M.on;/* in-game: energetic battle loop play-music8 */
 if(!M.ctx)return;const C=M.ctx;
 if(!M.plGain){M.plGain=C.createGain();M.plGain.gain.value=0;const pc=C.createDynamicsCompressor();pc.threshold.value=-10;pc.knee.value=4;pc.ratio.value=12;pc.attack.value=.003;pc.release.value=.2;M.plGain.connect(pc);pc.connect(C.destination)}
-if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music8.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
+if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music9.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
 if(want){if(M.master){M.master.gain.cancelScheduledValues(n);M.master.gain.setTargetAtTime(0,n,.08)}
 if(M.plBuf&&!M.plSrc){const sr=C.createBufferSource();sr.buffer=M.plBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=M.plBuf.duration-0.02;sr.connect(M.plGain);sr.start(n,0.03);M.plSrc=sr}
@@ -1928,12 +1936,12 @@ var ALL=['duel_started','your_turn','enemy_turn','opp_turn','online_duel','victo
 function vpreload(){ALL.forEach(vload)}
 try{vpreload()}catch(e){}
 document.addEventListener('pointerdown',function f(){vpreload();document.removeEventListener('pointerdown',f,true)},true);
-function vplay(n,force){try{if((typeof SFX_MUTED!=='undefined'&&SFX_MUTED)||(D&&D.muted))return;var C=vctx();if(!C)return;var b=VB[n];if(!b){VW[n]=Date.now();vload(n);return}var now=Date.now();if(!force&&now-vlast<600)return;vlast=now;if(vsrc){try{vsrc.stop()}catch(e){}}var s=C.createBufferSource(),g=C.createGain();g.gain.value=2.6;if(!C._vlim){var l=C.createDynamicsCompressor();l.threshold.value=-4;l.knee.value=2;l.ratio.value=16;l.attack.value=.002;l.release.value=.12;l.connect(C.destination);C._vlim=l}s.buffer=b;s.connect(g);g.connect(C._vlim);s.start();vsrc=s;try{if(M&&M.ctx&&(M.plSrc?M.plGain:M.webGain)){var mg=(M.plSrc?M.plGain:M.webGain).gain,t=M.ctx.currentTime,cur=mg.value;if(cur>0.01){mg.cancelScheduledValues(t);mg.setTargetAtTime(cur*0.35,t,.05);mg.setTargetAtTime(cur,t+b.duration+.1,.3)}}}catch(e){}}catch(e){}}
+function vplay(n,force){try{if((typeof SFX_MUTED!=='undefined'&&SFX_MUTED)||(D&&D.muted))return;var C=vctx();if(!C)return;var b=VB[n];if(!b){VW[n]=Date.now();vload(n);return}var now=Date.now();if(!force&&now-vlast<600)return;vlast=now;if(vsrc){try{vsrc.stop()}catch(e){}}var s=C.createBufferSource(),g=C.createGain();g.gain.value=3.5;if(!C._vlim){var l=C.createDynamicsCompressor();l.threshold.value=-4;l.knee.value=2;l.ratio.value=16;l.attack.value=.002;l.release.value=.12;l.connect(C.destination);C._vlim=l}s.buffer=b;s.connect(g);g.connect(C._vlim);s.start();vsrc=s;try{if(M&&M.ctx&&(M.plSrc?M.plGain:M.webGain)){var mg=(M.plSrc?M.plGain:M.webGain).gain,t=M.ctx.currentTime,cur=mg.value;if(cur>0.01){mg.cancelScheduledValues(t);mg.setTargetAtTime(cur*0.35,t,.05);mg.setTargetAtTime(cur,t+b.duration+.1,.3)}}}catch(e){}}catch(e){}}
 var RND=function(a){return a[Math.floor(Math.random()*a.length)]};
 var VO={summon:['summon1','summon2','summon3'],attack:['attack1','attack2','attack3'],destroy:['destroy1','destroy2']};
 var os=duelSfx;duelSfx=function(kind){os.apply(this,arguments);if(VO[kind])setTimeout(function(){vplay(RND(VO[kind]))},kind==='destroy'?350:0)};
 var BMAP={'duel started':'duel_started','your turn':'your_turn','enemy turn':'enemy_turn',"opponent's turn":'opp_turn','online duel':'online_duel','victory':'victory','defeat':'defeat'};
-duelAnnounce=function(m){var k=String(m||'').toLowerCase().replace(/[!.…]+$/,'').trim();if(BMAP[k])vplay(BMAP[k],true)};
+var TURNV=0;duelAnnounce=function(m){var k=String(m||'').toLowerCase().replace(/[!.…]+$/,'').trim();if(!BMAP[k])return;if(/turn/.test(k)){TURNV++;if(!(TURNV===1||(TURNV%4===0&&Math.random()<0.7)))return}vplay(BMAP[k],true)};
 duelVoice=function(h,text,id){var w=/menang|about to win/i.test(text||'');vplay((w?'win_':'warn_')+(id?'id':'en'),true)};
 try{if(window.speechSynthesis)window.speechSynthesis.cancel()}catch(e){}
 })();
@@ -1947,8 +1955,35 @@ duelRender=function(){var box=document.querySelector('#p-play .duel-box'),snap=[
  prev.apply(this,arguments);
  if(!box||!D||!snap.length)return;
  var live={};(D.fieldP||[]).concat(D.fieldB||[]).forEach(function(c){if(c)live[c.uid]=1});
- snap.forEach(function(s){if(live[s.u])return;var w=document.createElement('div');w.innerHTML=s.html;var g=w.firstElementChild;if(!g)return;g.classList.remove('duel-new','duel-sel');g.removeAttribute('data-duel');g.classList.add('da-ghost','da-out-'+s.sd);g.style.left=s.p.x+'px';g.style.top=s.p.y+'px';g.style.width=s.p.w+'px';g.style.height=s.p.h+'px';box.appendChild(g);setTimeout(function(){g.remove()},900)});
+ snap.forEach(function(s){if(live[s.u])return;daShatter(box,s)});
 };
+})();
+</script>
+<script>
+/* card shatter (destroyed), dealing at start, face-down / face-up toggle for your cards */
+function daShatter(box,s){var R=3,Cn=3,W=s.p.w,H=s.p.h,fl=document.createElement('div');fl.className='da-flash';fl.style.cssText='left:'+s.p.x+'px;top:'+s.p.y+'px;width:'+W+'px;height:'+H+'px';box.appendChild(fl);setTimeout(function(){fl.remove()},500);
+ for(var r=0;r<R;r++)for(var c=0;c<Cn;c++){var w=document.createElement('div');w.innerHTML=s.html;var g=w.firstElementChild;if(!g)continue;g.classList.remove('duel-new','duel-sel','da-down');g.removeAttribute('data-duel');g.classList.add('da-ghost');
+  var x0=c/Cn*100,x1=(c+1)/Cn*100,y0=r/R*100,y1=(r+1)/R*100,j=function(){return (Math.random()*8-4)};
+  g.style.clipPath='polygon('+(x0+(c?j():0))+'% '+(y0+(r?j():0))+'%,'+(x1+(c<Cn-1?j():0))+'% '+(y0+(r?j():0))+'%,'+(x1+(c<Cn-1?j():0))+'% '+(y1+(r<R-1?j():0))+'%,'+(x0+(c?j():0))+'% '+(y1+(r<R-1?j():0))+'%)';
+  g.style.left=s.p.x+'px';g.style.top=s.p.y+'px';g.style.width=W+'px';g.style.height=H+'px';box.appendChild(g);
+  var dx=((c+.5)/Cn-.5)*W*2.2+(Math.random()*40-20),dy=((r+.5)/R-.5)*H*2+(s.sd==='P'?40:-40)+Math.random()*40,rot=Math.random()*240-120;
+  try{g.animate([{transform:'none',opacity:1,filter:'brightness(2.4)'},{transform:'translate('+dx*.15+'px,'+dy*.15+'px) rotate('+rot*.1+'deg)',opacity:1,filter:'brightness(1.4) sepia(.6)',offset:.15},{transform:'translate('+dx+'px,'+(dy+60)+'px) rotate('+rot+'deg) scale(.6)',opacity:0,filter:'brightness(.5)'}],{duration:850+Math.random()*250,easing:'cubic-bezier(.2,.6,.4,1)',fill:'forwards'})}catch(e){}
+  (function(g){setTimeout(function(){g.remove()},1200)})(g)}}
+(function(){
+var prev=duelRender,lastTok=null;
+duelRender=function(){prev.apply(this,arguments);if(!D)return;
+ var newDuel=D.token!==lastTok;lastTok=D.token;
+ (D.fieldP||[]).forEach(function(c){if(c&&c.down===undefined)c.down=true});
+ var pf=document.getElementById('duelPlayerField'),bf=document.getElementById('duelBotField');if(!pf)return;
+ /* stagger new cards like a dealer handing them out */
+ var news=[].slice.call(document.querySelectorAll('#duelBotField .duel-new,#duelPlayerField .duel-new'));
+ if(news.length>1){var bots=news.filter(function(e){return bf.contains(e)}),pl=news.filter(function(e){return pf.contains(e)}),seq=[];for(var i=0;i<Math.max(bots.length,pl.length);i++){if(bots[i])seq.push(bots[i]);if(pl[i])seq.push(pl[i])}seq.forEach(function(e,i){e.style.animationDelay=(i*0.11)+'s';setTimeout(function(){try{sfxSweep(1800,700,.12,'triangle',.06)}catch(_){}} ,i*110)})}
+ pf.querySelectorAll('.duel-card[data-duel]').forEach(function(el){var i=D.fieldP.findIndex(function(c){return c&&c.uid===el.dataset.duel});if(i<0)return;var c=D.fieldP[i];
+  el.classList.toggle('da-down',!!c.down);
+  el.onclick=function(ev){ev.stopPropagation();if(!D||!D.active||D.phase==='Bot'||D.phase==='Over'){return}
+   if(c.down){c.down=false;el.classList.add('da-flip');try{duelSfx('card')}catch(_){}setTimeout(function(){duelRender()},160);return}
+   if(D.sel===i){c.down=true;D.sel=null;try{duelHideCursor()}catch(_){}try{duelSfx('card')}catch(_){}el.classList.add('da-flip');setTimeout(function(){duelRender()},160);return}
+   duelSelect(i)}})};
 })();
 </script>
 </body>
