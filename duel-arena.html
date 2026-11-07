@@ -292,6 +292,19 @@ html.da-compact #p-play .duel-field{max-width:none;width:min(100%,calc(var(--dac
 html.da-compact #p-play .duel-field>.duel-slot,html.da-compact #p-play .duel-field>.duel-card{height:var(--dacell,64px);min-height:0!important}
 html.da-compact #p-play .duel-field .duel-card img{height:calc(var(--dacell,64px) - 26px);max-height:none;width:auto;max-width:100%;margin:0 auto}
 html.da-compact #duelResult,html.da-compact #duelNextBtn,html.da-compact #duelSearch{grid-column:1 / span 2}
+
+html.da-compact #p-play,html.da-compact .main,html.da-compact .page{padding-left:4px!important;padding-right:4px!important;margin-top:0!important}
+html.da-compact .duel-box>.duel-head:first-child{grid-column:1;grid-row:1}
+html.da-compact #duelBotField{grid-column:1;grid-row:2}
+html.da-compact #duelPlayerField{grid-column:1;grid-row:3;margin-top:4px!important}
+html.da-compact .duel-box>.duel-head:not(:first-child){grid-column:1;grid-row:4}
+html.da-compact #duelHand{grid-row:1 / span 3!important;max-height:calc(var(--dah,360px) - 110px)!important}
+html.da-compact .duel-box>.duel-mid{grid-column:2!important;grid-row:4;flex-wrap:wrap!important;align-items:flex-start;font-size:9px;line-height:1.25;margin:0}
+html.da-compact .duel-box>.duel-mid #duelPhase{flex:1 1 100%!important;white-space:normal!important;overflow:visible!important}
+html.da-compact .duel-box>.duel-mid #duelTurn{flex:1 1 100%}
+html.da-compact .duel-field .duel-card .duel-atk,html.da-compact #duelHand .duel-card .duel-atk{font-size:8px!important;letter-spacing:-.2px;white-space:nowrap;overflow:visible}
+html.da-compact .duel-field .duel-card b{font-size:8.5px!important}
+html.da-compact #p-play .duel-field{width:min(100%,calc(var(--dacell,64px) * 5 * 1.45))!important}
 </style>
 </head>
   <body>
@@ -1818,7 +1831,7 @@ addEventListener('resize',function(){setTimeout(function(){update();size()},150)
 var tx=0,ty=0,st=0,sl=0,moved=false;
 B.addEventListener('touchstart',function(e){if(!R.classList.contains('da-rot'))return;var t=e.touches[0];tx=t.clientX;ty=t.clientY;st=B.scrollTop;moved=false},{passive:true});
 B.addEventListener('touchmove',function(e){if(!R.classList.contains('da-rot'))return;var t=e.touches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)>6||Math.abs(dy)>6)moved=true;B.scrollTop=st+dx;e.preventDefault()},{passive:false});
-function compact(){var rotd=R.classList.contains('da-rot');var w=rotd?innerHeight:innerWidth,h=rotd?innerWidth:innerHeight;var on=w>h&&h<=560;R.classList.toggle('da-compact',on);if(on){R.style.setProperty('--dah',h+'px');var cell=Math.floor((h-44-22*2-18-10)/4);R.style.setProperty('--dacell',Math.max(44,Math.min(110,cell))+'px')}}
+function compact(){var rotd=R.classList.contains('da-rot');var w=rotd?innerHeight:innerWidth,h=rotd?innerWidth:innerHeight;var on=w>h&&h<=560;R.classList.toggle('da-compact',on);if(on){R.style.setProperty('--dah',h+'px');var cell=Math.floor((h-40-20*2-12)/4);R.style.setProperty('--dacell',Math.max(44,Math.min(110,cell))+'px')}}
 var _u=update;update=function(){_u();compact()};addEventListener('orientationchange',function(){setTimeout(update,200)});
 update();})();</script>
   </body>
