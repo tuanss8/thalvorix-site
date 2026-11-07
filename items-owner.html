@@ -1,0 +1,26 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>THALVORIX Items ownership</title>
+<style>body{font-family:system-ui,sans-serif;background:#0b0710;color:#eee;max-width:560px;margin:0 auto;padding:24px}button{font-size:18px;padding:14px 20px;border-radius:12px;border:0;background:#e2b54a;color:#1a1020;font-weight:700;width:100%;margin:8px 0}button:disabled{opacity:.5}.box{background:#1a1222;border:1px solid #333;border-radius:12px;padding:14px;margin:12px 0;word-break:break-all}.ok{color:#5fd38a}.err{color:#ff7a7a}small{color:#aaa}</style></head><body>
+<h2>THALVORIX Items ownership</h2>
+<p>Owner-only page. Use wallet <b>0x1bbb…32af</b> on BNB Smart Chain. Step 2 moves Items ownership to your wallet so you can edit the collection on Element. Step 3 gives it back to the Reward Minter. While your wallet holds it, in-game item reward claims will fail, so finish step 3 after editing.</p>
+<div class="box"><small>Items</small><br>0xf2d63dd747d046efc9929ffe81d4c0d4d6fabf45<br><small>Reward Minter</small><br>0xb96d9533c1fd97fab5893625e903e4d91203652e<br><small>Current Items owner</small><br><b id="o">…</b></div>
+<button id="c">1. Connect wallet</button><button id="a" disabled>2. Take Items ownership (to my wallet)</button><button id="b" disabled>3. Give ownership back to Reward Minter</button>
+<div class="box" id="s">Not connected.</div>
+<script>
+const OWNER='0x1bbbe22c0d1acf24582adccdec6c438f97d132af',ITEMS='0xf2d63dd747d046efc9929ffe81d4c0d4d6fabf45',RM='0xb96d9533c1fd97fab5893625e903e4d91203652e';
+const P=window.ethereum,s=document.getElementById('s'),$=i=>document.getElementById(i),say=(h,c)=>{s.innerHTML=h;s.className='box '+(c||'')};let acc=null;
+const pad=a=>a.toLowerCase().replace('0x','').padStart(64,'0');
+async function cur(){const r=await fetch('https://bsc-dataseed.bnbchain.org',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_call',params:[{to:ITEMS,data:'0x8da5cb5b'},'latest']})}).then(r=>r.json());return '0x'+r.result.slice(26)}
+async function refresh(){try{const o=await cur();$('o').textContent=o===OWNER?'Your wallet 0x1bbb…32af':o===RM?'Reward Minter':o;if(acc){$('a').disabled=o!==RM;$('b').disabled=o!==OWNER;
+ if(o===OWNER)say('You own Items now. Edit the collection on Element (wait a few minutes if Edit is not shown yet), then press step 3.','ok');else if(o===RM)say('Connected as owner. Items is held by the Reward Minter.','ok')}}catch(e){$('o').textContent='?'}}
+async function wait(tx){for(let i=0;i<80;i++){await new Promise(r=>setTimeout(r,3000));const r=await P.request({method:'eth_getTransactionReceipt',params:[tx]});if(r)return r}return null}
+async function send(o){return P.request({method:'eth_sendTransaction',params:[Object.assign({from:acc,gasPrice:'0x2faf080'},o)]})}
+async function go(btn,o){btn.disabled=true;try{say('Confirm in your wallet…');const tx=await send(o);say('Sending… <a style="color:#e2b54a" href="https://bscscan.com/tx/'+tx+'" target="_blank">view tx</a>');const r=await wait(tx);if(!(r&&r.status==='0x1'))say('Failed or pending. Tx: '+tx,'err');await refresh()}catch(e){say(e.message||String(e),'err');btn.disabled=false}}
+$('c').onclick=async()=>{if(!P){say('No wallet found. Open this page in the browser inside your wallet app.','err');return}
+try{acc=(await P.request({method:'eth_requestAccounts'}))[0];try{await P.request({method:'wallet_switchEthereumChain',params:[{chainId:'0x38'}]})}catch(e){}
+if(await P.request({method:'eth_chainId'})!=='0x38'){say('Please switch your wallet to BNB Smart Chain.','err');acc=null;return}
+if(acc.toLowerCase()!==OWNER){say('Connected '+acc+'<br>This is not the owner wallet 0x1bbb…32af.','err');acc=null;return}
+await refresh()}catch(e){say(e.message||String(e),'err')}};
+$('a').onclick=()=>go($('a'),{to:RM,data:'0xbbf989ce'+pad(OWNER),gas:'0x186a0'});
+$('b').onclick=()=>go($('b'),{to:ITEMS,data:'0xf2fde38b'+pad(RM),gas:'0x186a0'});
+refresh();
+</script></body></html>
