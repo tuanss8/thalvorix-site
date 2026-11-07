@@ -344,6 +344,17 @@ html.da-compact #duelHand{grid-row:1 / span 4!important}
 .fd-card{width:16px;height:22px;border:1px solid #c58a3e;border-radius:2px;background:radial-gradient(circle,#000 0 15%,transparent 55%),repeating-conic-gradient(#7a3412 0 15deg,#3a1206 15deg 30deg);box-shadow:0 1px 3px rgba(0,0,0,.6)}
 .fd-deck{display:inline-flex;align-items:center;gap:4px;margin-left:8px;font-size:11px;color:#f1d9a0}
 .fd-deck .fd-card{box-shadow:2px 2px 0 #2a0d05,4px 4px 0 #1a0803}
+
+/* card enter / exit animations */
+#p-play #duelPlayerField .duel-new{animation:daInP .6s cubic-bezier(.2,1.2,.35,1) both}
+#p-play #duelBotField .duel-new{animation:daInB .6s cubic-bezier(.2,1.2,.35,1) both}
+@keyframes daInP{0%{transform:translate(260px,60px) rotate(18deg) scale(.55);opacity:0;filter:brightness(2)}55%{opacity:1}80%{transform:translate(0,-6px) rotate(-2deg) scale(1.08)}100%{transform:none;filter:none}}
+@keyframes daInB{0%{transform:translate(0,-220px) rotate(-14deg) scale(.6);opacity:0;filter:brightness(2)}55%{opacity:1}80%{transform:translate(0,6px) rotate(2deg) scale(1.08)}100%{transform:none;filter:none}}
+.da-ghost{position:absolute;z-index:40;pointer-events:none;margin:0!important;box-sizing:border-box}
+.da-out-P{animation:daOutP .8s cubic-bezier(.5,0,.9,.5) forwards}
+.da-out-B{animation:daOutB .8s cubic-bezier(.5,0,.9,.5) forwards}
+@keyframes daOutP{0%{transform:none;opacity:1;filter:brightness(2.5) saturate(0)}20%{transform:scale(1.12) rotate(-4deg);filter:brightness(1.6) sepia(1) hue-rotate(-30deg)}100%{transform:translate(-280px,140px) rotate(-60deg) scale(.4);opacity:0;filter:brightness(.6)}}
+@keyframes daOutB{0%{transform:none;opacity:1;filter:brightness(2.5) saturate(0)}20%{transform:scale(1.12) rotate(4deg);filter:brightness(1.6) sepia(1) hue-rotate(-30deg)}100%{transform:translate(280px,-160px) rotate(60deg) scale(.4);opacity:0;filter:brightness(.6)}}
 </style>
 </head>
   <body>
@@ -1925,6 +1936,19 @@ var BMAP={'duel started':'duel_started','your turn':'your_turn','enemy turn':'en
 duelAnnounce=function(m){var k=String(m||'').toLowerCase().replace(/[!.…]+$/,'').trim();if(BMAP[k])vplay(BMAP[k],true)};
 duelVoice=function(h,text,id){var w=/menang|about to win/i.test(text||'');vplay((w?'win_':'warn_')+(id?'id':'en'),true)};
 try{if(window.speechSynthesis)window.speechSynthesis.cancel()}catch(e){}
+})();
+</script>
+<script>
+(function(){
+function posIn(el,box){var x=0,y=0,e=el;while(e&&e!==box){x+=e.offsetLeft;y+=e.offsetTop;e=e.offsetParent}return e===box?{x:x,y:y,w:el.offsetWidth,h:el.offsetHeight}:null}
+var prev=duelRender;
+duelRender=function(){var box=document.querySelector('#p-play .duel-box'),snap=[];
+ if(box&&D){['P','B'].forEach(function(sd){var f=document.getElementById(sd==='P'?'duelPlayerField':'duelBotField');if(!f)return;f.querySelectorAll('.duel-card[data-duel]').forEach(function(el){var p=posIn(el,box);if(p)snap.push({u:el.dataset.duel,sd:sd,p:p,html:el.outerHTML})})})}
+ prev.apply(this,arguments);
+ if(!box||!D||!snap.length)return;
+ var live={};(D.fieldP||[]).concat(D.fieldB||[]).forEach(function(c){if(c)live[c.uid]=1});
+ snap.forEach(function(s){if(live[s.u])return;var w=document.createElement('div');w.innerHTML=s.html;var g=w.firstElementChild;if(!g)return;g.classList.remove('duel-new','duel-sel');g.removeAttribute('data-duel');g.classList.add('da-ghost','da-out-'+s.sd);g.style.left=s.p.x+'px';g.style.top=s.p.y+'px';g.style.width=s.p.w+'px';g.style.height=s.p.h+'px';box.appendChild(g);setTimeout(function(){g.remove()},900)});
+};
 })();
 </script>
 </body>
