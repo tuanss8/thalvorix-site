@@ -565,7 +565,7 @@ const bagKey=w=>'thalvorix_bag_'+String(w).toLowerCase();
 function bagCacheLoad(w){try{const a=JSON.parse(localStorage.getItem(bagKey(w))||'null');if(!Array.isArray(a))return[];return a.map(o=>({id:o.id,hero:HEROES[o.hi],rar:RAR[o.ri],listed:!!o.listed,price:o.price||0,priceWei:o.pw?BigInt(o.pw):0n,owner:String(w).toLowerCase()})).filter(n=>n.hero&&n.rar)}catch(e){return[]}}
 function bagCacheSave(w,list){try{localStorage.setItem(bagKey(w),JSON.stringify(list.map(n=>({id:n.id,hi:n.hero.id,ri:RAR.indexOf(n.rar),listed:!!n.listed,price:n.price||0,pw:n.priceWei?n.priceWei.toString():'0'}))))}catch(e){}}
 const itemKey=w=>'thalvorix_items_'+String(w).toLowerCase();
-function itemsLoad(w){try{rankLoad(w)}catch(e){}try{rankCloudPull(w)}catch(e){}try{const raw=localStorage.getItem(itemKey(w));if(raw==null){itemsSave(w);return}const a=JSON.parse(raw);if(!Array.isArray(a))return;ITEMS.forEach(i=>i.owned=false);a.forEach(id=>{if(ITEMS[id])ITEMS[id].owned=true})}catch(e){}}
+function itemsLoad(w){window.ITEMS_LOADED_W=String(w||'').toLowerCase();try{rankLoad(w)}catch(e){}try{rankCloudPull(w)}catch(e){}try{const raw=localStorage.getItem(itemKey(w));if(raw==null){itemsSave(w);return}const a=JSON.parse(raw);if(!Array.isArray(a))return;ITEMS.forEach(i=>i.owned=false);a.forEach(id=>{if(ITEMS[id])ITEMS[id].owned=true})}catch(e){}}
 function itemsSave(w){try{localStorage.setItem(itemKey(w),JSON.stringify(ITEMS.filter(i=>i.owned).map(i=>i.id)))}catch(e){}}
 function rankKey(w){return 'thx_rank_'+String(w||'').toLowerCase()}
 function rankSave(w){try{if(w)localStorage.setItem(rankKey(w),JSON.stringify({rank:S.rank,streak:S.streak,mp:S.matchesPlayed}))}catch(e){}try{if(w)rankCloudPush(w)}catch(e){}}
@@ -581,6 +581,8 @@ function boxesLoad(w){try{const a=JSON.parse(localStorage.getItem(boxKey(w))||'[
 function boxesSave(w){try{localStorage.setItem(boxKey(w),JSON.stringify(S.boxes))}catch(e){}}
 function saveBoxesIfWallet(){if(S.wallet)boxesSave(S.wallet)}
 /* Burn Box: burn Mystery Boxes for THAL (amount kept server-side, not shown). Deadline 2026-11-21 20:00 WIB. */
+/* one-time: in-game reward items (not on-chain, not staked) become Mystery Boxes */
+function rewardsToBoxes(){if(!S.wallet)return;const k='thx_rew2box_'+S.wallet.toLowerCase();if(localStorage.getItem(k)||window.ITEMS_LOADED_W!==S.wallet.toLowerCase())return;const c=ITEMS.filter(i=>i.owned&&!i.co&&!(typeof STAKED!=='undefined'&&STAKED.has(i.id)));c.forEach(i=>{i.owned=false;i.boxed=true;S.boxes.push(i.id)});localStorage.setItem(k,'1');if(c.length){saveBoxesIfWallet();saveItemsIfWallet();bagToast(c.length+' game reward'+(c.length>1?'s are':' is')+' now '+(c.length>1?'Mystery Boxes':'a Mystery Box')+'. Check Burn Box or your bag.');try{render()}catch(e){}}}
 const BURN_END=Date.parse('2026-11-21T13:00:00Z');let BURNED=0,BURN_W='',BURN_BUSY=false;
 function burnLeft(){const ms=BURN_END-Date.now();if(ms<=0)return'';const d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4);return d?d+'d '+h+'h':h+'h '+m+'m'}
 async function burnFetch(){if(!S.wallet||typeof fetch!=='function')return;const w=S.wallet.toLowerCase();try{const r=await fetch(SB_URL+'/functions/v1/burn-box',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w})});const o=await r.json();if(typeof o.burned==='number'){BURNED=o.burned;BURN_W=w;burnRender()}}catch(e){}}
@@ -597,7 +599,7 @@ async function burnBoxes(k){if(BURN_BUSY||!S.wallet)return;const n=(S.boxes||[])
  const r=await fetch(SB_URL+'/functions/v1/burn-box',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'burn',wallet:w.toLowerCase(),msg:c.msg,sig:c.sig,n:k})});const o=await r.json();
  if(r.status===401)localStorage.removeItem(rankSigKey(w));
  if(!o.ok){toast(o.error==='over cap'?'Burn limit reached for this wallet. Play more matches first.':o.error==='burn closed'?'Burn is closed.':'Burn failed. Please try again.');if(typeof o.burned==='number')BURNED=o.burned;return}
- const gone=S.boxes.slice(0,k);gone.forEach(id=>{if(ITEMS[id])ITEMS[id].boxed=false});S.boxes=S.boxes.slice(k);BURNED=o.burned;saveBoxesIfWallet();duelSfx('destroy');bagToast(k+' Mystery Box'+(k>1?'es':'')+' burned! THAL recorded to your wallet.')}catch(e){toast('Burn failed. Please try again.')}finally{BURN_BUSY=false;render()}}
+ const gone=S.boxes.slice(0,k);gone.forEach(id=>{if(ITEMS[id])ITEMS[id].boxed=false});S.boxes=S.boxes.slice(k);BURNED=o.burned;saveBoxesIfWallet();duelSfx('destroy');const rw=Array.isArray(o.rewards)?o.rewards:[],tot=rw.reduce((a,b)=>a+b,0),jp=rw.some(x=>x>=1e6);openModal(`<div class="x-drop"><div class="x-mbox"><img src="mbox.webp" alt="Mystery Box"></div><h3 class="x-gold x-congrats">${jp?'JACKPOT!':'Box burned!'}</h3><p>You got <b class="x-gold">${tot.toLocaleString('en-US')} THAL</b>${rw.length>1?' from '+rw.length+' boxes':''}.</p>${rw.length>1?`<p class="x-muted">${rw.map(x=>x.toLocaleString('en-US')).join(' · ')}</p>`:''}<p class="x-muted">THAL is recorded to your wallet and can be claimed when the token launches.</p><button class="x-cta" data-close>OK</button></div>`);if(jp)try{duelSfx('win')}catch(e){}}catch(e){toast('Burn failed. Please try again.')}finally{BURN_BUSY=false;render()}}
 /* Stake Items: stake owned items to earn THAL (rates kept server-side in stake-item). */
 const STAKE_RATE=[10000,25000,60000,150000,400000];let STAKED=new Map(),STAKE_W='',STAKE_BUSY=false;
 async function stakeFetch(){if(!S.wallet||typeof fetch!=='function'){stakeRender();return}const w=S.wallet.toLowerCase();try{const r=await fetch(SB_URL+'/functions/v1/stake-item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w})});const o=await r.json();if(Array.isArray(o.staked)){STAKED=new Map(o.staked.map(x=>[x.id,x.at]));STAKE_W=w;render()}}catch(e){}}
@@ -1270,7 +1272,7 @@ async function imLoadLogs(){const to=await latestBlock();let from=IC.last+1;cons
   IC.logs.push(ev)});
  IC.logs.sort((a,b)=>b.bn-a.bn||b.li-a.li)}
 async function imRefresh(force){if(IC.busy)return;if(!force&&IC.loaded&&Date.now()-IC.at<60000)return;IC.busy=true;
- try{await imLoadOwners();await imLoadLogs();IC.loaded=true;IC.at=Date.now();IC.err=false}catch(e){IC.err=true}finally{IC.busy=false}
+ try{await imLoadOwners();try{rewardsToBoxes()}catch(e){}await imLoadLogs();IC.loaded=true;IC.at=Date.now();IC.err=false}catch(e){IC.err=true}finally{IC.busy=false}
  try{rItems()}catch(e){}try{rInv()}catch(e){}imRenderAll()}
 function imRenderAll(){try{imRenderOffers()}catch(e){}try{imRenderHolders()}catch(e){}try{imRenderTraits()}catch(e){}try{imRenderActivity()}catch(e){}try{imRenderAnalytics()}catch(e){}}
 async function imTx(data,value,okMsg){try{toast('Confirm in your wallet…');const h=await sendTx({to:ITEMC,data,value:value?'0x'+value.toString(16):'0x0'});toast('Sent. Waiting for confirmation…');const r=await waitReceipt(h);
