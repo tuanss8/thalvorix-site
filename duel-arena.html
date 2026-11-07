@@ -254,8 +254,10 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
   <link rel="icon" href="/favicon.ico" sizes="any" /><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" /><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" /><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 <style id="bc-only">#p-play .duel-field{grid-template-columns:repeat(10,minmax(0,1fr))!important;gap:4px!important}
 #p-play .duel-field .duel-card,#p-play .duel-field .duel-slot{min-width:0;font-size:10px}
-@media (orientation:portrait) and (pointer:coarse){html.da-rot,html.da-rot body{overflow:hidden;height:100%}
-html.da-rot body{position:fixed;top:0;left:100vw;width:100vh;height:100vw;transform:rotate(90deg);transform-origin:0 0;overflow-y:auto;-webkit-overflow-scrolling:touch}}
+html.da-rot,html.da-rot body{overflow:hidden!important}
+html.da-rot body{position:fixed!important;top:0!important;margin:0!important;max-width:none!important;min-height:0!important;transform:rotate(90deg);transform-origin:0 0;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
+#daGate{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(11,7,16,.96);color:#e9dfc6;text-align:center;padding:24px;font:600 16px/1.4 system-ui}
+#daGate.on{display:flex}#daGate .ph{font-size:56px;animation:daTurn 1.6s ease-in-out infinite}@keyframes daTurn{50%{transform:rotate(90deg)}}
 #p-play>aside.callout,#p-play>h3,#p-play>p.x-muted,#p-play>#ladder,#p-play>.table-wrap,#playRankBox,#playArea>p.fineprint,#playArea>p.x-plbl,#myPick{display:none!important}#tabs,#liveBar{display:none!important}.bc-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:2px solid var(--x-gold,#c9a227);background:rgba(20,12,32,.92)}.bc-bar a{color:#e9dfc6;text-decoration:none;font-weight:700}.bc-bar b{color:var(--x-gold,#e3b341);letter-spacing:.5px}</style>
 </head>
   <body>
@@ -1766,9 +1768,19 @@ setTimeout(()=>{liveScan();setInterval(()=>{if(!document.hidden)liveScan()},6000
   <script>(function(){var t0=Date.now();try{sessionStorage.setItem('thx_tab','play')}catch(e){}
 var _go=go;window.go=go=function(t){if(t==='play')return _go('play');if(Date.now()-t0>2500){location.href='/#'+t}};
 _go('play');})();</script>
-  <script>(function(){var mob=matchMedia('(pointer:coarse)').matches;if(!mob)return;var R=document.documentElement;
-function fb(){R.classList.add('da-rot')}
-function tryLock(){try{var el=R,rf=el.requestFullscreen||el.webkitRequestFullscreen;var p=rf?rf.call(el,{navigationUI:'hide'}):null;Promise.resolve(p).then(function(){return screen.orientation&&screen.orientation.lock?screen.orientation.lock('landscape'):Promise.reject()}).then(function(){R.classList.remove('da-rot')}).catch(fb)}catch(e){fb()}}
-fb();document.addEventListener('click',function once(){document.removeEventListener('click',once,true);tryLock()},true);})();</script>
+  <div id="daGate"><div class="ph">&#128241;</div><div>Play in landscape</div><button class="x-cta" id="daGo">Play &#9654;</button></div>
+<script>(function(){var R=document.documentElement,B=document.body,G=document.getElementById('daGate');
+if(!matchMedia('(pointer:coarse)').matches)return;
+function portrait(){return innerHeight>innerWidth}
+function size(){if(!R.classList.contains('da-rot'))return;var w=innerWidth,h=innerHeight;B.style.width=h+'px';B.style.height=w+'px';B.style.left=w+'px'}
+function unrot(){R.classList.remove('da-rot');B.style.width=B.style.height=B.style.left=''}
+function rot(){R.classList.add('da-rot');size()}
+function update(){if(locked||!portrait()){unrot();G.classList.remove('on');return}if(tried){rot();G.classList.remove('on')}else G.classList.add('on')}
+var locked=false,tried=false;
+function go(){tried=true;try{var rf=R.requestFullscreen||R.webkitRequestFullscreen;Promise.resolve(rf?rf.call(R):null).then(function(){return screen.orientation&&screen.orientation.lock?screen.orientation.lock('landscape'):Promise.reject()}).then(function(){locked=true;update()}).catch(function(){update()})}catch(e){update()}}
+document.getElementById('daGo').onclick=go;
+document.addEventListener('fullscreenchange',function(){if(!document.fullscreenElement){locked=false;update()}});
+addEventListener('resize',function(){setTimeout(function(){update();size()},150)});
+update();})();</script>
   </body>
 </html>
