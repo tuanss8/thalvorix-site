@@ -44,7 +44,15 @@
       .x-brand{flex:none;font:var(--type-label);letter-spacing:.18em;color:var(--x-gold);margin-right:8px}
       .x-tabs button{flex:none;min-height:var(--tap);padding:0 14px;border-radius:var(--r-pill);border:0;background:none;color:var(--text-secondary);font:var(--type-label);cursor:pointer}
       .x-tabs button[aria-selected=true]{color:#1a1020;background:var(--x-gold)}
-      .x-box{background:var(--x-panel);border:1px solid var(--x-line);border-radius:var(--r-l);padding:20px;display:flex;flex-direction:column;gap:12px}
+      .x-burn{margin:0 0 16px;max-width:460px;background:linear-gradient(180deg,rgba(40,22,60,.95),rgba(14,8,22,.95));border:1px solid #8a6d3b;border-radius:var(--r-l);padding:18px;display:flex;flex-direction:column;gap:14px}
+.x-burn-head{display:flex;gap:12px;align-items:center}.x-burn-head img{width:48px;height:48px;object-fit:contain}
+.x-burn-when{font:12px/1.3 ui-monospace,monospace;letter-spacing:.06em;color:var(--x-gold);text-transform:uppercase}
+.x-burn-title{font-size:22px;font-weight:700;margin:2px 0 0}
+.x-burn-warn{color:#ff9b9b;font-weight:600}.x-burn-warn::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff7b7b;margin-right:8px}
+.x-burn-row{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:12px}
+.x-burn-row small{display:block;color:var(--x-muted,#aaa)}.x-burn-row b{font-size:44px;line-height:1;font-weight:300}.x-burn-row .r{text-align:right}.x-burn-arrow{font-size:22px;opacity:.6;padding-bottom:8px}
+.x-burn .x-cta{width:100%;font-size:17px}.x-burn .x-cta[disabled]{opacity:.5;cursor:not-allowed}
+.x-box{background:var(--x-panel);border:1px solid var(--x-line);border-radius:var(--r-l);padding:20px;display:flex;flex-direction:column;gap:12px}
       .x-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
       .x-in{min-height:var(--tap);padding:0 14px;border-radius:var(--r-s);border:1px solid var(--stroke-primary);background:var(--fill-primary-on);color:var(--text-primary);font:var(--type-body);flex:1 1 160px;min-width:0}
       select.x-in{flex:0 1 auto}
@@ -471,6 +479,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
           <h3>Items</h3>
           <div class="x-grid" id="invItems"></div>
           <h3>Mystery Boxes</h3>
+          <div class="x-burn" id="burnBox" hidden></div>
           <div class="x-grid" id="invBoxes"></div>
         </section>
         <section class="section x-panel" id="p-token" hidden>
@@ -556,6 +565,26 @@ const boxKey=w=>'thalvorix_boxes_'+String(w).toLowerCase();
 function boxesLoad(w){try{const a=JSON.parse(localStorage.getItem(boxKey(w))||'[]');if(!Array.isArray(a))return;S.boxes=a.filter(id=>ITEMS[id]);S.boxes.forEach(id=>{ITEMS[id].boxed=true})}catch(e){S.boxes=[]}}
 function boxesSave(w){try{localStorage.setItem(boxKey(w),JSON.stringify(S.boxes))}catch(e){}}
 function saveBoxesIfWallet(){if(S.wallet)boxesSave(S.wallet)}
+/* Burn Box: burn Mystery Boxes for THX (amount kept server-side, not shown). Deadline 2026-11-21 20:00 WIB. */
+const BURN_END=Date.parse('2026-11-21T13:00:00Z');let BURNED=0,BURN_W='',BURN_BUSY=false;
+function burnLeft(){const ms=BURN_END-Date.now();if(ms<=0)return'';const d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4);return d?d+'d '+h+'h':h+'h '+m+'m'}
+async function burnFetch(){if(!S.wallet||typeof fetch!=='function')return;const w=S.wallet.toLowerCase();try{const r=await fetch(SB_URL+'/functions/v1/burn-box',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w})});const o=await r.json();if(typeof o.burned==='number'){BURNED=o.burned;BURN_W=w;burnRender()}}catch(e){}}
+function burnRender(){const el=document.getElementById('burnBox');if(!el)return;const n=(S.boxes||[]).length;if(S.wallet&&BURN_W!==S.wallet.toLowerCase()){BURN_W=S.wallet.toLowerCase();BURNED=0;burnFetch()}
+ if(!S.wallet||(!n&&!BURNED)){el.hidden=true;el.innerHTML='';return}el.hidden=false;const left=burnLeft(),open=!!left;
+ el.innerHTML=`<div class="x-burn-head"><img src="mbox.webp" alt=""><div><div class="x-burn-when">Before 21 Nov 2026, 20:00 WIB${open?' · '+left+' left':' · closed'}</div><div class="x-burn-title">Burn your box for THX</div></div></div>
+ <div class="x-burn-warn">Unburned boxes earn no THX.</div>
+ <div class="x-burn-row"><div><small>Your boxes</small><b>${n}</b></div><span class="x-burn-arrow">→</span><div class="r"><small>Boxes burned</small><b>${BURNED}</b></div></div>
+ <button class="x-cta" id="burnOne" ${!open||!n||BURN_BUSY?'disabled':''}>${!open?'Burn closed':BURN_BUSY?'Burning…':n?'Burn 1 box · '+left+' left':'No boxes to burn'}</button>${n>1&&open?`<button class="btn" id="burnAll" ${BURN_BUSY?'disabled':''}>Burn all ${n} boxes</button>`:''}
+ <p class="x-muted" style="margin:0">THX is recorded to your wallet and can be claimed when the THX token launches. Burned boxes are gone and cannot be opened.</p>`}
+async function burnBoxes(k){if(BURN_BUSY||!S.wallet)return;const n=(S.boxes||[]).length;k=Math.min(k,n);if(k<1)return;if(Date.now()>BURN_END){toast('Burn is closed.');return}
+ if(!confirm('Burn '+k+' Mystery Box'+(k>1?'es':'')+' for THX? Burned boxes cannot be opened.'))return;
+ sessionStorage.removeItem('thx_rsig_no');BURN_BUSY=true;burnRender();try{const w=S.wallet;const c=await rankSig(w);if(!c){toast('Please sign in your wallet to burn.');return}
+ const r=await fetch(SB_URL+'/functions/v1/burn-box',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'burn',wallet:w.toLowerCase(),msg:c.msg,sig:c.sig,n:k})});const o=await r.json();
+ if(r.status===401)localStorage.removeItem(rankSigKey(w));
+ if(!o.ok){toast(o.error==='over cap'?'Burn limit reached for this wallet. Play more matches first.':o.error==='burn closed'?'Burn is closed.':'Burn failed. Please try again.');if(typeof o.burned==='number')BURNED=o.burned;return}
+ const gone=S.boxes.slice(0,k);gone.forEach(id=>{if(ITEMS[id])ITEMS[id].boxed=false});S.boxes=S.boxes.slice(k);BURNED=o.burned;saveBoxesIfWallet();duelSfx('destroy');bagToast(k+' Mystery Box'+(k>1?'es':'')+' burned! THX recorded to your wallet.')}catch(e){toast('Burn failed. Please try again.')}finally{BURN_BUSY=false;render()}}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#burnOne,#burnAll');if(!t)return;burnBoxes(t.id==='burnAll'?(S.boxes||[]).length:1)});
+setInterval(()=>{const el=document.getElementById('burnBox');if(el&&!el.hidden&&!BURN_BUSY)burnRender()},60000);
 async function checkBoxGrants(){if(!S.wallet||typeof fetch!=='function')return;const w=S.wallet.toLowerCase();try{const r=await fetch('box-grants.json');const j=await r.json();const g=(j&&j.grants||[]).find(x=>String(x.wallet||'').toLowerCase()===w);if(!g||!(g.boxes>0))return;const ck='thalvorix_boxgrants_'+w;let claimed=0;try{claimed=parseInt(localStorage.getItem(ck)||'0',10)||0}catch(e){}const owed=Math.max(0,Math.min(g.boxes,99)-claimed);if(!owed)return;for(let i=0;i<owed;i++){const it=rollBoxItem(S.rank.t||0);if(it)S.boxes.push(it.id)}try{localStorage.setItem(ck,String(claimed+owed))}catch(e){}saveBoxesIfWallet();render();bagToast('You received a Mystery Box reward'+(g.reason?' for '+g.reason:'')+'! Check your bag.')}catch(e){}}
 async function rpcCall(method,params){
   const p=prov();
@@ -1264,7 +1293,7 @@ $('#iPage').textContent=`Page ${ip+1} / ${pg} · ${L.length.toLocaleString()} it
 $('#iPrev').onclick=()=>{ip--;rItems()};$('#iNext').onclick=()=>{ip++;rItems()};$('#iSearch').oninput=$('#iTier').onchange=$('#iSort').onchange=$('#iShow').onchange=()=>{ip=0;rItems()};
 function rInv(){const ra=$('#invRar')?$('#invRar').value:'';if(!S.wallet){$('#invHeroes').innerHTML='<p class="x-muted">Connect your wallet to see your heroes.</p>';}else{const _all=mine(),_vis=_all.filter(n=>!n.listed&&(!ra||n.rar[0]===ra));$('#invHeroes').innerHTML=_vis.map(n=>nftCard(n,`<button class="btn" data-list="${n.id}">List for sale</button>`)).join('')||(S.invError?'<p class="x-muted">Inventory could not be loaded. Please reopen the bag to try again.</p>':(_all.length>0&&_all.every(n=>n.listed)?'<p class="x-muted">All your heroes are listed for sale. Find them in the NFT Market.</p>':'<p class="x-muted">No heroes yet.</p>'));}
 const its=ITEMS.filter(i=>i.owned).sort((a,b)=>b.tk-a.tk||b.price-a.price);$('#invItems').innerHTML=its.map(i=>`<div class="x-card r-${i.tier}"><button class="x-ibtn" data-idet="${i.id}" aria-label="Details for ${i.name}">${ico(i)}</button><b>${i.name}</b><span class="x-muted">${i.type} · ${i.el}</span><span class="t-${i.tier}">${i.tier}</span><span class="x-muted">Value ${fmt(i.price)}</span>${feeTxt(i.price)}${imAct(i)}</div>`).join('')||'<p class="x-muted">No items yet. Buy some or earn them in battle.</p>'
-const _bx=$('#invBoxes');if(_bx)_bx.innerHTML=S.boxes.map(id=>`<div class="x-card"><button class="x-ibtn" data-mboxopen="${id}" aria-label="Open Mystery Box"><span class="x-mbox x-mbox--sm"><img src="mbox.webp" alt="Mystery Box"></span></button><b>Mystery Box</b><span class="x-muted">Tap Open to reveal your reward</span><button class="btn" data-mboxopen="${id}">Open</button></div>`).join('')||'<p class="x-muted">No mystery boxes yet. Win a reward in battle to get one.</p>'}
+try{burnRender()}catch(e){}const _bx=$('#invBoxes');if(_bx)_bx.innerHTML=S.boxes.map(id=>`<div class="x-card"><button class="x-ibtn" data-mboxopen="${id}" aria-label="Open Mystery Box"><span class="x-mbox x-mbox--sm"><img src="mbox.webp" alt="Mystery Box"></span></button><b>Mystery Box</b><span class="x-muted">Tap Open to reveal your reward</span><button class="btn" data-mboxopen="${id}">Open</button></div>`).join('')||'<p class="x-muted">No mystery boxes yet. Win a reward in battle to get one.</p>'}
 const comboNfts=()=>{const m=mine();if(!S.deckOff)S.deckOff=new Set();const c=m.filter(n=>!S.deckOff.has(n.id));return c.length?c:m};
 const pickedNft=()=>{const c=comboNfts();return c.length?c[0]:null};
 const duelLPMax=()=>1000+200*(S.rank&&S.rank.t||0);
