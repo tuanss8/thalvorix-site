@@ -260,6 +260,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
         <button data-t="home" aria-selected="true">Home</button>
         <button data-t="mint">Free Mint</button>
         <button data-t="heroes">Heroes</button>
+        <button data-t="burn">Burn Box</button>
         <button data-t="nft">NFT Market</button>
         <button data-t="items">Item Market</button>
         <button data-t="play">Play Game</button>
@@ -471,6 +472,10 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
 
 
 
+        <section class="section x-panel" id="p-burn" hidden>
+          <div class="head"><p class="head__eyebrow">Event</p><h2>Burn Box</h2></div>
+          <div class="x-burn" id="burnBox"></div>
+        </section>
         <section class="section x-panel" id="p-inv" hidden>
           <div class="head"><p class="head__eyebrow" id="invEyebrow">my bag</p><h2>Your heroes and loot</h2></div>
           <h3>Hero NFTs</h3>
@@ -479,7 +484,6 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
           <h3>Items</h3>
           <div class="x-grid" id="invItems"></div>
           <h3>Mystery Boxes</h3>
-          <div class="x-burn" id="burnBox" hidden></div>
           <div class="x-grid" id="invBoxes"></div>
         </section>
         <section class="section x-panel" id="p-token" hidden>
@@ -570,7 +574,7 @@ const BURN_END=Date.parse('2026-11-21T13:00:00Z');let BURNED=0,BURN_W='',BURN_BU
 function burnLeft(){const ms=BURN_END-Date.now();if(ms<=0)return'';const d=Math.floor(ms/864e5),h=Math.floor(ms%864e5/36e5),m=Math.floor(ms%36e5/6e4);return d?d+'d '+h+'h':h+'h '+m+'m'}
 async function burnFetch(){if(!S.wallet||typeof fetch!=='function')return;const w=S.wallet.toLowerCase();try{const r=await fetch(SB_URL+'/functions/v1/burn-box',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w})});const o=await r.json();if(typeof o.burned==='number'){BURNED=o.burned;BURN_W=w;burnRender()}}catch(e){}}
 function burnRender(){const el=document.getElementById('burnBox');if(!el)return;const n=(S.boxes||[]).length;if(S.wallet&&BURN_W!==S.wallet.toLowerCase()){BURN_W=S.wallet.toLowerCase();BURNED=0;burnFetch()}
- if(!S.wallet||(!n&&!BURNED)){el.hidden=true;el.innerHTML='';return}el.hidden=false;const left=burnLeft(),open=!!left;
+ el.hidden=false;if(!S.wallet){el.innerHTML=`<div class="x-burn-head"><img src="mbox.webp" alt=""><div><div class="x-burn-when">Before 21 Nov 2026, 20:00 WIB${burnLeft()?' · '+burnLeft()+' left':' · closed'}</div><div class="x-burn-title">Burn your box for THAL</div></div></div><div class="x-burn-warn">Unburned boxes earn no THAL.</div><p class="x-muted" style="margin:0">Connect your wallet to see your Mystery Boxes and burn them.</p>`;return}const left=burnLeft(),open=!!left;
  el.innerHTML=`<div class="x-burn-head"><img src="mbox.webp" alt=""><div><div class="x-burn-when">Before 21 Nov 2026, 20:00 WIB${open?' · '+left+' left':' · closed'}</div><div class="x-burn-title">Burn your box for THAL</div></div></div>
  <div class="x-burn-warn">Unburned boxes earn no THAL.</div>
  <div class="x-burn-row"><div><small>Your boxes</small><b>${n}</b></div><span class="x-burn-arrow">→</span><div class="r"><small>Boxes burned</small><b>${BURNED}</b></div></div>
@@ -961,7 +965,7 @@ const fmt=n=>n.toFixed(n>0&&n<.01?Math.min(6,2-Math.floor(Math.log10(n))):3).rep
 confirmDlg=(t,p,ok,label,extra='')=>openModal(`<h3>${t}</h3>${extra}<p>Price: <b class="x-gold">${fmt(p)}</b></p><div class="x-row">${ok}<button class="btn" data-close>Cancel</button></div>`),mine=()=>S.myNfts;const findNft=id=>S.myNfts.find(n=>n.id==id)||S.nfts.find(n=>n.id==id);
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,3500)}
 let tab='home';
-function go(t){tab=t;try{sessionStorage.setItem('thx_tab',t)}catch(e){}$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
+function go(t){tab=t;try{sessionStorage.setItem('thx_tab',t)}catch(e){}$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}}if(t==='burn'){try{burnRender()}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
 $('#tabs').onclick=e=>{const b=e.target.closest('button[data-t]');if(!b)return;go(b.dataset.t)};
 // ---------- Settings: language switcher (EN / ID / ZH / JA / HI) ----------
 const I18N={
