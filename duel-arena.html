@@ -1787,7 +1787,7 @@ $('#musVol').oninput=()=>{if(M.on&&tab!=='nft'&&tab!=='play')M.master.gain.setTa
 function playMusicSync(){const inPlay=tab==='play',want=inPlay&&M.on;
 if(!M.ctx)return;const C=M.ctx;
 if(!M.plGain){M.plGain=C.createGain();M.plGain.gain.value=0;const pc=C.createDynamicsCompressor();pc.threshold.value=-10;pc.knee.value=4;pc.ratio.value=12;pc.attack.value=.003;pc.release.value=.2;M.plGain.connect(pc);pc.connect(C.destination)}
-if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music6.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
+if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music7.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
 if(want){if(M.master){M.master.gain.cancelScheduledValues(n);M.master.gain.setTargetAtTime(0,n,.08)}
 if(M.plBuf&&!M.plSrc){const sr=C.createBufferSource();sr.buffer=M.plBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=M.plBuf.duration-0.02;sr.connect(M.plGain);sr.start(n,0.03);M.plSrc=sr}
@@ -1909,10 +1909,22 @@ duelRender=function(){orig.apply(this,arguments);if(!D||!D.handB)return;
  var bh=document.querySelector('#duelBotName');var host=bh&&bh.parentNode;if(host){var e=document.getElementById('fdBot');if(!e){e=document.createElement('span');e.id='fdBot';host.appendChild(e)}
  var n=D.handB.length,h='<span class="fd-hand" title="Enemy hand (face down)">';for(var i=0;i<Math.min(n,10);i++)h+='<i class="fd-card"></i>';h+='</span>';if(D.deckB)h+='<span class="fd-deck" title="Enemy deck"><i class="fd-card"></i>'+D.deckB.length+'</span>';e.innerHTML=h}
  var ph=document.querySelector('#duelPlayerName');var ph2=ph&&ph.parentNode;if(ph2&&D.deckP){var p=document.getElementById('fdYou');if(!p){p=document.createElement('span');p.id='fdYou';ph2.appendChild(p)}p.innerHTML='<span class="fd-deck" title="Your deck"><i class="fd-card"></i>'+D.deckP.length+'</span>'}};
-/* Voice callouts (browser speech, short, quiet) */
-var VO={summon:['Summon!','I summon you!','Come forth!'],attack:['Attack!','Go!','Strike!'],destroy:['Destroyed!','Down you go!'],turn:['Your turn!'],win:['Victory!'],lose:['Defeat...'],start:['Duel!']};
-var last=0;function say(k){try{if(SFX_MUTED||(D&&D.muted))return;var ss=window.speechSynthesis;if(!ss||!VO[k])return;var now=Date.now();if(now-last<700&&k!=='win'&&k!=='lose')return;last=now;ss.cancel();var a=VO[k],u=new SpeechSynthesisUtterance(a[Math.floor(Math.random()*a.length)]);u.lang='en-US';u.rate=1.05;u.pitch=k==='lose'?0.7:0.85;u.volume=0.7;var vs=ss.getVoices().filter(function(v){return /^en/i.test(v.lang)});var pick=vs.find(function(v){return /male|daniel|david|google uk english male|alex/i.test(v.name)})||vs[0];if(pick)u.voice=pick;ss.speak(u)}catch(e){}}
-var os=duelSfx;duelSfx=function(kind){os.apply(this,arguments);if(kind==='turn'){setTimeout(function(){if(D&&D.phase==='Main')say('turn')},250)}else say(kind)};
+/* Recorded voice callouts (mp3 in /vo), played with Web Audio so they work on phones */
+var VB={},VL={},VW={},vlast=0,vsrc=null;
+function vctx(){try{DUEL_AC=DUEL_AC||new (window.AudioContext||window.webkitAudioContext)();if(DUEL_AC.state==='suspended')DUEL_AC.resume();return DUEL_AC}catch(e){return null}}
+function vload(n){var C=vctx();if(!C||VB[n]||VL[n])return;VL[n]=1;fetch('vo/'+n+'.mp3?v=1').then(function(r){return r.arrayBuffer()}).then(function(ab){return new Promise(function(ok,no){C.decodeAudioData(ab,ok,no)})}).then(function(b){VB[n]=b;if(VW[n]&&Date.now()-VW[n]<2500){VW[n]=0;vplay(n,true)}}).catch(function(){VL[n]=0})}
+var ALL=['duel_started','your_turn','enemy_turn','opp_turn','online_duel','victory','defeat','summon1','summon2','summon3','attack1','attack2','attack3','destroy1','destroy2','win_en','warn_en','win_id','warn_id'];
+function vpreload(){ALL.forEach(vload)}
+try{vpreload()}catch(e){}
+document.addEventListener('pointerdown',function f(){vpreload();document.removeEventListener('pointerdown',f,true)},true);
+function vplay(n,force){try{if((typeof SFX_MUTED!=='undefined'&&SFX_MUTED)||(D&&D.muted))return;var C=vctx();if(!C)return;var b=VB[n];if(!b){VW[n]=Date.now();vload(n);return}var now=Date.now();if(!force&&now-vlast<600)return;vlast=now;if(vsrc){try{vsrc.stop()}catch(e){}}var s=C.createBufferSource(),g=C.createGain();g.gain.value=1.0;s.buffer=b;s.connect(g);g.connect(C.destination);s.start();vsrc=s}catch(e){}}
+var RND=function(a){return a[Math.floor(Math.random()*a.length)]};
+var VO={summon:['summon1','summon2','summon3'],attack:['attack1','attack2','attack3'],destroy:['destroy1','destroy2']};
+var os=duelSfx;duelSfx=function(kind){os.apply(this,arguments);if(VO[kind])setTimeout(function(){vplay(RND(VO[kind]))},kind==='destroy'?350:0)};
+var BMAP={'duel started':'duel_started','your turn':'your_turn','enemy turn':'enemy_turn',"opponent's turn":'opp_turn','online duel':'online_duel','victory':'victory','defeat':'defeat'};
+duelAnnounce=function(m){var k=String(m||'').toLowerCase().replace(/[!.…]+$/,'').trim();if(BMAP[k])vplay(BMAP[k],true)};
+duelVoice=function(h,text,id){var w=/menang|about to win/i.test(text||'');vplay((w?'win_':'warn_')+(id?'id':'en'),true)};
+try{if(window.speechSynthesis)window.speechSynthesis.cancel()}catch(e){}
 })();
 </script>
 </body>
