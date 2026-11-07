@@ -1977,11 +1977,11 @@ duelRender=function(){prev.apply(this,arguments);if(!D)return;
  var pf=document.getElementById('duelPlayerField'),bf=document.getElementById('duelBotField');if(!pf)return;
  /* stagger new cards like a dealer handing them out */
  var news=[].slice.call(document.querySelectorAll('#duelBotField .duel-new,#duelPlayerField .duel-new'));
- if(news.length>1){var bots=news.filter(function(e){return bf.contains(e)}),pl=news.filter(function(e){return pf.contains(e)}),seq=[];for(var i=0;i<Math.max(bots.length,pl.length);i++){if(bots[i])seq.push(bots[i]);if(pl[i])seq.push(pl[i])}seq.forEach(function(e,i){e.style.animationDelay=(i*0.11)+'s';setTimeout(function(){try{sfxSweep(1800,700,.12,'triangle',.06)}catch(_){}} ,i*110)})}
+ if(news.length>1){var bots=news.filter(function(e){return bf.contains(e)}),pl=news.filter(function(e){return pf.contains(e)}),seq=[];for(var i=0;i<Math.max(bots.length,pl.length);i++){if(bots[i])seq.push(bots[i]);if(pl[i])seq.push(pl[i])}var gap=Math.min(0.5,2/seq.length);seq.forEach(function(e,i){e.style.animationDelay=(i*gap)+'s';e.style.animationDuration='.75s';setTimeout(function(){try{sfxSweep(1800,700,.12,'triangle',.06)}catch(_){}} ,i*gap*1000)})}
  pf.querySelectorAll('.duel-card[data-duel]').forEach(function(el){var i=D.fieldP.findIndex(function(c){return c&&c.uid===el.dataset.duel});if(i<0)return;var c=D.fieldP[i];
   el.classList.toggle('da-down',!!c.down);
   el.onclick=function(ev){ev.stopPropagation();if(!D||!D.active||D.phase==='Bot'||D.phase==='Over'){return}
-   if(c.down){c.down=false;el.classList.add('da-flip');try{duelSfx('card')}catch(_){}setTimeout(function(){duelRender()},160);return}
+   if(c.down){c.down=false;el.classList.add('da-flip');setTimeout(function(){if(D&&D.active&&!c.used&&D.phase!=='Bot'&&D.phase!=='Over')duelSelect(i);else duelRender()},160);return}
    if(D.sel===i){c.down=true;D.sel=null;try{duelHideCursor()}catch(_){}try{duelSfx('card')}catch(_){}el.classList.add('da-flip');setTimeout(function(){duelRender()},160);return}
    duelSelect(i)}})};
 })();
