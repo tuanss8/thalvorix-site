@@ -252,7 +252,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
 @media (prefers-reduced-motion:reduce){.live-track{animation-duration:120s}}
 </style>
   <link rel="icon" href="/favicon.ico" sizes="any" /><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" /><link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" /><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-<style id="bc-only">#tabs,#liveBar{display:none!important}.bc-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:2px solid var(--x-gold,#c9a227);background:rgba(20,12,32,.92)}.bc-bar a{color:#e9dfc6;text-decoration:none;font-weight:700}.bc-bar b{color:var(--x-gold,#e3b341);letter-spacing:.5px}</style>
+<style id="bc-only">#playArea{display:none!important}#tabs,#liveBar{display:none!important}.bc-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:2px solid var(--x-gold,#c9a227);background:rgba(20,12,32,.92)}.bc-bar a{color:#e9dfc6;text-decoration:none;font-weight:700}.bc-bar b{color:var(--x-gold,#e3b341);letter-spacing:.5px}</style>
 </head>
   <body>
     <div class="page" id="top">
@@ -445,6 +445,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
         <section class="section x-panel" id="p-play" hidden>
           <div class="x-box" id="playRankBox" style="margin-bottom:18px" hidden><div class="x-rank" id="rankCard"></div><h3>Your hero</h3><ul id="teamList" class="x-muted"></ul></div>
           <div class="head"><p class="head__eyebrow">Play Game</p><h2>Duel Arena &mdash; Card Battle.</h2></div>
+          <div class="x-row" style="margin:6px 0 18px"><a class="x-cta" id="bcPlay" href="/duel-arena" style="text-decoration:none">Play &#9654;</a></div>
           <div id="playArea">
             <div class="x-row" style="margin-bottom:12px"><p id="pickInfo" style="flex:1 1 220px"></p><button class="x-cta" id="startBtn">Start Duel Arena</button></div>
             <div class="x-box duel-box">
