@@ -1806,7 +1806,7 @@ $('#musVol').oninput=()=>{if(M.on&&tab!=='nft'&&tab!=='play')M.master.gain.setTa
 function playMusicSync(){const inPlay=tab==='play',want=inPlay&&M.on;/* in-game: energetic battle loop play-music8 */
 if(!M.ctx)return;const C=M.ctx;
 if(!M.plGain){M.plGain=C.createGain();M.plGain.gain.value=0;const pc=C.createDynamicsCompressor();pc.threshold.value=-10;pc.knee.value=4;pc.ratio.value=12;pc.attack.value=.003;pc.release.value=.2;M.plGain.connect(pc);pc.connect(C.destination)}
-if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music9.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
+if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music9.m4a?v=2').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
 if(want){if(M.master){M.master.gain.cancelScheduledValues(n);M.master.gain.setTargetAtTime(0,n,.08)}
 if(M.plBuf&&!M.plSrc){const sr=C.createBufferSource();sr.buffer=M.plBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=M.plBuf.duration-0.02;sr.connect(M.plGain);sr.start(n,0.03);M.plSrc=sr}
