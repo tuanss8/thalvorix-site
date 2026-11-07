@@ -261,6 +261,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
         <button data-t="mint">Free Mint</button>
         <button data-t="heroes">Heroes</button>
         <button data-t="burn">Burn Box</button>
+        <button data-t="stake">Stake</button>
         <button data-t="nft">NFT Market</button>
         <button data-t="items">Item Market</button>
         <button data-t="play">Play Game</button>
@@ -476,6 +477,15 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
           <div class="head"><p class="head__eyebrow">Event</p><h2>Burn Box</h2></div>
           <div class="x-burn" id="burnBox"></div>
         </section>
+        <section class="section x-panel" id="p-stake" hidden>
+          <div class="head"><p class="head__eyebrow">Earn THAL</p><h2>Stake Items</h2></div>
+          <p class="x-muted" id="stakeNote">Stake your items to earn THAL every day. Higher rarity earns more. THAL is recorded to your wallet and can be claimed when the THAL token launches. Staked items cannot be sold, listed or claimed until you unstake them.</p>
+          <div class="x-row" id="stakeBar"></div>
+          <h3>Staked</h3>
+          <div class="x-grid" id="stakeOn"></div>
+          <h3>Your items</h3>
+          <div class="x-grid" id="stakeOff"></div>
+        </section>
         <section class="section x-panel" id="p-inv" hidden>
           <div class="head"><p class="head__eyebrow" id="invEyebrow">my bag</p><h2>Your heroes and loot</h2></div>
           <h3>Hero NFTs</h3>
@@ -587,6 +597,24 @@ async function burnBoxes(k){if(BURN_BUSY||!S.wallet)return;const n=(S.boxes||[])
  if(r.status===401)localStorage.removeItem(rankSigKey(w));
  if(!o.ok){toast(o.error==='over cap'?'Burn limit reached for this wallet. Play more matches first.':o.error==='burn closed'?'Burn is closed.':'Burn failed. Please try again.');if(typeof o.burned==='number')BURNED=o.burned;return}
  const gone=S.boxes.slice(0,k);gone.forEach(id=>{if(ITEMS[id])ITEMS[id].boxed=false});S.boxes=S.boxes.slice(k);BURNED=o.burned;saveBoxesIfWallet();duelSfx('destroy');bagToast(k+' Mystery Box'+(k>1?'es':'')+' burned! THAL recorded to your wallet.')}catch(e){toast('Burn failed. Please try again.')}finally{BURN_BUSY=false;render()}}
+/* Stake Items: stake owned items to earn THAL (rates kept server-side in stake-item). */
+let STAKED=new Map(),STAKE_W='',STAKE_BUSY=false;
+async function stakeFetch(){if(!S.wallet||typeof fetch!=='function'){stakeRender();return}const w=S.wallet.toLowerCase();try{const r=await fetch(SB_URL+'/functions/v1/stake-item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w})});const o=await r.json();if(Array.isArray(o.staked)){STAKED=new Map(o.staked.map(x=>[x.id,x.at]));STAKE_W=w;render()}}catch(e){}}
+function stakeDays(at){const d=(Date.now()-at)/864e5;return d<1?Math.max(1,Math.floor(d*24))+'h':Math.floor(d)+'d'}
+function stakeRender(){const on=$('#stakeOn'),off=$('#stakeOff'),bar=$('#stakeBar');if(!on||!off)return;if(S.wallet&&STAKE_W!==S.wallet.toLowerCase()){STAKE_W=S.wallet.toLowerCase();STAKED=new Map();stakeFetch()}
+ if(!S.wallet){on.innerHTML='<p class="x-muted">Connect your wallet to stake items.</p>';off.innerHTML='';if(bar)bar.innerHTML='';return}
+ const mine=ITEMS.filter(i=>i.owned&&!i.boxed).sort((a,b)=>b.tk-a.tk);const st=mine.filter(i=>STAKED.has(i.id)),fr=mine.filter(i=>!STAKED.has(i.id)&&!(i.listed));
+ const card=(i,k)=>`<div class="x-card r-${i.tier}">${ico(i)}<b>${i.name}</b><span class="t-${i.tier}">${i.tier}</span>${k?`<span class="x-gold">Staked · ${stakeDays(STAKED.get(i.id))}</span><button class="btn" data-unstake="${i.id}" ${STAKE_BUSY?'disabled':''}>Unstake</button>`:`<button class="x-cta" data-stake="${i.id}" ${STAKE_BUSY?'disabled':''}>Stake</button>`}</div>`;
+ on.innerHTML=st.map(i=>card(i,1)).join('')||'<p class="x-muted">No items staked yet.</p>';off.innerHTML=fr.map(i=>card(i,0)).join('')||'<p class="x-muted">No items to stake. Earn items in battle or buy them on the Item Market.</p>';
+ if(bar)bar.innerHTML=`<span class="x-muted">${st.length} item${st.length===1?'':'s'} staked</span>${fr.length?`<button class="x-cta" data-stakeall ${STAKE_BUSY?'disabled':''}>Stake all (${fr.length})</button>`:''}${st.length?`<button class="btn" data-unstakeall ${STAKE_BUSY?'disabled':''}>Unstake all</button>`:''}`}
+async function stakeDo(action,ids){if(STAKE_BUSY||!S.wallet||!ids.length)return;sessionStorage.removeItem('thx_rsig_no');STAKE_BUSY=true;stakeRender();try{const w=S.wallet;const c=await rankSig(w);if(!c){toast('Please sign in your wallet to '+action+'.');return}
+ const r=await fetch(SB_URL+'/functions/v1/stake-item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,wallet:w.toLowerCase(),msg:c.msg,sig:c.sig,ids:ids.slice(0,50)})});const o=await r.json();if(r.status===401)localStorage.removeItem(rankSigKey(w));
+ if(Array.isArray(o.staked))STAKED=new Map(o.staked.map(x=>[x.id,x.at]));
+ if(!o.ok){toast(o.error==='over cap'?'Stake limit reached. Win more matches to stake more items.':'Could not '+action+'. Please try again.');return}
+ bagToast(action==='stake'?'Item staked! It now earns THAL every day.':'Item unstaked. Your THAL earnings are saved.')}catch(e){toast('Could not '+action+'. Please try again.')}finally{STAKE_BUSY=false;render()}}
+document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('[data-stake],[data-unstake],[data-stakeall],[data-unstakeall]');if(!t)return;
+ if(t.dataset.stake!=null)stakeDo('stake',[+t.dataset.stake]);else if(t.dataset.unstake!=null){if(confirm('Unstake this item? It stops earning THAL.'))stakeDo('unstake',[+t.dataset.unstake])}
+ else if(t.hasAttribute('data-stakeall'))stakeDo('stake',ITEMS.filter(i=>i.owned&&!i.boxed&&!STAKED.has(i.id)&&!i.listed).map(i=>i.id));else if(confirm('Unstake all items? They stop earning THAL.'))stakeDo('unstake',[...STAKED.keys()])});
 document.addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('#burnOne,#burnAll');if(!t)return;burnBoxes(t.id==='burnAll'?(S.boxes||[]).length:1)});
 setInterval(()=>{const el=document.getElementById('burnBox');if(el&&!el.hidden&&!BURN_BUSY)burnRender()},60000);
 async function checkBoxGrants(){if(!S.wallet||typeof fetch!=='function')return;const w=S.wallet.toLowerCase();try{const r=await fetch('box-grants.json');const j=await r.json();const g=(j&&j.grants||[]).find(x=>String(x.wallet||'').toLowerCase()===w);if(!g||!(g.boxes>0))return;const ck='thalvorix_boxgrants_'+w;let claimed=0;try{claimed=parseInt(localStorage.getItem(ck)||'0',10)||0}catch(e){}const owed=Math.max(0,Math.min(g.boxes,99)-claimed);if(!owed)return;for(let i=0;i<owed;i++){const it=rollBoxItem(S.rank.t||0);if(it)S.boxes.push(it.id)}try{localStorage.setItem(ck,String(claimed+owed))}catch(e){}saveBoxesIfWallet();render();bagToast('You received a Mystery Box reward'+(g.reason?' for '+g.reason:'')+'! Check your bag.')}catch(e){}}
@@ -965,7 +993,7 @@ const fmt=n=>n.toFixed(n>0&&n<.01?Math.min(6,2-Math.floor(Math.log10(n))):3).rep
 confirmDlg=(t,p,ok,label,extra='')=>openModal(`<h3>${t}</h3>${extra}<p>Price: <b class="x-gold">${fmt(p)}</b></p><div class="x-row">${ok}<button class="btn" data-close>Cancel</button></div>`),mine=()=>S.myNfts;const findNft=id=>S.myNfts.find(n=>n.id==id)||S.nfts.find(n=>n.id==id);
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,3500)}
 let tab='home';
-function go(t){tab=t;try{sessionStorage.setItem('thx_tab',t)}catch(e){}$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}}if(t==='burn'){try{burnRender()}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
+function go(t){tab=t;try{sessionStorage.setItem('thx_tab',t)}catch(e){}$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}}if(t==='burn'){try{burnRender()}catch(e){}}if(t==='stake'){try{stakeFetch()}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
 $('#tabs').onclick=e=>{const b=e.target.closest('button[data-t]');if(!b)return;go(b.dataset.t)};
 // ---------- Settings: language switcher (EN / ID / ZH / JA / HI) ----------
 const I18N={
@@ -1252,7 +1280,7 @@ async function imClaim(i){const w=S.wallet;if(!w)return;toast('Preparing your cl
  const sg=String(j.sig).replace('0x','');const data='0x5eddd157'+_w64(i.id).slice(0)+_w64(BigInt(j.deadline))+_w64(96)+_w64(sg.length/2)+sg.padEnd(Math.ceil(sg.length/64)*64,'0');
  try{toast('Confirm the claim in your wallet (gas only)…');const h=await sendTx({to:j.minter,data,value:'0x0'});toast('Sent. Waiting for confirmation…');const r=await waitReceipt(h);
   if(r&&r.status==='0x1')toast(`${i.name} is now on-chain. You can list it for sale.`);else toast('Claim failed. Check it on BscScan.');await imRefresh(true)}catch(e){toast(e&&e.code===4001?'Cancelled.':'Claim failed. Please try again.')}}
-async function imClick(e){const t=e.target.closest('[data-iclaim],[data-iclaimok],[data-ibuy],[data-ibuyok],[data-isell],[data-ilistok],[data-idelist],[data-ioffer],[data-iofferok],[data-iaccept],[data-icancel],[data-idet]');if(!t)return false;
+async function imClick(e){const t=e.target.closest('[data-iclaim],[data-iclaimok],[data-ibuy],[data-ibuyok],[data-isell],[data-ilistok],[data-idelist],[data-ioffer],[data-iofferok],[data-iaccept],[data-icancel],[data-idet]');if(!t)return false;{const sid=t.dataset.isell??t.dataset.iclaim??t.dataset.ilistok??t.dataset.iclaimok;if(sid!=null&&STAKED.has(+sid)){toast('This item is staked. Unstake it first.');return true}}
  const ds=t.dataset,me=iMe(),need=()=>{if(!S.wallet||!S.provider){toast('Connect your wallet first');return true}return false};
  if(ds.idet!=null){openModal(imDetail(ITEMS[+ds.idet]));return true}
  if(ds.iclaim!=null){if(need())return true;const i=ITEMS[+ds.iclaim];$('#modal').hidden=true;
@@ -1296,8 +1324,8 @@ $('#itemBody').innerHTML=L.slice(ip*50,ip*50+50).map(i=>`<tr><th scope="row"><di
 $('#iPage').textContent=`Page ${ip+1} / ${pg} · ${L.length.toLocaleString()} items`}
 $('#iPrev').onclick=()=>{ip--;rItems()};$('#iNext').onclick=()=>{ip++;rItems()};$('#iSearch').oninput=$('#iTier').onchange=$('#iSort').onchange=$('#iShow').onchange=()=>{ip=0;rItems()};
 function rInv(){const ra=$('#invRar')?$('#invRar').value:'';if(!S.wallet){$('#invHeroes').innerHTML='<p class="x-muted">Connect your wallet to see your heroes.</p>';}else{const _all=mine(),_vis=_all.filter(n=>!n.listed&&(!ra||n.rar[0]===ra));$('#invHeroes').innerHTML=_vis.map(n=>nftCard(n,`<button class="btn" data-list="${n.id}">List for sale</button>`)).join('')||(S.invError?'<p class="x-muted">Inventory could not be loaded. Please reopen the bag to try again.</p>':(_all.length>0&&_all.every(n=>n.listed)?'<p class="x-muted">All your heroes are listed for sale. Find them in the NFT Market.</p>':'<p class="x-muted">No heroes yet.</p>'));}
-const its=ITEMS.filter(i=>i.owned).sort((a,b)=>b.tk-a.tk||b.price-a.price);$('#invItems').innerHTML=its.map(i=>`<div class="x-card r-${i.tier}"><button class="x-ibtn" data-idet="${i.id}" aria-label="Details for ${i.name}">${ico(i)}</button><b>${i.name}</b><span class="x-muted">${i.type} · ${i.el}</span><span class="t-${i.tier}">${i.tier}</span><span class="x-muted">Value ${fmt(i.price)}</span>${feeTxt(i.price)}${imAct(i)}</div>`).join('')||'<p class="x-muted">No items yet. Buy some or earn them in battle.</p>'
-try{burnRender()}catch(e){}const _bx=$('#invBoxes');if(_bx)_bx.innerHTML=S.boxes.map(id=>`<div class="x-card"><button class="x-ibtn" data-mboxopen="${id}" aria-label="Open Mystery Box"><span class="x-mbox x-mbox--sm"><img src="mbox.webp" alt="Mystery Box"></span></button><b>Mystery Box</b><span class="x-muted">Tap Open to reveal your reward</span><button class="btn" data-mboxopen="${id}">Open</button></div>`).join('')||'<p class="x-muted">No mystery boxes yet. Win a reward in battle to get one.</p>'}
+const its=ITEMS.filter(i=>i.owned).sort((a,b)=>b.tk-a.tk||b.price-a.price);$('#invItems').innerHTML=its.map(i=>`<div class="x-card r-${i.tier}"><button class="x-ibtn" data-idet="${i.id}" aria-label="Details for ${i.name}">${ico(i)}</button><b>${i.name}</b><span class="x-muted">${i.type} · ${i.el}</span><span class="t-${i.tier}">${i.tier}</span><span class="x-muted">Value ${fmt(i.price)}</span>${feeTxt(i.price)}${STAKED.has(i.id)?'<span class="x-gold">Staked</span>':imAct(i)}</div>`).join('')||'<p class="x-muted">No items yet. Buy some or earn them in battle.</p>'
+try{burnRender()}catch(e){}try{stakeRender()}catch(e){}const _bx=$('#invBoxes');if(_bx)_bx.innerHTML=S.boxes.map(id=>`<div class="x-card"><button class="x-ibtn" data-mboxopen="${id}" aria-label="Open Mystery Box"><span class="x-mbox x-mbox--sm"><img src="mbox.webp" alt="Mystery Box"></span></button><b>Mystery Box</b><span class="x-muted">Tap Open to reveal your reward</span><button class="btn" data-mboxopen="${id}">Open</button></div>`).join('')||'<p class="x-muted">No mystery boxes yet. Win a reward in battle to get one.</p>'}
 const comboNfts=()=>{const m=mine();if(!S.deckOff)S.deckOff=new Set();const c=m.filter(n=>!S.deckOff.has(n.id));return c.length?c:m};
 const pickedNft=()=>{const c=comboNfts();return c.length?c[0]:null};
 const duelLPMax=()=>1000+200*(S.rank&&S.rank.t||0);
