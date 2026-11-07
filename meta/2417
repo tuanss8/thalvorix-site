@@ -1,0 +1,28 @@
+{
+  "name": "Feyrin #2417",
+  "description": "Thalvorix Hero NFT. Feyrin is a Fighter of Rare rarity, wielding Void power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/hd/h57.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Feyrin"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Fighter"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Void"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 57
+    }
+  ]
+}

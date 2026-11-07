@@ -1,0 +1,28 @@
+{
+  "name": "Gallowyn #2296",
+  "description": "Thalvorix Hero NFT. Gallowyn is a Fighter of Common rarity, wielding Light power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/hd/h58.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Gallowyn"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Fighter"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Light"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 58
+    }
+  ]
+}
