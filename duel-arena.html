@@ -1793,9 +1793,9 @@ $('#musBtn').onclick=()=>{M.on=!M.on;$('#musBtn').setAttribute('aria-pressed',M.
 if(M.on){if(!M.ctx)mInit();M.ctx.resume();const n=M.ctx.currentTime;M.master.gain.cancelScheduledValues(n);M.master.gain.setTargetAtTime(mvol(),n,.05);M.step=0;M.next=n+.08;clearInterval(M.timer);M.timer=setInterval(mTick,25);mTick()}
 else{clearInterval(M.timer);M.master.gain.setTargetAtTime(0,M.ctx.currentTime,.08);setTimeout(()=>{if(!M.on)M.ctx.suspend()},500)}try{nftMusicSync()}catch(e){}};
 (function(){const v=$('#musVol'),pct=$('#volPct');try{const sv=localStorage.getItem('thx_vol');if(sv!==null&&!isNaN(+sv))v.value=Math.max(0,Math.min(100,+sv))}catch(e){}const show=()=>{if(pct)pct.textContent=v.value+'%';try{localStorage.setItem('thx_vol',v.value)}catch(e){}};show();v.addEventListener('input',show);const step=d=>{v.value=Math.max(0,Math.min(100,(+v.value)+d));v.dispatchEvent(new Event('input'))};const dn=$('#volDown'),up=$('#volUp');if(dn)dn.onclick=()=>step(-10);if(up)up.onclick=()=>step(10)})();
-$('#musVol').oninput=()=>{if(M.on&&tab!=='nft'&&tab!=='play')M.master.gain.setTargetAtTime(mvol(),M.ctx.currentTime,.05);try{nftMusicSync()}catch(e){}};
+$('#musVol').oninput=()=>{if(M.on&&tab!=='nft')M.master.gain.setTargetAtTime(mvol(),M.ctx.currentTime,.05);try{nftMusicSync()}catch(e){}};
 /* Play Game has its own battle track (CC0: "Chiptune Battle Music" by pmiller, OpenGameArt; loops from 7.5 s); leaving Play Game restores the normal music */
-function playMusicSync(){const inPlay=tab==='play',want=inPlay&&M.on;
+function playMusicSync(){const inPlay=false,want=false;/* Play Game uses the same site music */
 if(!M.ctx)return;const C=M.ctx;
 if(!M.plGain){M.plGain=C.createGain();M.plGain.gain.value=0;const pc=C.createDynamicsCompressor();pc.threshold.value=-10;pc.knee.value=4;pc.ratio.value=12;pc.attack.value=.003;pc.release.value=.2;M.plGain.connect(pc);pc.connect(C.destination)}
 if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music7.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
@@ -1806,7 +1806,7 @@ M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(vol*0.4,n,.
 else{M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(0,n,.08);if(M.plSrc){const sr=M.plSrc;M.plSrc=null;try{sr.stop(n+.4)}catch(e){}}}}
 /* NFT Market has its own music: original Thalvorix war-drum loop (100 bpm, 28.8 s), composed for this site */
 /* Site music outside Play Game and NFT Market: original Thalvorix theme (epic choir, D minor, 136 bpm), composed for this site */
-function webMusicSync(){if(!M.ctx)return;const C=M.ctx,want=M.on&&tab!=='nft'&&tab!=='play';
+function webMusicSync(){if(!M.ctx)return;const C=M.ctx,want=M.on&&tab!=='nft';
 if(!M.webGain){M.webGain=C.createGain();M.webGain.gain.value=0;const lim=C.createDynamicsCompressor();lim.threshold.value=-8;lim.knee.value=2;lim.ratio.value=14;lim.attack.value=.005;lim.release.value=.25;M.webGain.connect(lim);lim.connect(C.destination)}
 if(!M.webBuf&&!M.webLoading){M.webLoading=true;fetch('web-music.m4a?v=3').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.webBuf=buf;M.webLoading=false;webMusicSync()}).catch(()=>{M.webLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
