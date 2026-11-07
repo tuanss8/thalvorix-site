@@ -1,0 +1,20 @@
+{
+  "name": "Molten Sound Chalice of the Crimson Tide #2208",
+  "description": "THALVORIX Item. A Rare Chalice of Sound power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_chalice.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Chalice"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    }
+  ]
+}

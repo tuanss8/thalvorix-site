@@ -1,0 +1,20 @@
+{
+  "name": "Venerable Sound Blade of the Silent Choir #5807",
+  "description": "THALVORIX Item. A Mythic Blade of Sound power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_blade.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Blade"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    }
+  ]
+}

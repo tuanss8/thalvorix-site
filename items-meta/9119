@@ -1,0 +1,20 @@
+{
+  "name": "Eternal Blood Amulet of the Fallen King #9119",
+  "description": "THALVORIX Item. A Common Amulet of Blood power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_amulet.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Amulet"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Blood"
+    }
+  ]
+}

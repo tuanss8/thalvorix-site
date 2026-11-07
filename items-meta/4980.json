@@ -1,0 +1,20 @@
+{
+  "name": "Blessed Time Wand of the Wyrm #4980",
+  "description": "THALVORIX Item. A Mythic Wand of Time power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_wand.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Wand"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Time"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Eternal Wind Chalice of the Tempest #2670",
+  "description": "THALVORIX Item. A Epic Chalice of Wind power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_chalice.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Chalice"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    }
+  ]
+}

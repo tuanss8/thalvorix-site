@@ -1,0 +1,20 @@
+{
+  "name": "Blessed Wind Warhammer of the Lost Legion #9624",
+  "description": "THALVORIX Item. A Mythic Warhammer of Wind power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_warhammer.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Warhammer"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    }
+  ]
+}

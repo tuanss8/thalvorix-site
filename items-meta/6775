@@ -1,0 +1,20 @@
+{
+  "name": "Grim Arcane Helm of the Old Gods #6775",
+  "description": "THALVORIX Item. A Legendary Helm of Arcane power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_helm.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Helm"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Arcane"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Forsaken Frost Staff of the Lost Legion #9366",
+  "description": "THALVORIX Item. A Common Staff of Frost power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_staff.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Staff"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    }
+  ]
+}

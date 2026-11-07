@@ -1,0 +1,20 @@
+{
+  "name": "Ancient Light Crown of the Bone Court #3532",
+  "description": "THALVORIX Item. A Legendary Crown of Light power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_crown.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Crown"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Light"
+    }
+  ]
+}

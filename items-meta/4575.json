@@ -1,0 +1,20 @@
+{
+  "name": "Celestial Venom Talisman of the Thalvorix Throne #4575",
+  "description": "THALVORIX Item. A Rare Talisman of Venom power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_talisman.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Talisman"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Venom"
+    }
+  ]
+}

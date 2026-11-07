@@ -1,0 +1,20 @@
+{
+  "name": "Forsaken Arcane Mantle of the Crimson Tide #1164",
+  "description": "THALVORIX Item. A Epic Mantle of Arcane power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_mantle.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Mantle"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Arcane"
+    }
+  ]
+}

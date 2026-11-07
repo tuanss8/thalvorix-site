@@ -1,0 +1,20 @@
+{
+  "name": "Infernal Blood Mantle of the Hollow Star #5863",
+  "description": "THALVORIX Item. A Rare Mantle of Blood power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_mantle.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Mantle"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Blood"
+    }
+  ]
+}

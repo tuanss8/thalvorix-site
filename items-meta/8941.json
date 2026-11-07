@@ -1,0 +1,20 @@
+{
+  "name": "Feral Time Greatsword of the Thalvorix Throne #8941",
+  "description": "THALVORIX Item. A Common Greatsword of Time power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_greatsword.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Greatsword"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Time"
+    }
+  ]
+}

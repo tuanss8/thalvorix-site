@@ -1,0 +1,20 @@
+{
+  "name": "Hallowed Spirit Scythe of the Pale Rider #5608",
+  "description": "THALVORIX Item. A Common Scythe of Spirit power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_scythe.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Scythe"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Spirit"
+    }
+  ]
+}

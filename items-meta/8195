@@ -1,0 +1,20 @@
+{
+  "name": "Infernal Venom Bracers of the Pale Rider #8195",
+  "description": "THALVORIX Item. A Common Bracers of Venom power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_bracers.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Bracers"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Venom"
+    }
+  ]
+}

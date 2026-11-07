@@ -1,0 +1,20 @@
+{
+  "name": "Gilded Spirit Greatsword of the Eclipse #6275",
+  "description": "THALVORIX Item. A Mythic Greatsword of Spirit power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_greatsword.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Greatsword"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Spirit"
+    }
+  ]
+}

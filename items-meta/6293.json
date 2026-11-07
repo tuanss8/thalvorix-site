@@ -1,0 +1,20 @@
+{
+  "name": "Eternal Wind Spear of the Deep Roots #6293",
+  "description": "THALVORIX Item. A Epic Spear of Wind power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_spear.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Spear"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    }
+  ]
+}

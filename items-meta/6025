@@ -1,0 +1,20 @@
+{
+  "name": "Blessed Sound Helm of the Tempest #6025",
+  "description": "THALVORIX Item. A Rare Helm of Sound power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_helm.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Helm"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    }
+  ]
+}

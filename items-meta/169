@@ -1,0 +1,20 @@
+{
+  "name": "Feral Light Pauldrons of the Crimson Tide #169",
+  "description": "THALVORIX Item. A Mythic Pauldrons of Light power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_pauldrons.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Pauldrons"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Light"
+    }
+  ]
+}

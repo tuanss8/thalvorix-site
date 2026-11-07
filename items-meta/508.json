@@ -1,0 +1,20 @@
+{
+  "name": "Runed Wind Gauntlets of the Pale Rider #508",
+  "description": "THALVORIX Item. A Epic Gauntlets of Wind power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_gauntlets.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Gauntlets"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    }
+  ]
+}

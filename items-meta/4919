@@ -1,0 +1,20 @@
+{
+  "name": "Gilded Light Amulet of the Warden #4919",
+  "description": "THALVORIX Item. A Rare Amulet of Light power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_amulet.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Amulet"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Light"
+    }
+  ]
+}

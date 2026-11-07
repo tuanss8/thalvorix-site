@@ -1,0 +1,20 @@
+{
+  "name": "Ancient Spirit Greaves of the Storm Lord #2912",
+  "description": "THALVORIX Item. A Common Greaves of Spirit power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_greaves.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Greaves"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Spirit"
+    }
+  ]
+}

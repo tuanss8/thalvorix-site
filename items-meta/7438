@@ -1,0 +1,20 @@
+{
+  "name": "Dread Light Shield of the Void Gate #7438",
+  "description": "THALVORIX Item. A Common Shield of Light power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_shield.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Shield"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Light"
+    }
+  ]
+}

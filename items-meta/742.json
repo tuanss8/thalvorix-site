@@ -1,0 +1,20 @@
+{
+  "name": "Sacred Time Crown of the Fallen King #742",
+  "description": "THALVORIX Item. A Common Crown of Time power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_crown.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Crown"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Time"
+    }
+  ]
+}

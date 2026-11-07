@@ -1,0 +1,20 @@
+{
+  "name": "Sacred Arcane Staff of the Void Gate #4618",
+  "description": "THALVORIX Item. A Common Staff of Arcane power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_staff.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Staff"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Arcane"
+    }
+  ]
+}

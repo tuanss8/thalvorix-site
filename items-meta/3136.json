@@ -1,0 +1,20 @@
+{
+  "name": "Sunken Spirit Cloak of the Tempest #3136",
+  "description": "THALVORIX Item. A Rare Cloak of Spirit power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_cloak.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Cloak"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Spirit"
+    }
+  ]
+}

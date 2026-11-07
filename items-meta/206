@@ -1,0 +1,20 @@
+{
+  "name": "Wicked Void Warhammer of the Warden #206",
+  "description": "THALVORIX Item. A Rare Warhammer of Void power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_warhammer.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Warhammer"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Void"
+    }
+  ]
+}

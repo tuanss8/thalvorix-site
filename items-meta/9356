@@ -1,0 +1,20 @@
+{
+  "name": "Starforged Storm Bracers of the Tempest #9356",
+  "description": "THALVORIX Item. A Epic Bracers of Storm power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_bracers.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Bracers"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Storm"
+    }
+  ]
+}

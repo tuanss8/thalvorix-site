@@ -1,0 +1,20 @@
+{
+  "name": "Hallowed Arcane Halberd of the Warden #5667",
+  "description": "THALVORIX Item. A Common Halberd of Arcane power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_halberd.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Halberd"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Arcane"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Venerable Venom Staff of the Hollow Star #4302",
+  "description": "THALVORIX Item. A Rare Staff of Venom power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_staff.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Staff"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Venom"
+    }
+  ]
+}

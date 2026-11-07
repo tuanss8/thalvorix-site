@@ -1,0 +1,20 @@
+{
+  "name": "Gilded Earth Dagger of the Void Gate #8310",
+  "description": "THALVORIX Item. A Legendary Dagger of Earth power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_dagger.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Dagger"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Earth"
+    }
+  ]
+}

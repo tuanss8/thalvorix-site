@@ -1,0 +1,20 @@
+{
+  "name": "Blessed Frost Quiver of the Wyrm #5249",
+  "description": "THALVORIX Item. A Legendary Quiver of Frost power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_quiver.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Quiver"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    }
+  ]
+}

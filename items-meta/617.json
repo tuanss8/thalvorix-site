@@ -1,0 +1,20 @@
+{
+  "name": "Radiant Shadow Crown of the Storm Lord #617",
+  "description": "THALVORIX Item. A Common Crown of Shadow power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_crown.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Crown"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Shadow"
+    }
+  ]
+}

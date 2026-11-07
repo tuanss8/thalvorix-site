@@ -1,0 +1,20 @@
+{
+  "name": "Feral Frost Helm of the Lost Legion #1920",
+  "description": "THALVORIX Item. A Rare Helm of Frost power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_helm.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Helm"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    }
+  ]
+}

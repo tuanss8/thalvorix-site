@@ -1,0 +1,20 @@
+{
+  "name": "Eternal Crystal Ring of the Dawn #878",
+  "description": "THALVORIX Item. A Rare Ring of Crystal power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_ring.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Ring"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Crystal"
+    }
+  ]
+}

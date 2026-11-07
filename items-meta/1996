@@ -1,0 +1,20 @@
+{
+  "name": "Starforged Arcane Gauntlets of the Fallen King #1996",
+  "description": "THALVORIX Item. A Rare Gauntlets of Arcane power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_gauntlets.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Gauntlets"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Arcane"
+    }
+  ]
+}

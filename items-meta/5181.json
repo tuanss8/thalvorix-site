@@ -1,0 +1,20 @@
+{
+  "name": "Grim Sound Cloak of the Abyss #5181",
+  "description": "THALVORIX Item. A Common Cloak of Sound power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_cloak.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Cloak"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    }
+  ]
+}

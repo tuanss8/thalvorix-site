@@ -1,0 +1,20 @@
+{
+  "name": "Venerable Sound Wand of the Thalvorix Throne #2178",
+  "description": "THALVORIX Item. A Rare Wand of Sound power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_wand.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Wand"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    }
+  ]
+}

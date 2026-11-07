@@ -1,0 +1,20 @@
+{
+  "name": "Blessed Sound Pauldrons of the Thalvorix Throne #2147",
+  "description": "THALVORIX Item. A Epic Pauldrons of Sound power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_pauldrons.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Pauldrons"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Ancient Storm Greaves of the Bone Court #5258",
+  "description": "THALVORIX Item. A Epic Greaves of Storm power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_greaves.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Greaves"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Storm"
+    }
+  ]
+}

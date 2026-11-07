@@ -1,0 +1,20 @@
+{
+  "name": "Molten Crystal Gauntlets of the Eclipse #2662",
+  "description": "THALVORIX Item. A Mythic Gauntlets of Crystal power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_gauntlets.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Gauntlets"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Crystal"
+    }
+  ]
+}

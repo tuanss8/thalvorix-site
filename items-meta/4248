@@ -1,0 +1,20 @@
+{
+  "name": "Gilded Shadow Amulet of the Thalvorix Throne #4248",
+  "description": "THALVORIX Item. A Rare Amulet of Shadow power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_amulet.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Amulet"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Shadow"
+    }
+  ]
+}

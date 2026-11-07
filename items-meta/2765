@@ -1,0 +1,20 @@
+{
+  "name": "Wicked Wind Ring of the Abyss #2765",
+  "description": "THALVORIX Item. A Epic Ring of Wind power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_ring.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Ring"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    }
+  ]
+}

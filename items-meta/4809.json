@@ -1,0 +1,20 @@
+{
+  "name": "Radiant Light Lantern of the Abyss #4809",
+  "description": "THALVORIX Item. A Rare Lantern of Light power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_lantern.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Lantern"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Light"
+    }
+  ]
+}

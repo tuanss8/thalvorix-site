@@ -1,0 +1,20 @@
+{
+  "name": "Infernal Crystal Greatsword of the Crimson Tide #1191",
+  "description": "THALVORIX Item. A Rare Greatsword of Crystal power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_greatsword.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Greatsword"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Crystal"
+    }
+  ]
+}

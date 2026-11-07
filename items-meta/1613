@@ -1,0 +1,20 @@
+{
+  "name": "Blessed Venom Bracers of the Last Oath #1613",
+  "description": "THALVORIX Item. A Rare Bracers of Venom power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_bracers.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Bracers"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Venom"
+    }
+  ]
+}

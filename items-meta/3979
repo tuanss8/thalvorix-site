@@ -1,0 +1,20 @@
+{
+  "name": "Spectral Earth Spear of the Silent Choir #3979",
+  "description": "THALVORIX Item. A Rare Spear of Earth power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_spear.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Spear"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Earth"
+    }
+  ]
+}

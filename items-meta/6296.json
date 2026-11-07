@@ -1,0 +1,20 @@
+{
+  "name": "Savage Nature Ring of the Pale Rider #6296",
+  "description": "THALVORIX Item. A Rare Ring of Nature power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_ring.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Ring"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Nature"
+    }
+  ]
+}

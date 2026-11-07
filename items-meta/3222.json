@@ -1,0 +1,20 @@
+{
+  "name": "Sunken Frost Bracers of the Storm Lord #3222",
+  "description": "THALVORIX Item. A Mythic Bracers of Frost power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_bracers.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Bracers"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    }
+  ]
+}

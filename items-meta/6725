@@ -1,0 +1,20 @@
+{
+  "name": "Ancient Blood Blade of the Bone Court #6725",
+  "description": "THALVORIX Item. A Mythic Blade of Blood power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_blade.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Blade"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Blood"
+    }
+  ]
+}

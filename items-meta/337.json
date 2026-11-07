@@ -1,0 +1,20 @@
+{
+  "name": "Ancient Crystal Shield of the Storm Lord #337",
+  "description": "THALVORIX Item. A Epic Shield of Crystal power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_shield.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Shield"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Crystal"
+    }
+  ]
+}

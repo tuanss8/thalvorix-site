@@ -1,0 +1,20 @@
+{
+  "name": "Molten Void Orb of the Eclipse #1135",
+  "description": "THALVORIX Item. A Legendary Orb of Void power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_orb.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Orb"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Void"
+    }
+  ]
+}

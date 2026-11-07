@@ -1,0 +1,20 @@
+{
+  "name": "Exalted Crystal Quiver of the Storm Lord #9029",
+  "description": "THALVORIX Item. A Legendary Quiver of Crystal power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_quiver.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Quiver"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Crystal"
+    }
+  ]
+}

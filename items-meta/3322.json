@@ -1,0 +1,20 @@
+{
+  "name": "Sunken Blood Dagger of the Last Oath #3322",
+  "description": "THALVORIX Item. A Rare Dagger of Blood power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_dagger.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Dagger"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Blood"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Dread Wind Pauldrons of the Lost Legion #9332",
+  "description": "THALVORIX Item. A Common Pauldrons of Wind power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_pauldrons.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Pauldrons"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Forsaken Venom Blade of the Warden #5832",
+  "description": "THALVORIX Item. A Common Blade of Venom power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_blade.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Blade"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Venom"
+    }
+  ]
+}

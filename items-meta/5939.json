@@ -1,0 +1,20 @@
+{
+  "name": "Blessed Time Ring of the First Flame #5939",
+  "description": "THALVORIX Item. A Mythic Ring of Time power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_ring.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Ring"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Time"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Grim Spirit Sigil of the Fallen King #7851",
+  "description": "THALVORIX Item. A Legendary Sigil of Spirit power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_sigil.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Sigil"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Spirit"
+    }
+  ]
+}

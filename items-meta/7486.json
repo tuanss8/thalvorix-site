@@ -1,0 +1,20 @@
+{
+  "name": "Celestial Shadow Quiver of the Bone Court #7486",
+  "description": "THALVORIX Item. A Common Quiver of Shadow power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_quiver.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Quiver"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Shadow"
+    }
+  ]
+}

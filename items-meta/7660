@@ -1,0 +1,20 @@
+{
+  "name": "Blessed Wind Pauldrons of the Silent Choir #7660",
+  "description": "THALVORIX Item. A Legendary Pauldrons of Wind power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_pauldrons.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Pauldrons"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    }
+  ]
+}

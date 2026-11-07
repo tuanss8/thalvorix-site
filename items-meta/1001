@@ -1,0 +1,20 @@
+{
+  "name": "Grim Wind Pauldrons of the Thalvorix Throne #1001",
+  "description": "THALVORIX Item. A Mythic Pauldrons of Wind power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_pauldrons.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Pauldrons"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Wind"
+    }
+  ]
+}

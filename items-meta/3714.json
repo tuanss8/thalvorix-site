@@ -1,0 +1,20 @@
+{
+  "name": "Savage Shadow Orb of the Dawn #3714",
+  "description": "THALVORIX Item. A Epic Orb of Shadow power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_orb.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Orb"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Shadow"
+    }
+  ]
+}

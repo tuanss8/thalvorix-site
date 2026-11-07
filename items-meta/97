@@ -1,0 +1,20 @@
+{
+  "name": "Blessed Frost Ring of the Pale Rider #97",
+  "description": "THALVORIX Item. A Legendary Ring of Frost power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_ring.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Ring"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Legendary"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Frost"
+    }
+  ]
+}

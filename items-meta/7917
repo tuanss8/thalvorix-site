@@ -1,0 +1,20 @@
+{
+  "name": "Cursed Arcane Gauntlets of the Thalvorix Throne #7917",
+  "description": "THALVORIX Item. A Common Gauntlets of Arcane power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_gauntlets.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Gauntlets"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Arcane"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "Forsaken Blood Crown of the Void Gate #2344",
+  "description": "THALVORIX Item. A Mythic Crown of Blood power. Equip it in Thalvorix, trade it on the market, and power up your heroes.",
+  "image": "https://thalvorix.xyz/i_crown.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Type",
+      "value": "Crown"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Mythic"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Blood"
+    }
+  ]
+}
