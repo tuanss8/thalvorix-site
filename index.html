@@ -743,22 +743,43 @@ async function apiLogin(addr){
 function walletDeepLinks(){
   return `<div class="x-box" style="margin-top:12px"><p class="x-muted">On your phone? Open Thalvorix inside a wallet app, then connect there:</p><div class="x-row"><a class="btn" href="https://metamask.app.link/dapp/thalvorix.xyz/" target="_blank" rel="noopener">MetaMask app</a><a class="btn" href="https://link.trustwallet.com/open_url?coin_id=56&url=https://thalvorix.xyz/" target="_blank" rel="noopener">Trust Wallet app</a><a class="btn" href="https://go.cb-w.com/dapp?cb_url=https://thalvorix.xyz/" target="_blank" rel="noopener">Coinbase Wallet app</a><a class="btn" href="https://www.binance.com/en/web3wallet" target="_blank" rel="noopener">Binance Wallet</a></div><p class="x-muted">Inside the wallet app browser, press Connect Wallet again.</p></div>`;
 }
+const SITE_URL='https://thalvorix.xyz/';
+const isMobileUA=()=>/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent||'');
+const b64=x=>btoa(x).replace(/=+$/,'');
+const WALLETS=[
+ {k:'trust',n:'Trust Wallet',i:'wl/trustwallet.webp',rd:['com.trustwallet.app'],f:p=>p.isTrust||p.isTrustWallet,w:()=>window.trustwallet&&(window.trustwallet.ethereum||window.trustwallet),m:'https://link.trustwallet.com/open_url?coin_id=56&url='+encodeURIComponent(SITE_URL),d:'https://trustwallet.com/download'},
+ {k:'metamask',n:'MetaMask',i:'wl/metamask.webp',rd:['io.metamask','io.metamask.mobile'],f:p=>p.isMetaMask&&!p.isTrust&&!p.isOkxWallet&&!p.isBitKeep&&!p.isTokenPocket&&!p.isSafePal&&!p.isBinance&&!p.isCoinbaseWallet,m:'https://metamask.app.link/dapp/thalvorix.xyz/',d:'https://metamask.io/download/'},
+ {k:'binance',n:'Binance Wallet',i:'wl/binance.webp',rd:['com.binance.wallet'],f:p=>p.isBinance,w:()=>(window.binancew3w&&window.binancew3w.ethereum)||window.BinanceChain,m:'bnc://app.binance.com/mp/app?appId=yFK5FCqYprrXDiVFbhyRx7&startPagePath='+b64('/pages/browser/index')+'&startPageQuery='+b64('url='+SITE_URL),d:'https://www.binance.com/en/download'},
+ {k:'okx',n:'OKX Wallet',i:'wl/okx.webp',rd:['com.okex.wallet'],f:p=>p.isOkxWallet||p.isOKExWallet,w:()=>window.okxwallet,m:'https://www.okx.com/download?deeplink='+encodeURIComponent('okx://wallet/dapp/url?dappUrl='+encodeURIComponent(SITE_URL)),d:'https://www.okx.com/web3'},
+ {k:'safepal',n:'SafePal',i:'wl/safepal.webp',rd:['app.safepal'],f:p=>p.isSafePal,w:()=>window.safepalProvider,m:'',d:'https://www.safepal.com/download'},
+ {k:'bitget',n:'Bitget Wallet',i:'wl/bitget.webp',rd:['com.bitget.web3'],f:p=>p.isBitKeep||p.isBitgetWallet,w:()=>window.bitkeep&&window.bitkeep.ethereum,m:'https://bkcode.vip?action=dapp&url='+encodeURIComponent(SITE_URL),d:'https://web3.bitget.com/download'},
+ {k:'tokenpocket',n:'TokenPocket',i:'wl/tokenpocket.webp',rd:['pro.tokenpocket'],f:p=>p.isTokenPocket,m:'tpoutside://pull.activity?param='+encodeURIComponent(JSON.stringify({url:SITE_URL,chain:'BSC',source:'thalvorix'})),d:'https://www.tokenpocket.pro/en/download/app'},
+ {k:'coinbase',n:'Coinbase Wallet',i:'wl/coinbase.webp',rd:['com.coinbase.wallet'],f:p=>p.isCoinbaseWallet,w:()=>window.coinbaseWalletExtension,m:'https://go.cb-w.com/dapp?cb_url='+encodeURIComponent(SITE_URL),d:'https://www.coinbase.com/wallet/downloads'}];
+function walletProv(W){
+ const e=EIP6963.find(x=>x.info&&(W.rd.includes(x.info.rdns)||String(x.info.name||'').toLowerCase().startsWith(W.n.toLowerCase().split(' ')[0])));if(e)return e.provider;
+ try{if(W.w){const p=W.w();if(p&&p.request)return p}}catch(err){}
+ const eth=window.ethereum;if(!eth)return null;
+ const list=Array.isArray(eth.providers)&&eth.providers.length?eth.providers:[eth];
+ return list.find(p=>{try{return !!W.f(p)}catch(err){return false}})||null}
+function walletRow(attr,icon,name,tag){return `<button ${attr} style="display:flex;align-items:center;gap:14px;width:100%;padding:12px 14px;margin:0 0 8px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:inherit;font:inherit;font-size:16px;text-align:left;cursor:pointer">${icon?`<img src="${icon}" alt="" style="width:40px;height:40px;border-radius:10px;flex:none">`:'<span style="width:40px;height:40px;border-radius:10px;background:rgba(255,255,255,.1);flex:none"></span>'}<span style="flex:1">${name}</span>${tag?`<span class="x-gold" style="font-size:12px">${tag}</span>`:''}<span style="opacity:.5;font-size:20px">›</span></button>`}
 async function openWalletPicker(){
   openModal(`<h3>Connect Wallet</h3><p class="x-muted">Detecting wallets…</p>`);
   try{window.dispatchEvent(new CustomEvent('eip6963:requestProvider'))}catch(e){}
   await new Promise(r=>setTimeout(r,350));
-  const opts=[];
-  EIP6963.forEach((w,i)=>{opts.push(`<button class="x-cta" data-wallet="${i}">${w.info.icon?`<img src="${w.info.icon}" alt="" style="width:20px;height:20px;vertical-align:middle;margin-right:8px">`:''}${w.info.name||'Wallet'}</button>`)});
-  const injected=window.ethereum;
-  if(injected&&!EIP6963.some(w=>w.provider===injected))opts.push(`<button class="x-cta" data-wallet="injected">Connect</button>`);
-  let h=`<h3>Connect Wallet</h3>`;
-  if(opts.length)h+=`<p class="x-muted">Choose a wallet to connect:</p><div class="x-row">${opts.join('')}</div>`;
-  else h+=`<p class="x-muted">No wallet detected in this browser.</p>`;
-  h+=walletDeepLinks();
-  h+=`<div class="x-box" style="margin-top:12px"><p class="x-muted">Agent ID holder or BNB Smart Chain user (min. 5 transactions)?</p><div class="x-row"><input class="x-in" id="apiAddr" placeholder="BSC wallet address (0x…)" style="flex:1"><button class="x-cta" data-apilogin="1">Enter with Agent ID</button></div><div class="x-row" style="margin-top:8px"><button class="btn" data-apiwallet="1">Use my wallet address</button></div><p class="x-muted">We only check on-chain that this address holds a Binance Agent ID.</p></div>`;
-  h+=`<div class="x-row" style="margin-top:12px"><button class="btn" data-close>Cancel</button></div>`;
+  const mob=isMobileUA();let rows='';const used=new Set();
+  WALLETS.forEach(W=>{const p=walletProv(W);if(p)used.add(p);rows+=walletRow(`data-wpick="${W.k}"`,W.i,W.n,p?'Detected':(mob?'':'Install'))});
+  EIP6963.forEach((w,i)=>{if(!used.has(w.provider)){used.add(w.provider);rows+=walletRow(`data-wallet="${i}"`,w.info.icon,w.info.name||'Wallet','Detected')}});
+  if(window.ethereum&&!used.has(window.ethereum))rows+=walletRow('data-wallet="injected"','','Browser Wallet','Detected');
+  let h=`<h3 style="text-align:center">Connect Wallet</h3><p class="x-muted" style="text-align:center;margin-top:-4px">BNB Smart Chain</p><div style="max-height:60vh;overflow:auto;margin-top:10px">${rows}</div>`;
+  if(mob)h+=`<p class="x-muted" style="font-size:13px">Tap a wallet to open Thalvorix inside its app, then press Connect Wallet there.</p>`;
+  h+=`<details style="margin-top:10px"><summary class="x-muted" style="cursor:pointer">Agent ID or enter address manually</summary><div class="x-box" style="margin-top:8px"><p class="x-muted">Agent ID holder or BNB Smart Chain user (min. 5 transactions)?</p><div class="x-row"><input class="x-in" id="apiAddr" placeholder="BSC wallet address (0x…)" style="flex:1"><button class="x-cta" data-apilogin="1">Enter with Agent ID</button></div><div class="x-row" style="margin-top:8px"><button class="btn" data-apiwallet="1">Use my wallet address</button></div><p class="x-muted">We only check on-chain that this address holds a Binance Agent ID.</p></div></details>`;
+  h+=`<div class="x-row" style="margin-top:12px;justify-content:center"><button class="btn" data-close>Cancel</button></div>`;
   const d=$('#dlg');if(d)d.innerHTML=h;
 }
+async function pickWallet(k){const W=WALLETS.find(x=>x.k===k);if(!W)return;const p=walletProv(W);
+  if(p){$('#modal').hidden=true;const ok=await connectWith(p);if(ok){puzzleNew();await refreshChain().catch(()=>{})}return}
+  if(isMobileUA()){if(W.m){location.href=W.m;return}try{await navigator.clipboard.writeText(SITE_URL)}catch(e){}toast(`Link copied. Open ${W.n}, go to its DApp browser and paste thalvorix.xyz`);setTimeout(()=>{location.href=W.d},1200);return}
+  window.open(W.d,'_blank','noopener');toast(`${W.n} not found in this browser. Install it, then refresh this page.`)}
 async function sendTx(tx){
   const ok=await ensureBsc();if(!ok)throw new Error('Wrong network');
   const p=prov();if(!p)throw new Error('No wallet connected');return p.request({method:'eth_sendTransaction',params:[{from:S.wallet,to:tx.to,data:tx.data,value:tx.value||'0x0'}]});
@@ -1388,6 +1409,7 @@ else if((v=g('ibuy'))){const i=ITEMS[v];if(i.owned)return;if(!S.wallet)return to
 else if((v=g('ibuyok'))){const i=ITEMS[v];$('#modal').hidden=true;if(i.owned)return;if(!S.wallet)return toast('Connect your wallet first');if(S.bal==null||S.bal<i.price)return toast('Not enough BNB');i.owned=true;try{logAct('Buy','Item',`${i.name} (${i.tier})`,i.price,whoMe(),'Item Market')}catch(e){}toast(`Bought ${i.name}`);saveItemsIfWallet()}
 else if((v=g('isell'))){const i=ITEMS[v];if(!i.owned)return;return confirmDlg(`Sell ${i.name}?`,i.price,`<button class="x-cta" data-isellok="${i.id}">Confirm sale</button>`,0,itemDetail(i))}
 else if((v=g('isellok'))){const i=ITEMS[v];$('#modal').hidden=true;if(!i.owned)return;i.owned=false;try{logAct('Sell','Item',`${i.name} (${i.tier})`,i.price,'Item Market',whoMe())}catch(e){}toast(`Sold ${i.name}`);saveItemsIfWallet()}
+else if((v=g('wpick'))){await pickWallet(v)}
 else if((v=g('wallet'))){$('#modal').hidden=true;const w=v==='injected'?window.ethereum:(EIP6963[+v]?EIP6963[+v].provider:null);if(w){const ok=await connectWith(w);if(ok){puzzleNew();await refreshChain().catch(()=>{});}}}
 else if(g('disconnectok')){$('#modal').hidden=true;doDisconnect()}
 else if(g('leftback')){const ls=$('#leftScreen');if(ls){ls.hidden=true;ls.style.display='none';}go('home');return}
