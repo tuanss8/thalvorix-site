@@ -480,6 +480,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
         <section class="section x-panel" id="p-stake" hidden>
           <div class="head"><p class="head__eyebrow">Earn THAL</p><h2>Stake Items</h2></div>
           <p class="x-muted" id="stakeNote">Stake your items to earn THAL every day. Higher rarity earns more. THAL is recorded to your wallet and can be claimed when the THAL token launches. Staked items cannot be sold, listed or claimed until you unstake them.</p>
+          <div class="x-row" id="stakeRates"><span class="t-Common">Common 10,000</span><span class="t-Rare">Rare 25,000</span><span class="t-Epic">Epic 60,000</span><span class="t-Legendary">Legendary 150,000</span><span class="t-Mythic">Mythic 400,000</span><span class="x-muted">THAL per item per day</span></div>
           <div class="x-row" id="stakeBar"></div>
           <h3>Staked</h3>
           <div class="x-grid" id="stakeOn"></div>
@@ -598,13 +599,13 @@ async function burnBoxes(k){if(BURN_BUSY||!S.wallet)return;const n=(S.boxes||[])
  if(!o.ok){toast(o.error==='over cap'?'Burn limit reached for this wallet. Play more matches first.':o.error==='burn closed'?'Burn is closed.':'Burn failed. Please try again.');if(typeof o.burned==='number')BURNED=o.burned;return}
  const gone=S.boxes.slice(0,k);gone.forEach(id=>{if(ITEMS[id])ITEMS[id].boxed=false});S.boxes=S.boxes.slice(k);BURNED=o.burned;saveBoxesIfWallet();duelSfx('destroy');bagToast(k+' Mystery Box'+(k>1?'es':'')+' burned! THAL recorded to your wallet.')}catch(e){toast('Burn failed. Please try again.')}finally{BURN_BUSY=false;render()}}
 /* Stake Items: stake owned items to earn THAL (rates kept server-side in stake-item). */
-let STAKED=new Map(),STAKE_W='',STAKE_BUSY=false;
+const STAKE_RATE=[10000,25000,60000,150000,400000];let STAKED=new Map(),STAKE_W='',STAKE_BUSY=false;
 async function stakeFetch(){if(!S.wallet||typeof fetch!=='function'){stakeRender();return}const w=S.wallet.toLowerCase();try{const r=await fetch(SB_URL+'/functions/v1/stake-item',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:w})});const o=await r.json();if(Array.isArray(o.staked)){STAKED=new Map(o.staked.map(x=>[x.id,x.at]));STAKE_W=w;render()}}catch(e){}}
 function stakeDays(at){const d=(Date.now()-at)/864e5;return d<1?Math.max(1,Math.floor(d*24))+'h':Math.floor(d)+'d'}
 function stakeRender(){const on=$('#stakeOn'),off=$('#stakeOff'),bar=$('#stakeBar');if(!on||!off)return;if(S.wallet&&STAKE_W!==S.wallet.toLowerCase()){STAKE_W=S.wallet.toLowerCase();STAKED=new Map();stakeFetch()}
  if(!S.wallet){on.innerHTML='<p class="x-muted">Connect your wallet to stake items.</p>';off.innerHTML='';if(bar)bar.innerHTML='';return}
  const mine=ITEMS.filter(i=>i.owned&&!i.boxed).sort((a,b)=>b.tk-a.tk);const st=mine.filter(i=>STAKED.has(i.id)),fr=mine.filter(i=>!STAKED.has(i.id)&&!(i.listed));
- const card=(i,k)=>`<div class="x-card r-${i.tier}">${ico(i)}<b>${i.name}</b><span class="t-${i.tier}">${i.tier}</span>${k?`<span class="x-gold">Staked · ${stakeDays(STAKED.get(i.id))}</span><button class="btn" data-unstake="${i.id}" ${STAKE_BUSY?'disabled':''}>Unstake</button>`:`<button class="x-cta" data-stake="${i.id}" ${STAKE_BUSY?'disabled':''}>Stake</button>`}</div>`;
+ const card=(i,k)=>`<div class="x-card r-${i.tier}">${ico(i)}<b>${i.name}</b><span class="t-${i.tier}">${i.tier} · ${STAKE_RATE[i.tk].toLocaleString('en-US')} THAL/day</span>${k?`<span class="x-gold">Staked · ${stakeDays(STAKED.get(i.id))}</span><button class="btn" data-unstake="${i.id}" ${STAKE_BUSY?'disabled':''}>Unstake</button>`:`<button class="x-cta" data-stake="${i.id}" ${STAKE_BUSY?'disabled':''}>Stake</button>`}</div>`;
  on.innerHTML=st.map(i=>card(i,1)).join('')||'<p class="x-muted">No items staked yet.</p>';off.innerHTML=fr.map(i=>card(i,0)).join('')||'<p class="x-muted">No items to stake. Earn items in battle or buy them on the Item Market.</p>';
  if(bar)bar.innerHTML=`<span class="x-muted">${st.length} item${st.length===1?'':'s'} staked</span>${fr.length?`<button class="x-cta" data-stakeall ${STAKE_BUSY?'disabled':''}>Stake all (${fr.length})</button>`:''}${st.length?`<button class="btn" data-unstakeall ${STAKE_BUSY?'disabled':''}>Unstake all</button>`:''}`}
 async function stakeDo(action,ids){if(STAKE_BUSY||!S.wallet||!ids.length)return;sessionStorage.removeItem('thx_rsig_no');STAKE_BUSY=true;stakeRender();try{const w=S.wallet;const c=await rankSig(w);if(!c){toast('Please sign in your wallet to '+action+'.');return}
