@@ -265,7 +265,34 @@ html.da-rot,html.da-rot body{overflow:hidden!important}
 html.da-rot body{touch-action:none;position:fixed!important;top:0!important;margin:0!important;max-width:none!important;min-height:0!important;transform:rotate(90deg);transform-origin:0 0;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
 #daGate{position:fixed;inset:0;z-index:99999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;background:rgba(11,7,16,.96);color:#e9dfc6;text-align:center;padding:24px;font:600 16px/1.4 system-ui}
 #daGate.on{display:flex}#daGate .ph{font-size:56px;animation:daTurn 1.6s ease-in-out infinite}@keyframes daTurn{50%{transform:rotate(90deg)}}
-#p-play>aside.callout,#p-play>h3,#p-play>p.x-muted,#p-play>#ladder,#p-play>.table-wrap,#playRankBox,#playArea>p.fineprint,#playArea>p.x-plbl,#myPick{display:none!important}#tabs,#liveBar{display:none!important}.bc-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:2px solid var(--x-gold,#c9a227);background:rgba(20,12,32,.92)}.bc-bar a{color:#e9dfc6;text-decoration:none;font-weight:700}.bc-bar b{color:var(--x-gold,#e3b341);letter-spacing:.5px}</style>
+#p-play>aside.callout,#p-play>h3,#p-play>p.x-muted,#p-play>#ladder,#p-play>.table-wrap,#playRankBox,#playArea>p.fineprint,#playArea>p.x-plbl,#myPick{display:none!important}#tabs,#liveBar{display:none!important}.bc-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 14px;border-bottom:2px solid var(--x-gold,#c9a227);background:rgba(20,12,32,.92)}.bc-bar a{color:#e9dfc6;text-decoration:none;font-weight:700}.bc-bar b{color:var(--x-gold,#e3b341);letter-spacing:.5px}
+/* compact landscape: whole duel on one screen */
+html.da-compact .bc-bar{padding:3px 10px}html.da-compact .bc-bar .x-cta{padding:4px 10px;font-size:12px}
+html.da-compact #p-play{padding-top:4px!important;padding-bottom:0!important}
+html.da-compact .main{padding-top:0!important}
+html.duel-on.da-compact #p-play>.head,html.duel-on.da-compact #playArea>.x-row{display:none!important}
+html.da-compact .duel-box{display:grid;grid-template-columns:minmax(0,1fr) 168px;grid-auto-rows:auto;column-gap:8px;padding:4px 6px;position:relative}
+html.da-compact .duel-box>*{grid-column:1}
+html.da-compact .duel-box>.duel-head{padding:2px 8px;font-size:11px;min-height:0}
+html.da-compact .duel-box .duel-bar{height:5px}
+html.da-compact .duel-box>.duel-mid{margin:2px 0;font-size:10px;gap:4px;flex-wrap:nowrap}
+html.da-compact .duel-box>.duel-mid #duelPhase{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.da-compact .duel-box>.duel-mid .btn{padding:2px 6px;font-size:10px}
+html.da-compact .duel-box>p.x-muted,html.da-compact #duelLog{display:none!important}
+html.da-compact .duel-banner{position:absolute;left:0;right:176px;top:44%;z-index:20;pointer-events:none;min-height:0;font-size:22px}
+html.da-compact #duelHand{grid-column:2;grid-row:1 / span 6;margin:0;align-content:start;overflow-y:auto;max-height:calc(var(--dah,360px) - 44px);display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px}
+html.da-compact #duelHand .duel-hand-card{width:auto;gap:2px}
+html.da-compact #duelHand .duel-card{width:auto!important;padding:2px}
+html.da-compact #duelHand .duel-card img{max-height:calc(var(--dacell,64px) - 14px);aspect-ratio:1/1}
+html.da-compact #duelHand .duel-card .duel-skill,html.da-compact #duelHand .duel-card .duel-el,html.da-compact .duel-field .duel-card .duel-skill,html.da-compact .duel-field .duel-card .duel-el,html.da-compact .duel-field .duel-card .duel-stars{display:none!important}
+html.da-compact #duelHand .duel-card b,html.da-compact .duel-field .duel-card b{font-size:9px;margin-top:1px}
+html.da-compact #duelHand .duel-card .duel-atk,html.da-compact .duel-field .duel-card .duel-atk{font-size:9px;margin:0}
+html.da-compact .duel-summon-btn{padding:2px;font-size:10px}
+html.da-compact #p-play .duel-field{max-width:none;width:min(100%,calc(var(--dacell,64px) * 5 * 1.25))}
+html.da-compact #p-play .duel-field>.duel-slot,html.da-compact #p-play .duel-field>.duel-card{height:var(--dacell,64px);min-height:0!important}
+html.da-compact #p-play .duel-field .duel-card img{height:calc(var(--dacell,64px) - 26px);max-height:none;width:auto;max-width:100%;margin:0 auto}
+html.da-compact #duelResult,html.da-compact #duelNextBtn,html.da-compact #duelSearch{grid-column:1 / span 2}
+</style>
 </head>
   <body>
     <div class="page" id="top">
@@ -1791,6 +1818,8 @@ addEventListener('resize',function(){setTimeout(function(){update();size()},150)
 var tx=0,ty=0,st=0,sl=0,moved=false;
 B.addEventListener('touchstart',function(e){if(!R.classList.contains('da-rot'))return;var t=e.touches[0];tx=t.clientX;ty=t.clientY;st=B.scrollTop;moved=false},{passive:true});
 B.addEventListener('touchmove',function(e){if(!R.classList.contains('da-rot'))return;var t=e.touches[0],dx=t.clientX-tx,dy=t.clientY-ty;if(Math.abs(dx)>6||Math.abs(dy)>6)moved=true;B.scrollTop=st+dx;e.preventDefault()},{passive:false});
+function compact(){var rotd=R.classList.contains('da-rot');var w=rotd?innerHeight:innerWidth,h=rotd?innerWidth:innerHeight;var on=w>h&&h<=560;R.classList.toggle('da-compact',on);if(on){R.style.setProperty('--dah',h+'px');var cell=Math.floor((h-44-22*2-18-10)/4);R.style.setProperty('--dacell',Math.max(44,Math.min(110,cell))+'px')}}
+var _u=update;update=function(){_u();compact()};addEventListener('orientationchange',function(){setTimeout(update,200)});
 update();})();</script>
   </body>
 </html>
