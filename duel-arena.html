@@ -330,6 +330,20 @@ html.da-compact #duelHand{grid-row:1 / span 4!important}
 #p-play,#p-play .section,.main,.page,#playArea{background:transparent!important;box-shadow:none!important}
 .duel-head{background:rgba(10,8,30,.45)!important}
 #duelHand{background:rgba(10,10,40,.25)!important;border-top:0!important}
+
+/* Board mat like a classic card-duel table: one mat, thin grid lines */
+#p-play .duel-field{gap:0!important;padding:0!important;border:2px solid rgba(227,190,90,.85)!important;border-radius:6px;background:linear-gradient(135deg,rgba(40,110,90,.30),rgba(150,140,60,.22) 50%,rgba(40,110,90,.30))!important;box-shadow:0 0 14px rgba(227,190,90,.25)!important}
+#p-play .duel-field>.duel-slot,#p-play .duel-field>.duel-slot:nth-child(odd){background:transparent!important;border:0!important;border-right:1px solid rgba(255,240,200,.55)!important;border-bottom:1px solid rgba(255,240,200,.55)!important;border-radius:0!important;box-shadow:none!important}
+#p-play .duel-field>*{border-radius:0!important}
+#p-play .duel-field>.duel-card{outline:1px solid rgba(255,240,200,.55);outline-offset:-1px}
+/* face-down card back (original vortex design) */
+#p-play .duel-back{background:#3a1508!important;border:2px solid #8a5a2b!important;border-radius:4px!important}
+#p-play .duel-back>.duel-back-inner{border:1px solid #c58a3e!important;border-radius:3px!important;background:radial-gradient(circle,#000 0 12%,#2a0d05 22%,transparent 60%),repeating-conic-gradient(from 0deg,#7a3412 0 12deg,#3a1206 12deg 24deg),#4a1a08!important}
+#p-play .duel-back>.duel-back-inner svg{display:none}
+.fd-hand{display:inline-flex;gap:3px;margin-left:8px;vertical-align:middle}
+.fd-card{width:16px;height:22px;border:1px solid #c58a3e;border-radius:2px;background:radial-gradient(circle,#000 0 15%,transparent 55%),repeating-conic-gradient(#7a3412 0 15deg,#3a1206 15deg 30deg);box-shadow:0 1px 3px rgba(0,0,0,.6)}
+.fd-deck{display:inline-flex;align-items:center;gap:4px;margin-left:8px;font-size:11px;color:#f1d9a0}
+.fd-deck .fd-card{box-shadow:2px 2px 0 #2a0d05,4px 4px 0 #1a0803}
 </style>
 </head>
   <body>
@@ -1773,11 +1787,11 @@ $('#musVol').oninput=()=>{if(M.on&&tab!=='nft'&&tab!=='play')M.master.gain.setTa
 function playMusicSync(){const inPlay=tab==='play',want=inPlay&&M.on;
 if(!M.ctx)return;const C=M.ctx;
 if(!M.plGain){M.plGain=C.createGain();M.plGain.gain.value=0;const pc=C.createDynamicsCompressor();pc.threshold.value=-10;pc.knee.value=4;pc.ratio.value=12;pc.attack.value=.003;pc.release.value=.2;M.plGain.connect(pc);pc.connect(C.destination)}
-if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music5.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
+if(!M.plBuf&&!M.plLoading&&inPlay){M.plLoading=true;fetch('play-music6.m4a?v=1').then(r=>r.arrayBuffer()).then(ab=>new Promise((ok,no)=>C.decodeAudioData(ab,ok,no))).then(buf=>{M.plBuf=buf;M.plLoading=false;playMusicSync()}).catch(()=>{M.plLoading=false})}
 const vol=Math.min(1,$('#musVol').value/100),n=C.currentTime;
 if(want){if(M.master){M.master.gain.cancelScheduledValues(n);M.master.gain.setTargetAtTime(0,n,.08)}
 if(M.plBuf&&!M.plSrc){const sr=C.createBufferSource();sr.buffer=M.plBuf;sr.loop=true;sr.loopStart=0;sr.loopEnd=M.plBuf.duration-0.02;sr.connect(M.plGain);sr.start(n,0.03);M.plSrc=sr}
-M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(vol*0.8,n,.08)}
+M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(vol*0.4,n,.08)}
 else{M.plGain.gain.cancelScheduledValues(n);M.plGain.gain.setTargetAtTime(0,n,.08);if(M.plSrc){const sr=M.plSrc;M.plSrc=null;try{sr.stop(n+.4)}catch(e){}}}}
 /* NFT Market has its own music: original Thalvorix war-drum loop (100 bpm, 28.8 s), composed for this site */
 /* Site music outside Play Game and NFT Market: original Thalvorix theme (epic choir, D minor, 136 bpm), composed for this site */
@@ -1888,5 +1902,18 @@ function frame(now){requestAnimationFrame(frame);if(document.hidden)return;if(no
 x.drawImage(neb,0,0,W,H);for(var q=0;q<PS.length;q++){var P=PS[q];P.x+=P.dx;P.y+=P.dy;if(P.x<-.2||P.x>1.2)P.dx=-P.dx;if(P.y<-.2||P.y>1.2)P.dy=-P.dy;x.drawImage(P.c,P.x*W-P.c.width/2,P.y*H-P.c.height/2)}var cx=W/2,cy=H/2,rot=t*.0015,cs=Math.cos(rot),sn=Math.sin(rot);
 for(var i=0;i<S.length;i++){var p=S[i];if(!red)p.z-=.004;if(p.z<=.03){S[i]=ns(1);continue}var rx=p.x*cs-p.y*sn,ry=p.x*sn+p.y*cs,sx=cx+rx/p.z*W*.35,sy=cy+ry/p.z*H*.35;if(sx<0||sx>W||sy<0||sy>H){S[i]=ns(1);continue}var r=(1-p.z)*2.4+.4;x.globalAlpha=Math.min(1,(1-p.z)*1.5);x.fillStyle=p.c;x.fillRect(sx-r/2,sy-r/2,r,r)}x.globalAlpha=1}
 rs();addEventListener('resize',function(){setTimeout(rs,200)});requestAnimationFrame(frame);})();</script>
-  </body>
+  <script>
+(function(){
+var orig=duelRender;
+duelRender=function(){orig.apply(this,arguments);if(!D||!D.handB)return;
+ var bh=document.querySelector('#duelBotName');var host=bh&&bh.parentNode;if(host){var e=document.getElementById('fdBot');if(!e){e=document.createElement('span');e.id='fdBot';host.appendChild(e)}
+ var n=D.handB.length,h='<span class="fd-hand" title="Enemy hand (face down)">';for(var i=0;i<Math.min(n,10);i++)h+='<i class="fd-card"></i>';h+='</span>';if(D.deckB)h+='<span class="fd-deck" title="Enemy deck"><i class="fd-card"></i>'+D.deckB.length+'</span>';e.innerHTML=h}
+ var ph=document.querySelector('#duelPlayerName');var ph2=ph&&ph.parentNode;if(ph2&&D.deckP){var p=document.getElementById('fdYou');if(!p){p=document.createElement('span');p.id='fdYou';ph2.appendChild(p)}p.innerHTML='<span class="fd-deck" title="Your deck"><i class="fd-card"></i>'+D.deckP.length+'</span>'}};
+/* Voice callouts (browser speech, short, quiet) */
+var VO={summon:['Summon!','I summon you!','Come forth!'],attack:['Attack!','Go!','Strike!'],destroy:['Destroyed!','Down you go!'],turn:['Your turn!'],win:['Victory!'],lose:['Defeat...'],start:['Duel!']};
+var last=0;function say(k){try{if(SFX_MUTED||(D&&D.muted))return;var ss=window.speechSynthesis;if(!ss||!VO[k])return;var now=Date.now();if(now-last<700&&k!=='win'&&k!=='lose')return;last=now;ss.cancel();var a=VO[k],u=new SpeechSynthesisUtterance(a[Math.floor(Math.random()*a.length)]);u.lang='en-US';u.rate=1.05;u.pitch=k==='lose'?0.7:0.85;u.volume=0.7;var vs=ss.getVoices().filter(function(v){return /^en/i.test(v.lang)});var pick=vs.find(function(v){return /male|daniel|david|google uk english male|alex/i.test(v.name)})||vs[0];if(pick)u.voice=pick;ss.speak(u)}catch(e){}}
+var os=duelSfx;duelSfx=function(kind){os.apply(this,arguments);if(kind==='turn'){setTimeout(function(){if(D&&D.phase==='Main')say('turn')},250)}else say(kind)};
+})();
+</script>
+</body>
 </html>
