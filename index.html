@@ -441,6 +441,12 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
         </section>
 
         <section class="section x-panel" id="p-play" hidden>
+          <div class="head"><p class="head__eyebrow">Play Game</p><h2>Choose a game mode.</h2></div>
+          <div id="gameModes" style="display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-bottom:18px">
+            <a class="x-box" href="/battle-card" style="display:block;text-decoration:none;color:inherit;border:2px solid var(--x-gold,#c9a227)"><p class="x-muted" style="margin:0">Mode 1</p><h3 style="margin:4px 0">Battle Card</h3><p class="x-muted">Duel Arena card battle with your NFT heroes. Ranked, stars and Mystery Box rewards.</p><span class="x-cta" style="display:inline-block;margin-top:6px">Play Battle Card &rarr;</span></a>
+            <div class="x-box" style="opacity:.6"><p class="x-muted" style="margin:0">More modes</p><h3 style="margin:4px 0">Coming soon</h3><p class="x-muted">New game modes will be added here.</p></div>
+          </div>
+          <div id="playLegacy" hidden>
           <div class="x-box" id="playRankBox" style="margin-bottom:18px" hidden><div class="x-rank" id="rankCard"></div><h3>Your hero</h3><ul id="teamList" class="x-muted"></ul></div>
           <div class="head"><p class="head__eyebrow">Play Game</p><h2>Duel Arena &mdash; Card Battle.</h2></div>
           <div id="playArea">
@@ -470,6 +476,7 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
           <p class="x-muted">8 tiers × 10 divisions, X lowest to I highest. 25 stars per division.</p>
           <ol class="x-ladder" id="ladder"></ol>
           <div class="table-wrap"><table><caption>Leaderboard</caption><thead><tr><th scope="col">Team</th><th scope="col">Rank</th><th scope="col">Stars</th><th scope="col">Win rate</th></tr></thead><tbody id="lbBody"></tbody></table></div>
+                  </div>
         </section>
 
 
@@ -693,7 +700,7 @@ async function sessRestore(){const ss=sessGet();if(!ss||!ss.addr||S.wallet)retur
   if(typeof puzzleNew==='function'){puzzleNew();if(ss.ps)PUZZLE.solved=true}
   try{if(XT_PENDING||localStorage.getItem('thx_xtpend'))xtBack();updateMintUI()}catch(e){}
   await refreshChain().catch(()=>{});try{updateMintUI();render()}catch(e){}}
-setTimeout(()=>{try{const pend=localStorage.getItem('thx_xtpend'),last=sessionStorage.getItem('thx_tab');if(pend||(last==='mint'))go('mint');else if(last&&last!=='home'&&document.getElementById('p-'+last))go(last)}catch(e){}},0);
+setTimeout(()=>{try{const hh=(location.hash||'').slice(1);if(hh&&document.getElementById('p-'+hh)){go(hh);return}}catch(e){}try{const pend=localStorage.getItem('thx_xtpend'),last=sessionStorage.getItem('thx_tab');if(pend||(last==='mint'))go('mint');else if(last&&last!=='home'&&document.getElementById('p-'+last))go(last)}catch(e){}},0);
 window.addEventListener('pageshow',e=>{try{if(XT_PENDING||localStorage.getItem('thx_xtpend')){if(!XT_PENDING)XT_PENDING=JSON.parse(localStorage.getItem('thx_xtpend'));xtBack()}}catch(err){}});
 setTimeout(()=>{sessRestore().catch(()=>{}).then(()=>{try{if(XT_PENDING)xtBack()}catch(e){}})},0);
 function doDisconnect(){
