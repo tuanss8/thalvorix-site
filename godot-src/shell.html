@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>$GODOT_PROJECT_NAME</title>
+<!-- start the two big downloads before index.js runs (same URLs/mode as the Godot loader, so no double fetch) -->
+<link rel="preload" href="index.wasm" as="fetch" type="application/wasm" crossorigin="anonymous">
+<link rel="preload" href="index.pck" as="fetch" crossorigin="anonymous">
 <style>
 html,body,#canvas{margin:0;padding:0;border:0}
 html,body{touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}

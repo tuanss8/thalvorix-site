@@ -20,6 +20,7 @@ Export (single-threaded web, no COOP/COEP needed), then generate the service wor
 `post_export.py` writes `godot/sw.js` (cache name = hash of the exported files). Always run it after an export, or repeat visitors keep the previous cached build until it runs.
 
 Loading pipeline (2026-11-09):
+- `<link rel="preload">` for index.wasm/index.pck in the shell head starts both downloads before index.js runs (same URL + cors mode as the Godot loader: one fetch each, verified).
 - The shell starts downloading `index.wasm` + `index.pck` and compiles/instantiates the engine (`engine.init`) as soon as the page opens, while the player picks a deck; Play only calls `engine.start`. Progress shows `Downloading game… N%` (both files), then `Preparing engine…` (compile), `Starting engine…`, `Building the arena…`. The overlay stays until Godot calls `window.THX_onTitle()` after the title frame (20 s fallback).
 - `sw.js` (registered 3 s after the title shows, scope `/godot/`) precaches this build from the HTTP cache and serves it cache-first on repeat visits; a new export = new cache name, old caches are deleted on activate. `?nosw` skips registration.
 - Startup order in `main.gd`: lights/camera → table + UI → title frame → backdrop over the following frames → one hidden card drawn under the table to pre-compile card shaders. Backdrop textures are baked PNGs in `space/` (regenerate with `godot --headless --path godot-src -s res://tools/bake_space.gd`); the generator functions stay in `main.gd`. The 4 planet rim shells share one Shader (one GPU program).
