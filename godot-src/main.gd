@@ -1,6 +1,6 @@
 extends Node3D
 ## THALVORIX Duel Arena 3D - playable prototype.
-## Player vs bot, 5 slots per side, 4000 LP each.
+## Player vs bot, 5 slots per side, 1000 LP each (LP damage = ATK/DEF gap x DMG_SCALE).
 ## Attack rule (simplified from the 2D Duel Arena): attacker ATK vs target DEF.
 ##   ATK > DEF : target destroyed, its owner loses (ATK - DEF) LP.
 ##   ATK < DEF : attack bounces, attacker's owner loses (DEF - ATK) LP.
@@ -14,7 +14,9 @@ const SLOT_X := [-3.7, -1.85, 0.0, 1.85, 3.7]
 const CARD_SCALE := 1.15
 const ROW_Z := [1.72, -1.72]                       # player row, bot row
 const DECK_POS := [Vector3(5.85, 0.0, 2.4), Vector3(-5.85, 0.0, -2.4)]
-const LP_MAX := 4000
+const LP_MAX := 1000
+const DMG_SCALE := 0.25        # ATK/DEF gap -> LP damage (stats stay in the thousands)
+const LpHud := preload("res://lp_hud.gd")
 const DECK_SIZE := 8
 const RARITIES := ["Common", "Uncommon", "Rare", "Epic", "Legendary"]
 const RARITY_W := [40, 27, 18, 10, 5]
@@ -812,36 +814,21 @@ func _build_ui() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(root)
 
-	# LP panels: enemy top-left, player bottom-left
+	# LP panels: enemy top-left, player bottom-left (custom-drawn pill, see lp_hud.gd)
 	for side in 2:
-		var box := VBoxContainer.new()
-		box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var hud: Control = LpHud.new()
+		hud.setup(side, LP_MAX)
 		if side == 1:
-			box.set_anchors_preset(Control.PRESET_TOP_LEFT)
-			box.position = Vector2(20, 14)
+			hud.set_anchors_preset(Control.PRESET_TOP_LEFT)
+			hud.position = Vector2(16, 12)
 		else:
-			box.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
-			box.offset_top = -96
-			box.offset_left = 20
-		var head := HBoxContainer.new()
-		head.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		head.add_child(_label("ENEMY" if side == 1 else "YOU", 26, Color(1, 0.55, 0.6) if side == 1 else Color(0.55, 0.8, 1)))
-		var t := _label("LP 4000", 26, Color(1, 0.88, 0.35))
-		head.add_child(t)
-		head.add_theme_constant_override("separation", 16)
-		box.add_child(head)
-		var bar := ProgressBar.new()
-		bar.custom_minimum_size = Vector2(330, 22)
-		bar.max_value = LP_MAX
-		bar.value = LP_MAX
-		bar.show_percentage = false
-		bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		bar.add_theme_stylebox_override("background", _style(Color(0.1, 0.08, 0.15, 0.9), 6))
-		bar.add_theme_stylebox_override("fill", _style(Color(0.95, 0.3, 0.38) if side == 1 else Color(0.3, 0.62, 1.0), 6))
-		box.add_child(bar)
-		root.add_child(box)
-		lp_bar.append(bar)
-		lp_text.append(t)
+			hud.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+			hud.offset_left = 16
+			hud.offset_top = -76
+			hud.offset_right = 16 + 340
+			hud.offset_bottom = -14
+		root.add_child(hud)
+		lp_bar.append(hud)
 
 	status_lbl = _label("", 24, Color(1, 1, 1))
 	status_lbl.set_anchors_preset(Control.PRESET_CENTER_TOP)
@@ -937,7 +924,7 @@ func _build_ui() -> void:
 	var deck_lbl := _label(_deck_line(), 22, Color(0.6, 0.95, 0.7) if my_deck.size() > 0 else Color(0.7, 0.7, 0.8))
 	deck_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tv.add_child(deck_lbl)
-	var how := _label("Tap one of your cards, then tap an enemy card to attack.\nATK beats DEF: the difference is taken from Life Points.", 24, Color(0.9, 0.9, 0.95))
+	var how := _label("Tap one of your cards, then tap an enemy card to attack.\nATK beats DEF: a quarter of the gap hits Life Points (1000 LP).", 24, Color(0.9, 0.9, 0.95))
 	how.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tv.add_child(how)
 	var play := _button("Play", 38)
@@ -1560,16 +1547,18 @@ func _attack(att: Node3D, tgt: Node3D) -> void:
 	var diff: int = att.atk - tgt.def
 	var a_name: String = att.hero.name
 	var t_name: String = tgt.hero.name
+	var dmg: int = maxi(10, int(round(absf(diff) * DMG_SCALE / 10.0)) * 10)
 	if diff > 0:
+		diff = dmg
 		lp[tgt.side] -= diff
 		_float_text("-%d" % diff, tgt.position + Vector3(0, 0.8, 0), Color(1, 0.45, 0.4))
 		await get_tree().create_timer(0.12).timeout
 		_shatter(tgt)
 		_set_status("%s destroys %s! %d damage to %s LP." % [a_name, t_name, diff, "enemy" if tgt.side == 1 else "your"])
 	elif diff < 0:
-		lp[att.side] += diff
-		_float_text("-%d" % -diff, start + Vector3(0, 0.8, 0), Color(1, 0.45, 0.4))
-		_set_status("%s blocks! DEF %d > ATK %d. %d recoil to %s LP." % [t_name, tgt.def, att.atk, -diff, "your" if att.side == 0 else "enemy"])
+		lp[att.side] -= dmg
+		_float_text("-%d" % dmg, start + Vector3(0, 0.8, 0), Color(1, 0.45, 0.4))
+		_set_status("%s blocks! DEF %d > ATK %d. %d recoil to %s LP." % [t_name, tgt.def, att.atk, dmg, "your" if att.side == 0 else "enemy"])
 	else:
 		await get_tree().create_timer(0.12).timeout
 		_shatter(tgt)
@@ -1589,12 +1578,7 @@ func _attack(att: Node3D, tgt: Node3D) -> void:
 
 func _update_lp(instant := false) -> void:
 	for side in 2:
-		var v := float(max(lp[side], 0))
-		lp_text[side].text = "LP %d" % int(v)
-		if instant:
-			lp_bar[side].value = v
-		else:
-			create_tween().tween_property(lp_bar[side], "value", v, 0.5).set_trans(Tween.TRANS_SINE)
+		lp_bar[side].set_lp(float(max(lp[side], 0)), instant)
 
 
 func _shatter(c: Node3D) -> void:
