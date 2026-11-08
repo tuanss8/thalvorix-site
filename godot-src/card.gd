@@ -1,0 +1,173 @@
+extends Node3D
+## One duel card: a thin 3D box with hero art, name and ATK/DEF on the front,
+## a THALVORIX back, and a glow plate used for selection / target hints.
+
+const W := 1.3
+const D := 1.85
+const T := 0.05
+const REST_Y := 0.03
+
+const RARITY_COL := {
+	"Common": Color(0.62, 0.64, 0.72),
+	"Uncommon": Color(0.30, 0.85, 0.45),
+	"Rare": Color(0.30, 0.58, 1.0),
+	"Epic": Color(0.75, 0.38, 1.0),
+	"Legendary": Color(1.0, 0.76, 0.22),
+}
+
+var hero: Dictionary = {}
+var tex: Texture2D
+var atk := 0
+var def := 0
+var rarity := "Common"
+var side := 0          # 0 = player, 1 = bot
+var slot := -1
+var face_up := false
+var alive := true
+
+var _glow: MeshInstance3D
+var _glow_mat: StandardMaterial3D
+var _pulse := 0.0
+var _glow_on := false
+
+
+func setup(h: Dictionary, t: Texture2D, a: int, d: int, r: String, s: int) -> void:
+	hero = h
+	tex = t
+	atk = a
+	def = d
+	rarity = r
+	side = s
+	var col: Color = RARITY_COL.get(r, Color.WHITE)
+
+	# glow plate (under the card, slightly larger)
+	_glow = MeshInstance3D.new()
+	var gm := BoxMesh.new()
+	gm.size = Vector3(W + 0.22, 0.01, D + 0.22)
+	_glow.mesh = gm
+	_glow_mat = StandardMaterial3D.new()
+	_glow_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_glow_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_glow_mat.albedo_color = Color(0.5, 0.9, 1.0, 0.0)
+	_glow.material_override = _glow_mat
+	_glow.position.y = 0.0  # centred in the body so only the rim shows, face up or down
+	_glow.visible = false
+	add_child(_glow)
+
+	# body
+	var body := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(W, T, D)
+	body.mesh = bm
+	var mm := StandardMaterial3D.new()
+	mm.albedo_color = Color(0.10, 0.07, 0.16)
+	mm.metallic = 0.5
+	mm.roughness = 0.4
+	body.material_override = mm
+	add_child(body)
+
+	# rarity frame on the front
+	var frame := MeshInstance3D.new()
+	var fm := BoxMesh.new()
+	fm.size = Vector3(W - 0.03, 0.004, D - 0.03)
+	frame.mesh = fm
+	var fmat := StandardMaterial3D.new()
+	fmat.albedo_color = col * 0.7
+	fmat.emission_enabled = true
+	fmat.emission = col
+	fmat.emission_energy_multiplier = 0.45
+	frame.material_override = fmat
+	frame.position.y = T * 0.5 + 0.002
+	add_child(frame)
+
+	var inner := MeshInstance3D.new()
+	var inm := BoxMesh.new()
+	inm.size = Vector3(W - 0.12, 0.004, D - 0.12)
+	inner.mesh = inm
+	var inmat := StandardMaterial3D.new()
+	inmat.albedo_color = Color(0.05, 0.035, 0.09)
+	inner.material_override = inmat
+	inner.position.y = T * 0.5 + 0.005
+	add_child(inner)
+
+	# hero art
+	var art_size := W - 0.16
+	var art := MeshInstance3D.new()
+	var q := PlaneMesh.new()
+	q.size = Vector2(art_size, art_size)
+	art.mesh = q
+	var am := StandardMaterial3D.new()
+	am.albedo_texture = t
+	am.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	am.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	art.material_override = am
+	art.position = Vector3(0, T * 0.5 + 0.009, -D * 0.5 + 0.08 + art_size * 0.5)
+	add_child(art)
+
+	var text_y := T * 0.5 + 0.012
+	var name_lbl := _flat_label(String(h.get("name", "?")).to_upper(), 40, Color(1, 0.95, 0.85))
+	name_lbl.position = Vector3(0, text_y, -D * 0.5 + 0.08 + art_size + 0.13)
+	add_child(name_lbl)
+
+	var role_lbl := _flat_label("%s · %s" % [h.get("role", ""), h.get("el", "")], 26, col.lightened(0.3))
+	role_lbl.position = Vector3(0, text_y, name_lbl.position.z + 0.15)
+	add_child(role_lbl)
+
+	var atk_lbl := _flat_label("ATK %d" % a, 28, Color(1.0, 0.55, 0.35))
+	atk_lbl.pixel_size = 0.0040
+	atk_lbl.position = Vector3(-W * 0.245, text_y, D * 0.5 - 0.16)
+	add_child(atk_lbl)
+	var def_lbl := _flat_label("DEF %d" % d, 28, Color(0.45, 0.75, 1.0))
+	def_lbl.pixel_size = 0.0040
+	def_lbl.position = Vector3(W * 0.245, text_y, D * 0.5 - 0.16)
+	add_child(def_lbl)
+
+	# back side (faces -Y; visible when the card lies face down)
+	var back := MeshInstance3D.new()
+	var bq := PlaneMesh.new()
+	bq.size = Vector2(W - 0.08, D - 0.08)
+	back.mesh = bq
+	var backm := StandardMaterial3D.new()
+	backm.albedo_color = Color(0.22, 0.08, 0.36)
+	backm.emission_enabled = true
+	backm.emission = Color(0.35, 0.12, 0.6)
+	backm.emission_energy_multiplier = 0.35
+	back.material_override = backm
+	back.rotation.z = PI
+	back.position.y = -T * 0.5 - 0.002
+	add_child(back)
+	var emblem := _flat_label("THX", 72, Color(1.0, 0.82, 0.35))
+	emblem.rotation = Vector3(PI * 0.5, 0, PI)
+	emblem.position = Vector3(0, -T * 0.5 - 0.006, 0)
+	add_child(emblem)
+	var emblem2 := _flat_label("THALVORIX", 26, Color(0.85, 0.75, 1.0))
+	emblem2.rotation = Vector3(PI * 0.5, 0, PI)
+	emblem2.position = Vector3(0, -T * 0.5 - 0.006, 0.42)
+	add_child(emblem2)
+
+
+func _flat_label(txt: String, size: int, color: Color) -> Label3D:
+	var l := Label3D.new()
+	l.text = txt
+	l.font_size = size
+	l.pixel_size = 0.0042
+	l.outline_size = 8
+	l.outline_modulate = Color(0, 0, 0, 0.9)
+	l.modulate = color
+	l.rotation.x = -PI * 0.5
+	l.alpha_cut = Label3D.ALPHA_CUT_DISCARD
+	l.double_sided = false
+	l.width = 300
+	return l
+
+
+func set_glow(on: bool, color: Color = Color(0.5, 0.9, 1.0)) -> void:
+	_glow_on = on
+	_glow.visible = on
+	_glow_mat.albedo_color = Color(color.r, color.g, color.b, 0.75)
+
+
+func _process(delta: float) -> void:
+	if _glow_on:
+		_pulse += delta * 5.0
+		_glow_mat.albedo_color.a = 0.45 + 0.35 * sin(_pulse)
