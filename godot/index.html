@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>THALVORIX Duel Arena 3D</title>
 <style>
 html,body,#canvas{margin:0;padding:0;border:0}
+html,body{touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#canvas{touch-action:none}
+#status input{-webkit-user-select:text;user-select:text}
 body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family:'Noto Sans','Segoe UI',Arial,sans-serif}
 #canvas{display:block}
 #canvas:focus{outline:none}
@@ -74,9 +77,19 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
   console.error=function(...a){try{const s=a.map(x=>x&&x.message?x.message:String(x)).join(' ');THX_lastErrors.push(s);if(THX_lastErrors.length>20)THX_lastErrors.shift();if(/ERROR|SCRIPT ERROR|USER ERROR|Error/i.test(s))THX_showError(s.slice(0,400))}catch(_){}ce(...a)};
 })();
 </script>
+<script>
+/* ---------- keep the browser from zooming the page: pinch / ctrl+wheel / iOS gestures go to the game ---------- */
+(function(){
+  const no=e=>{if(e.cancelable)e.preventDefault()};
+  ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,no,{passive:false}));
+  document.addEventListener('touchmove',e=>{if(e.touches&&e.touches.length>1)no(e)},{passive:false});
+  document.addEventListener('wheel',e=>{if(e.ctrlKey)no(e)},{passive:false});
+  let lastEnd=0;document.addEventListener('touchend',e=>{const t=Date.now();if(t-lastEnd<300&&e.target&&e.target.id==='canvas')no(e);lastEnd=t},{passive:false});
+})();
+</script>
 <script src="index.js"></script>
 <script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2977500,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2987340,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 
 /* ---------- read-only THALVORIX Hero NFT scan (same method as duel-arena.html) ---------- */

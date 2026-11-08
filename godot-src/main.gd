@@ -23,6 +23,30 @@ const RARITY_POW := {"Common": 1.0, "Uncommon": 1.07, "Rare": 1.14, "Epic": 1.22
 var cam: Camera3D
 var cam_base := Transform3D()
 var shake := 0.0
+# zoom / pan (pinch, wheel, magnify, on-screen buttons). zoom = distance multiplier.
+const ZOOM_MIN := 0.6
+const ZOOM_MAX := 2.2
+const CAM_TARGET := Vector3(0, 0, 0.55)
+const DRAG_PX := 18.0
+var cam_dir := Vector3.UP
+var cam_dist := 10.0
+var zoom := 1.0
+var zoom_t := 1.0
+var pan := Vector2.ZERO        # x / z offset of the look-at point on the table
+var pan_t := Vector2.ZERO
+var touches := {}              # touch index -> position
+var pinch_prev := 0.0
+var pinch_mid_prev := Vector2.ZERO
+var multi := false             # a 2+ finger gesture happened since the last first-finger press
+var press_active := false
+var press_pos := Vector2.ZERO
+var last_drag := Vector2.ZERO
+var dragging := false
+var zoom_ui: Control
+var zoom_btns := []
+var zoom_ui_mode := -1         # 0 landscape, 1 portrait
+var star_layers := []          # [node, follow factor] parallax layers
+var _js_cam_sent := Vector3(-1, -1, -1)
 var spin_nodes := []          # [node, axis, speed]
 var orbit_pivots := []        # [node, speed]
 var stars: MultiMeshInstance3D
@@ -74,7 +98,7 @@ func _ready() -> void:
 	# synchronously. Build the scene over the next frames instead.
 	_build_env()
 	await get_tree().process_frame
-	_build_space()
+	_build_space()           # coroutine: builds the backdrop over the next frames
 	_build_table()
 	await get_tree().process_frame
 	_build_ui()
@@ -176,6 +200,9 @@ func _build_env() -> void:
 	add_child(cam)
 	cam.look_at(Vector3(0, 0, 0.55), Vector3.UP)
 	cam_base = cam.transform
+	cam_dir = (cam.position - CAM_TARGET).normalized()
+	cam_dist = (cam.position - CAM_TARGET).length()
+	cam.far = 400.0
 	cam.current = true
 
 
@@ -186,96 +213,376 @@ func _unshaded(color: Color, energy := 1.0) -> StandardMaterial3D:
 	return m
 
 
+# ---------------------------------------------------------------- 3D space backdrop
+# Everything is generated in code: small procedural textures (<=128 px), low-poly
+# spheres, unshaded/additive materials for stars and nebula. No glow pass.
+const STAR_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_disabled, shadows_disabled;
+uniform float twinkle = 1.0;
+varying float phase;
+void vertex() {
+	MODELVIEW_MATRIX = VIEW_MATRIX * mat4(INV_VIEW_MATRIX[0], INV_VIEW_MATRIX[1], INV_VIEW_MATRIX[2], MODEL_MATRIX[3]);
+	MODELVIEW_MATRIX = MODELVIEW_MATRIX * mat4(vec4(length(MODEL_MATRIX[0].xyz), 0.0, 0.0, 0.0), vec4(0.0, length(MODEL_MATRIX[1].xyz), 0.0, 0.0), vec4(0.0, 0.0, length(MODEL_MATRIX[2].xyz), 0.0), vec4(0.0, 0.0, 0.0, 1.0));
+	phase = INSTANCE_CUSTOM.x * 6.2831;
+}
+void fragment() {
+	vec2 d = UV * 2.0 - 1.0;
+	float r = dot(d, d);
+	float a = exp(-r * 10.0) + exp(-r * 3.0) * 0.28;
+	float tw = 1.0 - twinkle * 0.4 * (0.5 + 0.5 * sin(TIME * (1.2 + phase * 0.4) + phase * 5.0));
+	ALBEDO = COLOR.rgb * tw;
+	ALPHA = clamp(a, 0.0, 1.0);
+}
+"""
+const RIM_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, cull_back, shadows_disabled;
+uniform vec4 rim_color : source_color = vec4(0.4, 0.6, 1.0, 1.0);
+uniform float power = 3.0;
+void fragment() {
+	float f = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), power);
+	ALBEDO = rim_color.rgb;
+	ALPHA = clamp(f * rim_color.a, 0.0, 1.0);
+}
+"""
+
+
 func _build_space() -> void:
-	# star field
-	var sm := SphereMesh.new()
-	sm.radius = 0.09
-	sm.height = 0.18
-	sm.radial_segments = 6
-	sm.rings = 3
-	var smat := _unshaded(Color.WHITE)
-	smat.vertex_color_use_as_albedo = true
-	sm.material = smat
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.use_colors = true
-	mm.mesh = sm
-	mm.instance_count = 520
-	for i in mm.instance_count:
-		var dir := Vector3(randf_range(-1, 1), randf_range(-1, 0.6), randf_range(-1, 1)).normalized()
-		var r := randf_range(38.0, 60.0)
-		var s := randf_range(0.5, 1.7)
-		mm.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(s, s, s)), dir * r))
-		var tint: Color = [Color(1, 1, 1), Color(0.75, 0.82, 1.0), Color(1.0, 0.85, 0.7), Color(0.9, 0.75, 1.0)][i % 4]
-		mm.set_instance_color(i, tint * randf_range(0.6, 1.4))
-	stars = MultiMeshInstance3D.new()
-	stars.multimesh = mm
-	add_child(stars)
+	# --- starfield: 3 layers. Far layers follow the camera (skybox-like), the near
+	# layer stays put, so zooming / panning gives visible depth parallax.
+	var star_mat := ShaderMaterial.new()
+	var sh := Shader.new()
+	sh.code = STAR_SHADER
+	star_mat.shader = sh
+	var tints := [Color(1, 1, 1), Color(0.72, 0.82, 1.0), Color(1.0, 0.86, 0.68), Color(0.9, 0.74, 1.0), Color(0.7, 1.0, 0.95)]
+	# [count, radius min, radius max, size min, size max, follow]
+	for L in [[620, 85.0, 110.0, 0.55, 1.2, 1.0], [300, 48.0, 62.0, 0.4, 0.9, 0.55], [110, 22.0, 32.0, 0.22, 0.5, 0.0]]:
+		var q := QuadMesh.new()
+		q.size = Vector2.ONE
+		q.material = star_mat
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_colors = true
+		mm.use_custom_data = true
+		mm.mesh = q
+		mm.instance_count = L[0]
+		for i in mm.instance_count:
+			var dir := Vector3(randf_range(-1, 1), randf_range(-1, 0.35), randf_range(-1, 1)).normalized()
+			if L[5] == 0.0 and dir.y > -0.12:
+				dir.y = -randf_range(0.12, 0.9)      # near layer only below the table plane
+				dir = dir.normalized()
+			var sz := randf_range(L[3], L[4]) * (2.2 if randf() < 0.04 else 1.0)
+			mm.set_instance_transform(i, Transform3D(Basis().scaled(Vector3(sz, sz, sz)), dir * randf_range(L[1], L[2])))
+			mm.set_instance_color(i, tints[i % tints.size()] * randf_range(0.55, 1.5))
+			mm.set_instance_custom_data(i, Color(randf(), 0, 0, 0))
+		var mi := MultiMeshInstance3D.new()
+		mi.multimesh = mm
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mi)
+		star_layers.append([mi, L[5]])
+		if stars == null:
+			stars = mi
+	await get_tree().process_frame
 
-	# planets
-	_planet(Vector3(-13.5, -12.0, -21.0), 4.6, Color(0.85, 0.42, 0.25), Color(0.5, 0.12, 0.05), 0.08)
-	var ringed := _planet(Vector3(14.0, -9.0, -17.0), 2.8, Color(0.45, 0.4, 0.95), Color(0.12, 0.08, 0.4), -0.12)
+	# --- nebula: big additive billboards with a soft procedural cloud texture
+	var neb_root := Node3D.new()
+	add_child(neb_root)
+	star_layers.append([neb_root, 0.85])
+	var neb_tex := _nebula_tex(7)
+	var neb_tex2 := _nebula_tex(21)
+	# [pos, size, color]
+	for nb in [[Vector3(-24, -34, -60), 70.0, Color(0.55, 0.18, 0.75, 0.55)],
+			[Vector3(28, -30, -55), 60.0, Color(0.12, 0.42, 0.75, 0.5)],
+			[Vector3(2, -55, -40), 80.0, Color(0.7, 0.16, 0.42, 0.38)],
+			[Vector3(-48, -40, -8), 60.0, Color(0.2, 0.5, 0.7, 0.4)],
+			[Vector3(48, -42, -2), 64.0, Color(0.5, 0.2, 0.8, 0.42)],
+			[Vector3(0, -60, 20), 80.0, Color(0.3, 0.12, 0.55, 0.4)]]:
+		var m := MeshInstance3D.new()
+		var qm := QuadMesh.new()
+		qm.size = Vector2(nb[1], nb[1])
+		m.mesh = qm
+		var nm := StandardMaterial3D.new()
+		nm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		nm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		nm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		nm.no_depth_test = false
+		nm.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+		nm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		nm.albedo_texture = neb_tex if randf() < 0.5 else neb_tex2
+		nm.albedo_color = nb[2]
+		nm.disable_receive_shadows = true
+		m.material_override = nm
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		m.position = nb[0]
+		m.rotation.z = randf() * TAU
+		neb_root.add_child(m)
+	await get_tree().process_frame
+
+	# --- planets (lit by the sun, procedural equirectangular textures)
+	var lava := _planet(Vector3(-13.5, -12.0, -21.0), 4.6,
+		_planet_tex("rock", 3, Color(0.42, 0.16, 0.08), Color(0.85, 0.5, 0.25), Color(1.0, 0.55, 0.1)), 0.06, Color(1.0, 0.45, 0.2, 0.9))
+	await get_tree().process_frame
+	var ringed := _planet(Vector3(14.0, -9.0, -17.0), 2.8,
+		_planet_tex("gas", 11, Color(0.32, 0.26, 0.72), Color(0.82, 0.7, 1.0), Color(1.0, 0.75, 0.9)), -0.1, Color(0.65, 0.5, 1.0, 0.8))
+	ringed.rotation_degrees = Vector3(22, 0, -18)
 	var ring := MeshInstance3D.new()
-	var tm := TorusMesh.new()
-	tm.inner_radius = 3.6
-	tm.outer_radius = 5.4
-	tm.rings = 48
-	tm.ring_segments = 6
-	ring.mesh = tm
+	ring.mesh = _ring_mesh(3.7, 6.3, 72)
 	var rmat := StandardMaterial3D.new()
-	rmat.albedo_color = Color(0.9, 0.75, 1.0, 0.55)
+	rmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	rmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	rmat.emission_enabled = true
-	rmat.emission = Color(0.55, 0.35, 0.9)
-	rmat.emission_energy_multiplier = 0.6
+	rmat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	rmat.albedo_texture = _ring_tex(5)
+	rmat.albedo_color = Color(1.0, 0.92, 1.0, 0.9)
 	ring.material_override = rmat
-	ring.scale = Vector3(1, 0.04, 1)
-	ring.position = ringed.position
-	ring.rotation_degrees = Vector3(22, 0, -18)
-	add_child(ring)
-	spin_nodes.append([ring, Vector3.UP, 0.05])
-	# small moon orbiting the big planet
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var ring_pivot := Node3D.new()
+	ring_pivot.position = ringed.position
+	ring_pivot.rotation_degrees = Vector3(22, 0, -18)
+	add_child(ring_pivot)
+	ring_pivot.add_child(ring)
+	spin_nodes.append([ring, Vector3.UP, 0.03])
+	await get_tree().process_frame
+	_planet(Vector3(9.5, -21.0, -33.0), 3.3,
+		_planet_tex("earth", 17, Color(0.06, 0.2, 0.5), Color(0.2, 0.55, 0.3), Color(0.92, 0.95, 1.0)), 0.09, Color(0.35, 0.7, 1.0, 1.0))
+	await get_tree().process_frame
+	_planet(Vector3(-7.0, -27.0, -42.0), 2.1,
+		_planet_tex("gas", 29, Color(0.55, 0.85, 0.9), Color(0.85, 0.97, 1.0), Color(0.4, 0.7, 0.95)), 0.14, Color(0.5, 0.9, 1.0, 0.7))
+	await get_tree().process_frame
+
+	# moon orbiting the big planet
 	var pivot := Node3D.new()
-	pivot.position = Vector3(-13.5, -12.0, -21.0)
+	pivot.position = lava.position
+	pivot.rotation_degrees.z = 12
 	add_child(pivot)
-	var moon := MeshInstance3D.new()
-	var ms := SphereMesh.new()
-	ms.radius = 0.9
-	ms.height = 1.8
-	moon.mesh = ms
-	var mmat := StandardMaterial3D.new()
-	mmat.albedo_color = Color(0.7, 0.85, 1.0)
-	mmat.emission_enabled = true
-	mmat.emission = Color(0.2, 0.35, 0.6)
-	moon.material_override = mmat
-	moon.position = Vector3(7.5, 2.0, 0)
-	pivot.add_child(moon)
-	orbit_pivots.append([pivot, 0.18])
-	# distant glowing star
-	_planet(Vector3(4.0, -16.0, -34.0), 2.2, Color(1.0, 0.85, 0.5), Color(1.0, 0.6, 0.2), 0.0, true)
+	var moon := _planet(Vector3(7.8, 1.5, 0), 0.95,
+		_planet_tex("moon", 41, Color(0.42, 0.42, 0.46), Color(0.78, 0.78, 0.82), Color(0.25, 0.25, 0.28)), 0.2, Color(0, 0, 0, 0), pivot)
+	moon.rotation_degrees.z = 0
+	orbit_pivots.append([pivot, 0.16])
+
+	# distant sun: unshaded core + additive corona billboard
+	var sun := MeshInstance3D.new()
+	var ss := SphereMesh.new()
+	ss.radius = 2.0
+	ss.height = 4.0
+	ss.radial_segments = 16
+	ss.rings = 8
+	sun.mesh = ss
+	sun.material_override = _unshaded(Color(1.0, 0.86, 0.55), 1.3)
+	sun.position = Vector3(30.0, -24.0, -70.0)
+	add_child(sun)
+	var cor := MeshInstance3D.new()
+	var cq := QuadMesh.new()
+	cq.size = Vector2(16, 16)
+	cor.mesh = cq
+	var cm := StandardMaterial3D.new()
+	cm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	cm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	cm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	cm.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
+	cm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	cm.albedo_texture = _radial_tex()
+	cm.albedo_color = Color(1.0, 0.7, 0.35, 0.9)
+	cor.material_override = cm
+	cor.position = sun.position
+	add_child(cor)
+	await get_tree().process_frame
+
+	# small asteroid field drifting between the planets
+	var rock := SphereMesh.new()
+	rock.radius = 0.5
+	rock.height = 1.0
+	rock.radial_segments = 6
+	rock.rings = 3
+	var rkm := StandardMaterial3D.new()
+	rkm.albedo_color = Color(0.45, 0.38, 0.42)
+	rkm.roughness = 1.0
+	rock.material = rkm
+	var amm := MultiMesh.new()
+	amm.transform_format = MultiMesh.TRANSFORM_3D
+	amm.mesh = rock
+	amm.instance_count = 46
+	for i in amm.instance_count:
+		var ang := randf() * TAU
+		var rr := randf_range(15.0, 22.0)
+		var b := Basis(Vector3(randf(), randf(), randf()).normalized(), randf() * TAU)
+		b = b.scaled(Vector3(randf_range(0.3, 1.0), randf_range(0.25, 0.7), randf_range(0.3, 0.9)))
+		amm.set_instance_transform(i, Transform3D(b, Vector3(cos(ang) * rr, randf_range(-1.2, 1.2), sin(ang) * rr)))
+	var belt := MultiMeshInstance3D.new()
+	belt.multimesh = amm
+	belt.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	belt.position = Vector3(0, -14.0, -6.0)
+	belt.rotation_degrees.x = 8
+	add_child(belt)
+	spin_nodes.append([belt, Vector3.UP, 0.02])
 
 
-func _planet(pos: Vector3, radius: float, col: Color, emis: Color, spin: float, glow := false) -> MeshInstance3D:
+func _planet(pos: Vector3, radius: float, tex: Texture2D, spin: float, rim := Color(0, 0, 0, 0), parent: Node = null) -> MeshInstance3D:
 	var p := MeshInstance3D.new()
 	var s := SphereMesh.new()
 	s.radius = radius
 	s.height = radius * 2.0
-	s.radial_segments = 32
-	s.rings = 16
+	s.radial_segments = 28 if radius > 2.0 else 18
+	s.rings = 14 if radius > 2.0 else 9
 	p.mesh = s
 	var m := StandardMaterial3D.new()
-	m.albedo_color = col
-	m.roughness = 0.8
-	m.emission_enabled = true
-	m.emission = emis
-	m.emission_energy_multiplier = 2.5 if glow else 0.5
+	m.albedo_texture = tex
+	m.roughness = 1.0
+	m.metallic_specular = 0.1
+	m.emission_enabled = true          # faint night side so planets never go black
+	m.emission_texture = tex
+	m.emission = Color.WHITE
+	m.emission_energy_multiplier = 0.22
 	p.material_override = m
+	p.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	p.position = pos
 	p.rotation_degrees.z = 15
-	add_child(p)
+	(parent if parent != null else self).add_child(p)
 	if spin != 0.0:
 		spin_nodes.append([p, Vector3.UP, spin])
+	if rim.a > 0.0:
+		var at := MeshInstance3D.new()
+		var as_ := SphereMesh.new()
+		as_.radius = radius * 1.07
+		as_.height = radius * 2.14
+		as_.radial_segments = 24
+		as_.rings = 12
+		at.mesh = as_
+		var am := ShaderMaterial.new()
+		var sh := Shader.new()
+		sh.code = RIM_SHADER
+		am.shader = sh
+		am.set_shader_parameter("rim_color", rim)
+		at.material_override = am
+		at.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		at.position = pos
+		(parent if parent != null else self).add_child(at)
 	return p
+
+
+# equirectangular planet texture, sampled on the sphere so it wraps seamlessly
+func _planet_tex(kind: String, seed_: int, c1: Color, c2: Color, c3: Color) -> ImageTexture:
+	var w := 128
+	var h := 64
+	var n := FastNoiseLite.new()
+	n.seed = seed_
+	n.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+	n.fractal_type = FastNoiseLite.FRACTAL_FBM
+	n.fractal_octaves = 4
+	n.frequency = 0.9
+	var craters := []
+	if kind == "moon":
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_
+		for i in 16:
+			craters.append([Vector3(rng.randf_range(-1, 1), rng.randf_range(-1, 1), rng.randf_range(-1, 1)).normalized(), rng.randf_range(0.08, 0.32)])
+	var img := Image.create(w, h, false, Image.FORMAT_RGB8)
+	for y in h:
+		var lat := (float(y) + 0.5) / h * PI - PI * 0.5
+		var cl := cos(lat)
+		for x in w:
+			var lon := float(x) / w * TAU
+			var p := Vector3(cl * cos(lon), sin(lat), cl * sin(lon))
+			var col: Color
+			match kind:
+				"gas":
+					var t := n.get_noise_3dv(p * 1.6)
+					var v := 0.5 + 0.5 * sin(lat * 14.0 + t * 4.0)
+					col = c1.lerp(c2, v)
+					var storm := p.distance_to(Vector3(0.75, -0.35, 0.56))
+					if storm < 0.28:
+						col = col.lerp(c3, (1.0 - storm / 0.28) * 0.8)
+				"rock":
+					var v := n.get_noise_3dv(p * 1.3) * 0.5 + 0.5
+					col = c1.lerp(c2, smoothstep(0.3, 0.75, v))
+					var crack := absf(n.get_noise_3dv(p * 3.1 + Vector3(9, 4, 2)))
+					if crack < 0.05:
+						col = col.lerp(c3, 1.0 - crack / 0.05)
+				"earth":
+					var v := n.get_noise_3dv(p * 1.2) * 0.5 + 0.5
+					col = c1.lerp(c1 * 1.5, v) if v < 0.53 else c2.lerp(Color(0.55, 0.45, 0.25), smoothstep(0.6, 0.8, v))
+					if absf(lat) > 1.2:
+						col = col.lerp(c3, smoothstep(1.2, 1.35, absf(lat)))
+					var cloud := n.get_noise_3dv(p * 2.4 + Vector3(5, 0, 3))
+					if cloud > 0.15:
+						col = col.lerp(c3, clampf((cloud - 0.15) * 2.5, 0.0, 0.75))
+				_:  # moon
+					var v := n.get_noise_3dv(p * 2.0) * 0.5 + 0.5
+					col = c1.lerp(c2, v)
+					for c in craters:
+						var dd: float = p.distance_to(c[0]) / c[1]
+						if dd < 1.0:
+							col = col.lerp(c3, 0.45) if dd < 0.8 else col.lerp(c2 * 1.15, 0.5)
+			img.set_pixel(x, y, col)
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
+
+func _nebula_tex(seed_: int) -> ImageTexture:
+	var sz := 96
+	var n := FastNoiseLite.new()
+	n.seed = seed_
+	n.fractal_octaves = 4
+	n.frequency = 0.035
+	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
+	for y in sz:
+		for x in sz:
+			var d := Vector2(x - sz * 0.5, y - sz * 0.5).length() / (sz * 0.5)
+			var fall := clampf(1.0 - d, 0.0, 1.0)
+			fall = fall * fall * (3.0 - 2.0 * fall)
+			var v := n.get_noise_2d(x, y) * 0.5 + 0.5
+			var a := clampf(fall * (0.25 + v * 1.1), 0.0, 1.0)
+			img.set_pixel(x, y, Color(0.75 + v * 0.25, 0.75 + v * 0.25, 1.0, a))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
+
+func _radial_tex() -> ImageTexture:
+	var sz := 64
+	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
+	for y in sz:
+		for x in sz:
+			var d := Vector2(x - sz * 0.5 + 0.5, y - sz * 0.5 + 0.5).length() / (sz * 0.5)
+			var a := clampf(1.0 - d, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1, 1, 1, a * a))
+	img.generate_mipmaps()
+	return ImageTexture.create_from_image(img)
+
+
+func _ring_tex(seed_: int) -> ImageTexture:
+	var w := 128
+	var n := FastNoiseLite.new()
+	n.seed = seed_
+	n.frequency = 0.09
+	var img := Image.create(w, 2, false, Image.FORMAT_RGBA8)
+	for x in w:
+		var t := float(x) / (w - 1)
+		var v := n.get_noise_1d(x) * 0.5 + 0.5
+		var edge := smoothstep(0.0, 0.08, t) * (1.0 - smoothstep(0.9, 1.0, t))
+		var gap := 0.25 if absf(t - 0.62) < 0.035 else 1.0
+		var col := Color(0.75, 0.6, 0.95).lerp(Color(1.0, 0.88, 0.75), v)
+		col.a = clampf(edge * gap * (0.25 + v * 0.75), 0.0, 1.0)
+		img.set_pixel(x, 0, col)
+		img.set_pixel(x, 1, col)
+	return ImageTexture.create_from_image(img)
+
+
+# flat annulus in the XZ plane, UV.x = radial position (inner 0 -> outer 1)
+func _ring_mesh(r0: float, r1: float, seg: int) -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in seg:
+		var a0 := float(i) / seg * TAU
+		var a1 := float(i + 1) / seg * TAU
+		var p00 := Vector3(cos(a0) * r0, 0, sin(a0) * r0)
+		var p01 := Vector3(cos(a0) * r1, 0, sin(a0) * r1)
+		var p10 := Vector3(cos(a1) * r0, 0, sin(a1) * r0)
+		var p11 := Vector3(cos(a1) * r1, 0, sin(a1) * r1)
+		for v in [[p00, 0.0], [p01, 1.0], [p11, 1.0], [p00, 0.0], [p11, 1.0], [p10, 0.0]]:
+			st.set_normal(Vector3.UP)
+			st.set_uv(Vector2(v[1], 0.5))
+			st.add_vertex(v[0])
+	return st.commit()
 
 
 func _build_table() -> void:
@@ -476,6 +783,25 @@ func _build_ui() -> void:
 	mute_btn.pressed.connect(_toggle_mute)
 	root.add_child(mute_btn)
 
+	# zoom buttons: right edge, vertically centred, thumb-sized
+	var zb := VBoxContainer.new()
+	zb.add_theme_constant_override("separation", 12)
+	zb.alignment = BoxContainer.ALIGNMENT_CENTER
+	zb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for spec in [["+", 44, func(): _zoom_by(0.8)], ["−", 44, func(): _zoom_by(1.25)], ["Reset", 20, _zoom_reset]]:
+		var b := _button(spec[0], spec[1])
+		b.custom_minimum_size = Vector2(94, 84)
+		b.focus_mode = Control.FOCUS_NONE
+		b.modulate = Color(1, 1, 1, 0.82)
+		b.pressed.connect(spec[2])
+		zb.add_child(b)
+		zoom_btns.append([b, spec[1]])
+	root.add_child(zb)
+	zoom_ui = zb
+	_layout_zoom_ui(false)
+
+
+
 	# result panel
 	result_panel = ColorRect.new()
 	(result_panel as ColorRect).color = Color(0, 0, 0, 0.55)
@@ -539,6 +865,29 @@ func _build_ui() -> void:
 	root.add_child(rotate_hint)
 
 
+# The UI is laid out on a 1280-wide base, so in portrait it is drawn ~3x smaller:
+# make the zoom buttons bigger there and move them to the empty area under the table.
+func _layout_zoom_ui(portrait: bool) -> void:
+	zoom_ui_mode = 1 if portrait else 0
+	var bs := Vector2(170, 150) if portrait else Vector2(94, 84)
+	for e in zoom_btns:
+		var b: Button = e[0]
+		b.custom_minimum_size = bs
+		b.add_theme_font_size_override("font_size", int(e[1] * (1.7 if portrait else 1.0)))
+	if portrait:
+		zoom_ui.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		zoom_ui.offset_left = -200
+		zoom_ui.offset_right = -24
+		zoom_ui.offset_top = -760
+		zoom_ui.offset_bottom = -230
+	else:
+		zoom_ui.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
+		zoom_ui.offset_left = -112
+		zoom_ui.offset_right = -18
+		zoom_ui.offset_top = -150
+		zoom_ui.offset_bottom = 150
+
+
 func _toggle_mute() -> void:
 	muted = not muted
 	AudioServer.set_bus_mute(0, muted)
@@ -546,6 +895,8 @@ func _toggle_mute() -> void:
 
 
 func _set_status(t: String) -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.THX_STATUS=" + JSON.stringify(t))
 	status_lbl.text = t
 
 
@@ -883,20 +1234,156 @@ func _select(c) -> void:
 		_set_status("%s selected (ATK %d) · now tap an enemy card" % [c.hero.name, c.atk])
 
 
+# ---------------------------------------------------------------- input: taps, zoom, pan
+# Touch tracking runs in _input so a finger lifted over a UI control is never
+# missed (a stale finger would make every later tap look like a pinch).
+func _input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch:
+		if event.pressed:
+			touches[event.index] = event.position
+		else:
+			touches.erase(event.index)
+		if touches.size() >= 2:
+			multi = true
+			_pinch_reset()
+	elif event is InputEventScreenDrag:
+		touches[event.index] = event.position
+		if touches.size() >= 2:
+			_pinch_update()
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_MOUSE_EXIT:
+		touches.clear()
+		press_active = false
+		dragging = false
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if cam == null:
+		return
+	if event is InputEventMagnifyGesture:
+		if event.factor > 0.0:
+			_zoom_by(1.0 / event.factor)
+		return
+	if event is InputEventMouseButton:
+		var f: float = event.factor if event.factor > 0.0 else 1.0
+		if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_zoom_by(pow(0.9, f))
+			return
+		if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_zoom_by(pow(1.0 / 0.9, f))
+			return
+		if event.button_index != MOUSE_BUTTON_LEFT:
+			return
+		if event.pressed:
+			if touches.size() <= 1:
+				multi = false        # a new gesture starts with the first finger
+			press_active = true
+			press_pos = event.position
+			last_drag = event.position
+			dragging = false
+		else:
+			var was_tap := press_active and not dragging and not multi
+			press_active = false
+			dragging = false
+			if was_tap:
+				_tap(event.position)
+		return
+	if event is InputEventMouseMotion and press_active and (event.button_mask & MOUSE_BUTTON_MASK_LEFT):
+		if multi or touches.size() >= 2:
+			return
+		if not dragging:
+			# only turn a press into a pan when panning is possible (zoomed in), so a
+			# slightly sliding tap on a card at normal zoom still selects it
+			if event.position.distance_to(press_pos) > DRAG_PX and _pan_limit(zoom_t).x > 0.05:
+				dragging = true
+				last_drag = event.position
+			return
+		_pan_drag(last_drag, event.position)
+		last_drag = event.position
+
+
+func _tap(pos: Vector2) -> void:
 	if state != "player" or autoplay:
 		return
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		var c = _pick(event.position)
-		if c == null:
-			return
-		if c.side == 0:
-			_select(null if c == selected else c)
-		elif selected != null:
-			var a = selected
-			_attack(a, c)
-		else:
-			_set_status("First select one of YOUR cards (bottom row)")
+	var c = _pick(pos)
+	if c == null:
+		return
+	if c.side == 0:
+		_select(null if c == selected else c)
+	elif selected != null:
+		var a = selected
+		_attack(a, c)
+	else:
+		_set_status("First select one of YOUR cards (bottom row)")
+
+
+func _zoom_by(f: float) -> void:
+	if state == "title":
+		return
+	zoom_t = clampf(zoom_t * f, ZOOM_MIN, ZOOM_MAX)
+
+
+func _zoom_reset() -> void:
+	zoom_t = 1.0
+	pan_t = Vector2.ZERO
+
+
+func _pan_limit(z: float) -> Vector2:
+	var k := clampf((1.0 - z) / (1.0 - ZOOM_MIN), 0.0, 1.0)
+	return Vector2(5.0, 2.4) * k
+
+
+func _cam_transform(z: float, p: Vector2) -> Transform3D:
+	var target := CAM_TARGET + Vector3(p.x, 0.0, p.y)
+	return Transform3D(cam_base.basis, target + cam_dir * cam_dist * z)
+
+
+# point on the table plane (y = 0) under a screen position, for the current zoom/pan
+func _ground_at(screen_pos: Vector2, z: float, p: Vector2) -> Vector3:
+	var o := _cam_transform(z, p).origin
+	var d := cam.project_ray_normal(screen_pos)   # direction only depends on the basis
+	if d.y > -0.01:
+		d.y = -0.01
+	return o + d * (-o.y / d.y)
+
+
+func _pan_drag(from: Vector2, to: Vector2) -> void:
+	if state == "title":
+		return
+	var h0 := _ground_at(from, zoom, pan)
+	var h1 := _ground_at(to, zoom, pan)
+	pan_t -= Vector2(h1.x - h0.x, h1.z - h0.z)
+	var lim := _pan_limit(zoom_t)
+	pan_t = pan_t.clamp(-lim, lim)
+	pan = pan_t                                  # 1:1 under the finger
+
+
+func _two_touches() -> Array:
+	var k := touches.keys()
+	k.sort()
+	return [touches[k[0]], touches[k[1]]]
+
+
+func _pinch_reset() -> void:
+	var t := _two_touches()
+	pinch_prev = (t[0] as Vector2).distance_to(t[1])
+	pinch_mid_prev = ((t[0] as Vector2) + t[1]) * 0.5
+	press_active = false
+	dragging = false
+
+
+func _pinch_update() -> void:
+	var t := _two_touches()
+	var d := (t[0] as Vector2).distance_to(t[1])
+	var mid: Vector2 = ((t[0] as Vector2) + t[1]) * 0.5
+	if pinch_prev > 8.0 and d > 8.0:
+		_zoom_by(pinch_prev / d)
+	if _pan_limit(zoom_t).x > 0.05:
+		_pan_drag(pinch_mid_prev, mid)
+	pinch_prev = d
+	pinch_mid_prev = mid
 
 
 func _pick(screen_pos: Vector2):
@@ -1107,11 +1594,38 @@ func _process(delta: float) -> void:
 		cam.fov = 76.0
 	rotate_hint.visible = aspect < 1.0 and state != "title"
 
-	var tr := cam_base
+	# smooth zoom / pan, then screen shake on top of the zoomed transform
+	var k := 1.0 - exp(-12.0 * delta)
+	zoom = lerpf(zoom, zoom_t, k)
+	if absf(zoom - zoom_t) < 0.0005:
+		zoom = zoom_t
+	var lim := _pan_limit(zoom_t)
+	pan_t = pan_t.clamp(-lim, lim)
+	pan = pan.lerp(pan_t, k)
+	var tr := _cam_transform(zoom, pan)
+	var cam_off := tr.origin - cam_base.origin
+	for l in star_layers:
+		(l[0] as Node3D).position = cam_off * float(l[1])
+	if zoom_ui != null:
+		zoom_ui.visible = state != "title"
+		if zoom_ui_mode != (1 if aspect < 1.0 else 0):
+			_layout_zoom_ui(aspect < 1.0)
 	if shake > 0.0:
 		shake = maxf(0.0, shake - delta)
 		tr.origin += Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * shake * 0.35
 	cam.transform = tr
+	_publish_cam()
+
+
+# window.THX_CAM = {zoom, panX, panZ} on the web, for automated tests (only when it changes)
+func _publish_cam() -> void:
+	if not OS.has_feature("web"):
+		return
+	var v := Vector3(snappedf(zoom_t, 0.01), snappedf(pan_t.x, 0.01), snappedf(pan_t.y, 0.01))
+	if v == _js_cam_sent:
+		return
+	_js_cam_sent = v
+	JavaScriptBridge.eval("window.THX_CAM={zoom:%s,panX:%s,panZ:%s,state:'%s'}" % [v.x, v.y, v.z, state])
 
 
 func _shot(name: String) -> void:
