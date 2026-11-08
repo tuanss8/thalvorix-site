@@ -89,7 +89,7 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
 </script>
 <script src="index.js"></script>
 <script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":2987340,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":3079428,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 
 /* ---------- read-only THALVORIX Hero NFT scan (same method as duel-arena.html) ---------- */
@@ -145,7 +145,7 @@ async function scanHeroes(wallet,onStep){
   const $=id=>document.getElementById(id);
   const statusOverlay=$('status'),msg=$('msg'),bar=$('progBar'),progTxt=$('progTxt');
   const say=(t,err)=>{msg.textContent=t;msg.className=err?'err':''};
-  let started=false,running=false,dlDone=false;
+  let started=false,running=false;
 
   // WebGL2 is required by the Compatibility renderer.
   let gl2=false;try{gl2=!!document.createElement('canvas').getContext('webgl2')}catch(e){}
@@ -157,39 +157,84 @@ async function scanHeroes(wallet,onStep){
     return;
   }
 
-  // Start downloading the engine right away, while the player chooses a deck.
+  // Load everything right away, while the player chooses a deck: download the
+  // engine (.wasm) and the game data (.pck) in parallel, then compile and
+  // instantiate the engine in the background. "Play" then only has to start it.
+  const exe=GODOT_CONFIG.executable,pack=GODOT_CONFIG.mainPack||(exe+'.pck');
+  const totalBytes=(GODOT_CONFIG.fileSizes[exe+'.wasm']||0)+(GODOT_CONFIG.fileSizes[pack]||0);
+  let stage='download',inited=false,packed=false,t0=performance.now();
+  window.THX_STAGES={start:Math.round(t0)};
+  const stamp=n=>{if(!(n in THX_STAGES))THX_STAGES[n]=Math.round(performance.now())};
+  function setBar(f){bar.style.width=(Math.max(0,Math.min(1,f))*100).toFixed(1)+'%'}
+  function showStage(){
+    if(stage==='download')return;            // onProgress writes the download text
+    const txt={compile:'Preparing engine…',ready:started?'Starting engine…':'Ready',start:'Starting engine…',scene:'Building the arena…'}[stage]||'';
+    progTxt.textContent=txt;
+    setBar({compile:.92,ready:started?.95:.94,start:.96,scene:.98}[stage]||1);
+  }
   function onProgress(cur,total){
-    if(cur>0&&total>0){bar.style.width=Math.min(100,cur/total*100).toFixed(1)+'%';progTxt.textContent='Downloading game '+Math.round(cur/1048576)+' / '+Math.round(total/1048576)+' MB';if(cur>=total){dlDone=true;if(!running)progTxt.textContent='Game downloaded'}}
+    if(stage!=='download')return;
+    total=total||totalBytes;
+    if(cur>0&&total>0){
+      const f=cur/total;setBar(f*.9);
+      progTxt.textContent='Downloading game… '+Math.min(99,Math.floor(f*100))+'%';
+      if(cur>=total){stamp('downloaded');stage=inited?'ready':'compile';showStage()}
+    }
   }
   const engine=new Engine(Object.assign({},GODOT_CONFIG,{onProgress}));
-  try{
-    const exe=GODOT_CONFIG.executable;
-    Engine.load(exe,GODOT_CONFIG.fileSizes[exe+'.wasm']).catch(e=>{THX_showError('Download failed: '+(e&&e.message||e))});
-    // Progress during the pre-download: poll via a throwaway fetch-free estimate is not exposed, so show indeterminate text.
-    progTxt.textContent='Downloading game…';
-  }catch(e){THX_showError(e&&e.message||e)}
+  progTxt.textContent='Downloading game… 0%';
+  const packP=engine.preloadFile(pack,pack).then(()=>{packed=true;stamp('pck')});
+  const initP=engine.init(exe).then(()=>{
+    inited=true;stamp('compiled');
+    if(stage==='download'||stage==='compile'){stage='ready';showStage()}
+  });
+  const loadP=Promise.all([initP,packP]);
+  loadP.catch(e=>{THX_showError('Loading failed: '+(e&&e.message||e));say('Loading failed. Check your connection and reload.',true)});
 
   const canvas=$('canvas');
   canvas.addEventListener('webglcontextlost',ev=>{
     THX_showError('The graphics context was lost (the browser GPU process reset). Reload the page. If this keeps happening, update your graphics driver or turn on "Use graphics acceleration" in Chrome settings.');
   },false);
 
+  // Repeat visits: a service worker (sw.js, versioned per export) keeps the
+  // engine + game data in Cache Storage, so the next load skips the download.
+  // Registered only once the game is running, so it never competes with the
+  // first download (its precache is filled from the HTTP cache).
+  function registerSW(){
+    if(!('serviceWorker' in navigator)||!window.isSecureContext||/[?&]nosw\b/.test(location.search))return;
+    try{navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{})}catch(e){}
+  }
+
+  function hideOverlay(){
+    if(!statusOverlay.isConnected)return;
+    stamp('overlay');statusOverlay.remove();
+    setTimeout(registerSW,3000);
+  }
+
   function launch(){
     if(started)return;started=true;running=true;
     $('choose').style.display='none';
     say((window.THX_DECK&&THX_DECK.heroes&&THX_DECK.heroes.length)?`Loaded ${THX_DECK.heroes.length} Hero NFT(s). Starting…`:(msg.textContent||'Starting…'));
-    progTxt.textContent='Starting engine…';
-    const t0=Date.now();
+    if(stage!=='download')showStage();
+    const tl=Date.now();
     const watchdog=setInterval(()=>{
-      const s=Math.round((Date.now()-t0)/1000);
-      if(s>=25)progTxt.textContent=`Still starting (${s}s)… slow devices can take a while to prepare the 3D scene.`;
-      if(s===60){
+      const s=Math.round((Date.now()-tl)/1000);
+      if(s>=25&&stage!=='download')progTxt.textContent=`Still starting (${s}s)… slow devices can take a while to prepare the 3D scene.`;
+      if(s===90){
         const last=(window.THX_lastErrors||[]).slice(-3).join(' | ');
-        THX_showError('The game has not started after 60 s.'+(last?' Last errors: '+last:' No error was reported.')+' Try reloading; if it repeats, check that hardware acceleration is on in your browser.');
+        THX_showError('The game has not started after 90 s.'+(last?' Last errors: '+last:' No error was reported.')+' Try reloading; if it repeats, check that hardware acceleration is on in your browser.');
       }
     },1000);
-    engine.startGame({onProgress}).then(()=>{
-      clearInterval(watchdog);running=false;statusOverlay.remove();
+    // The overlay stays up (with a stage label) until Godot has drawn the title
+    // screen, so there is never a blank canvas in between.
+    window.THX_onTitle=()=>{stamp('title');clearInterval(watchdog);running=false;hideOverlay()};
+    loadP.then(()=>{
+      stage='start';showStage();stamp('launch');
+      // let the label paint before the (blocking) engine start
+      return new Promise(r=>requestAnimationFrame(()=>setTimeout(r,30)));
+    }).then(()=>engine.start({args:['--main-pack',pack],onProgress})).then(()=>{
+      stamp('started');stage='scene';showStage();
+      setTimeout(()=>{if(statusOverlay.isConnected){clearInterval(watchdog);running=false;hideOverlay()}},20000);
     },err=>{
       clearInterval(watchdog);running=false;
       say('Error: '+(err&&err.message||err),true);THX_showError('Engine failed to start: '+(err&&err.message||err));

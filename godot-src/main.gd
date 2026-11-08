@@ -34,6 +34,12 @@ var zoom := 1.0
 var zoom_t := 1.0
 var pan := Vector2.ZERO        # x / z offset of the look-at point on the table
 var pan_t := Vector2.ZERO
+# orbit: camera yaw around the table (one-finger horizontal drag, mouse drag, arrow keys)
+const ORBIT_MAX := deg_to_rad(70.0)
+const ORBIT_PER_SCREEN := PI          # yaw for a drag across the full screen width
+const ORBIT_KEY_STEP := deg_to_rad(12.0)
+var orbit := 0.0
+var orbit_t := 0.0
 var touches := {}              # touch index -> position
 var pinch_prev := 0.0
 var pinch_mid_prev := Vector2.ZERO
@@ -47,10 +53,12 @@ var zoom_btns := []
 var zoom_ui_mode := -1         # 0 landscape, 1 portrait
 var star_layers := []          # [node, follow factor] parallax layers
 var _js_cam_sent := Vector3(-1, -1, -1)
+var _js_orbit_sent := -999.0
 var spin_nodes := []          # [node, axis, speed]
 var orbit_pivots := []        # [node, speed]
 var stars: MultiMeshInstance3D
 var textures := {}
+var _rim_shader: Shader
 
 var field := [[null, null, null, null, null], [null, null, null, null, null]]
 var reserve := [[], []]
@@ -87,7 +95,16 @@ var autoplay := false
 var shots := false
 
 
+# Startup timing marks: window.THX_T[name] = performance.now() on the web (for load-time tests).
+func _mark(n: String) -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("(window.THX_T=window.THX_T||{})['%s']=Math.round(performance.now())" % n)
+	else:
+		print("THXT ", n, " ", Time.get_ticks_msec())
+
+
 func _ready() -> void:
+	_mark("ready")
 	randomize()
 	var args := OS.get_cmdline_user_args()
 	autoplay = args.has("--autoplay")
@@ -96,13 +113,21 @@ func _ready() -> void:
 	# Keep the first frame light: on the web, startGame() only resolves (and the
 	# loading overlay only hides) after _ready + the first frame have run
 	# synchronously. Build the scene over the next frames instead.
+	# Order: lights/camera -> table + title UI -> (title on screen) -> space backdrop.
+	# The backdrop is built progressively *after* the title is visible; its
+	# textures are pre-baked PNGs (res://space/), not generated per pixel here.
 	_build_env()
 	await get_tree().process_frame
-	_build_space()           # coroutine: builds the backdrop over the next frames
 	_build_table()
-	await get_tree().process_frame
 	_build_ui()
 	_build_audio()
+	_mark("ui_built")
+	await get_tree().process_frame
+	_mark("title_frame")
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.THX_onTitle&&window.THX_onTitle()")
+	await get_tree().process_frame
+	_build_space()           # coroutine: builds the backdrop over the next frames
 	if shots:
 		get_tree().create_timer(0.5).timeout.connect(func(): _shot("title"))
 	if autoplay:
@@ -283,14 +308,15 @@ func _build_space() -> void:
 		star_layers.append([mi, L[5]])
 		if stars == null:
 			stars = mi
+	_mark("sp_stars")
 	await get_tree().process_frame
 
 	# --- nebula: big additive billboards with a soft procedural cloud texture
 	var neb_root := Node3D.new()
 	add_child(neb_root)
 	star_layers.append([neb_root, 0.85])
-	var neb_tex := _nebula_tex(7)
-	var neb_tex2 := _nebula_tex(21)
+	var neb_tex := _space_tex("nebula_a")
+	var neb_tex2 := _space_tex("nebula_b")
 	# [pos, size, color]
 	for nb in [[Vector3(-24, -34, -60), 70.0, Color(0.55, 0.18, 0.75, 0.55)],
 			[Vector3(28, -30, -55), 60.0, Color(0.12, 0.42, 0.75, 0.5)],
@@ -317,14 +343,15 @@ func _build_space() -> void:
 		m.position = nb[0]
 		m.rotation.z = randf() * TAU
 		neb_root.add_child(m)
+	_mark("sp_nebula")
 	await get_tree().process_frame
 
 	# --- planets (lit by the sun, procedural equirectangular textures)
 	var lava := _planet(Vector3(-13.5, -12.0, -21.0), 4.6,
-		_planet_tex("rock", 3, Color(0.42, 0.16, 0.08), Color(0.85, 0.5, 0.25), Color(1.0, 0.55, 0.1)), 0.06, Color(1.0, 0.45, 0.2, 0.9))
+		_space_tex("planet_lava"), 0.06, Color(1.0, 0.45, 0.2, 0.9))
 	await get_tree().process_frame
 	var ringed := _planet(Vector3(14.0, -9.0, -17.0), 2.8,
-		_planet_tex("gas", 11, Color(0.32, 0.26, 0.72), Color(0.82, 0.7, 1.0), Color(1.0, 0.75, 0.9)), -0.1, Color(0.65, 0.5, 1.0, 0.8))
+		_space_tex("planet_ringed"), -0.1, Color(0.65, 0.5, 1.0, 0.8))
 	ringed.rotation_degrees = Vector3(22, 0, -18)
 	var ring := MeshInstance3D.new()
 	ring.mesh = _ring_mesh(3.7, 6.3, 72)
@@ -332,7 +359,7 @@ func _build_space() -> void:
 	rmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	rmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	rmat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	rmat.albedo_texture = _ring_tex(5)
+	rmat.albedo_texture = _space_tex("ring")
 	rmat.albedo_color = Color(1.0, 0.92, 1.0, 0.9)
 	ring.material_override = rmat
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -344,10 +371,10 @@ func _build_space() -> void:
 	spin_nodes.append([ring, Vector3.UP, 0.03])
 	await get_tree().process_frame
 	_planet(Vector3(9.5, -21.0, -33.0), 3.3,
-		_planet_tex("earth", 17, Color(0.06, 0.2, 0.5), Color(0.2, 0.55, 0.3), Color(0.92, 0.95, 1.0)), 0.09, Color(0.35, 0.7, 1.0, 1.0))
+		_space_tex("planet_earth"), 0.09, Color(0.35, 0.7, 1.0, 1.0))
 	await get_tree().process_frame
 	_planet(Vector3(-7.0, -27.0, -42.0), 2.1,
-		_planet_tex("gas", 29, Color(0.55, 0.85, 0.9), Color(0.85, 0.97, 1.0), Color(0.4, 0.7, 0.95)), 0.14, Color(0.5, 0.9, 1.0, 0.7))
+		_space_tex("planet_ice"), 0.14, Color(0.5, 0.9, 1.0, 0.7))
 	await get_tree().process_frame
 
 	# moon orbiting the big planet
@@ -356,9 +383,10 @@ func _build_space() -> void:
 	pivot.rotation_degrees.z = 12
 	add_child(pivot)
 	var moon := _planet(Vector3(7.8, 1.5, 0), 0.95,
-		_planet_tex("moon", 41, Color(0.42, 0.42, 0.46), Color(0.78, 0.78, 0.82), Color(0.25, 0.25, 0.28)), 0.2, Color(0, 0, 0, 0), pivot)
+		_space_tex("planet_moon"), 0.2, Color(0, 0, 0, 0), pivot)
 	moon.rotation_degrees.z = 0
 	orbit_pivots.append([pivot, 0.16])
+	_mark("sp_planets")
 
 	# distant sun: unshaded core + additive corona billboard
 	var sun := MeshInstance3D.new()
@@ -381,7 +409,7 @@ func _build_space() -> void:
 	cm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	cm.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
 	cm.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	cm.albedo_texture = _radial_tex()
+	cm.albedo_texture = _space_tex("radial")
 	cm.albedo_color = Color(1.0, 0.7, 0.35, 0.9)
 	cor.material_override = cm
 	cor.position = sun.position
@@ -415,6 +443,30 @@ func _build_space() -> void:
 	belt.rotation_degrees.x = 8
 	add_child(belt)
 	spin_nodes.append([belt, Vector3.UP, 0.02])
+	_mark("space_built")
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_mark("space_done")
+	_prewarm_card()
+
+
+# Draw one card hidden under the table for a couple of frames while the title is
+# up, so its materials / Label3D shaders are compiled before Play (no hitch when
+# the first cards fly in).
+func _prewarm_card() -> void:
+	var pool: Array = HeroData.default_pool()
+	if pool.is_empty():
+		return
+	var c := _make_card(pool[0], 0)
+	c.visible = true
+	c.position = Vector3(0, -0.9, 0.5)
+	c.rotation = Vector3.ZERO
+	await get_tree().process_frame
+	c.rotation = Vector3(0, 0, PI)     # back face too
+	await get_tree().process_frame
+	await get_tree().process_frame
+	c.queue_free()
+	_mark("prewarm_done")
 
 
 func _planet(pos: Vector3, radius: float, tex: Texture2D, spin: float, rim := Color(0, 0, 0, 0), parent: Node = null) -> MeshInstance3D:
@@ -449,15 +501,23 @@ func _planet(pos: Vector3, radius: float, tex: Texture2D, spin: float, rim := Co
 		as_.rings = 12
 		at.mesh = as_
 		var am := ShaderMaterial.new()
-		var sh := Shader.new()
-		sh.code = RIM_SHADER
-		am.shader = sh
+		if _rim_shader == null:            # one shared Shader = one GPU program compile
+			_rim_shader = Shader.new()
+			_rim_shader.code = RIM_SHADER
+		am.shader = _rim_shader
 		am.set_shader_parameter("rim_color", rim)
 		at.material_override = am
 		at.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		at.position = pos
 		(parent if parent != null else self).add_child(at)
 	return p
+
+
+# Backdrop textures are baked from the generators below (same seeds, same output)
+# into res://space/*.png, so startup does no per-pixel GDScript work. Re-bake with
+# `godot --headless --path godot-src -s res://tools/bake_space.gd` after changing them.
+func _space_tex(n: String) -> Texture2D:
+	return load("res://space/%s.png" % n)
 
 
 # equirectangular planet texture, sampled on the sphere so it wraps seamlessly
@@ -1238,6 +1298,13 @@ func _select(c) -> void:
 # Touch tracking runs in _input so a finger lifted over a UI control is never
 # missed (a stale finger would make every later tap look like a pinch).
 func _input(event: InputEvent) -> void:
+	# arrow keys orbit (handled here, before GUI focus navigation can eat them)
+	if event is InputEventKey and event.pressed and state != "title" and cam != null:
+		if event.keycode == KEY_LEFT or event.keycode == KEY_RIGHT:
+			var dir := 1.0 if event.keycode == KEY_LEFT else -1.0
+			orbit_t = clampf(orbit_t + dir * ORBIT_KEY_STEP, -ORBIT_MAX, ORBIT_MAX)
+			get_viewport().set_input_as_handled()
+			return
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			touches[event.index] = event.position
@@ -1294,14 +1361,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		if multi or touches.size() >= 2:
 			return
 		if not dragging:
-			# only turn a press into a pan when panning is possible (zoomed in), so a
-			# slightly sliding tap on a card at normal zoom still selects it
-			if event.position.distance_to(press_pos) > DRAG_PX and _pan_limit(zoom_t).x > 0.05:
+			# a press becomes a drag once the finger moved more than DRAG_PX; from then
+			# on it is no longer a tap. Horizontal movement orbits the camera (two-finger
+			# drag pans, see _pinch_update).
+			if event.position.distance_to(press_pos) > DRAG_PX:
 				dragging = true
 				last_drag = event.position
 			return
-		_pan_drag(last_drag, event.position)
+		_orbit_drag(event.position.x - last_drag.x)
 		last_drag = event.position
+
+
+func _orbit_drag(dx: float) -> void:
+	if state == "title":
+		return
+	var w := maxf(get_viewport().get_visible_rect().size.x, 1.0)
+	orbit_t = clampf(orbit_t - dx / w * ORBIT_PER_SCREEN, -ORBIT_MAX, ORBIT_MAX)
 
 
 func _tap(pos: Vector2) -> void:
@@ -1328,16 +1403,20 @@ func _zoom_by(f: float) -> void:
 func _zoom_reset() -> void:
 	zoom_t = 1.0
 	pan_t = Vector2.ZERO
+	orbit_t = 0.0
 
 
 func _pan_limit(z: float) -> Vector2:
+	# a little two-finger pan is allowed at normal zoom too; more when zoomed in
 	var k := clampf((1.0 - z) / (1.0 - ZOOM_MIN), 0.0, 1.0)
-	return Vector2(5.0, 2.4) * k
+	var base := clampf((1.5 - z) / 0.5, 0.0, 1.0)
+	return Vector2(5.0, 2.4) * k + Vector2(1.6, 0.9) * base
 
 
 func _cam_transform(z: float, p: Vector2) -> Transform3D:
 	var target := CAM_TARGET + Vector3(p.x, 0.0, p.y)
-	return Transform3D(cam_base.basis, target + cam_dir * cam_dist * z)
+	var yaw := Basis(Vector3.UP, orbit)          # orbit around the (panned) look-at point
+	return Transform3D(yaw * cam_base.basis, target + yaw * (cam_dir * cam_dist * z))
 
 
 # point on the table plane (y = 0) under a screen position, for the current zoom/pan
@@ -1558,14 +1637,20 @@ func _float_text(t: String, pos: Vector3, col: Color) -> void:
 
 
 # ---------------------------------------------------------------- per frame
+var _lf_t := 0.0
 func _process(delta: float) -> void:
-	if stars == null or rotate_hint == null:
+	if _lf_t < 40.0:   # startup long-frame log (web tests): window.THX_T.long = [[t_ms, frame_ms], ...]
+		_lf_t += delta
+		if delta > 0.1 and OS.has_feature("web"):
+			JavaScriptBridge.eval("(window.THX_T=window.THX_T||{});(THX_T.long=THX_T.long||[]).push([Math.round(performance.now()),%d])" % int(delta * 1000.0))
+	if rotate_hint == null:
 		return   # scene is still being built over the first frames
 	for s in spin_nodes:
 		s[0].rotate(s[1], s[2] * delta)
 	for o in orbit_pivots:
 		o[0].rotate_y(o[1] * delta)
-	stars.rotate_y(0.004 * delta)
+	if stars != null:
+		stars.rotate_y(0.004 * delta)
 
 	# fragments fall through the table and fade
 	var keep := []
@@ -1602,6 +1687,9 @@ func _process(delta: float) -> void:
 	var lim := _pan_limit(zoom_t)
 	pan_t = pan_t.clamp(-lim, lim)
 	pan = pan.lerp(pan_t, k)
+	orbit = lerpf(orbit, orbit_t, 1.0 - exp(-9.0 * delta))
+	if absf(orbit - orbit_t) < 0.0005:
+		orbit = orbit_t
 	var tr := _cam_transform(zoom, pan)
 	var cam_off := tr.origin - cam_base.origin
 	for l in star_layers:
@@ -1622,10 +1710,12 @@ func _publish_cam() -> void:
 	if not OS.has_feature("web"):
 		return
 	var v := Vector3(snappedf(zoom_t, 0.01), snappedf(pan_t.x, 0.01), snappedf(pan_t.y, 0.01))
-	if v == _js_cam_sent:
+	var o := snappedf(rad_to_deg(orbit), 0.1)
+	if v == _js_cam_sent and o == _js_orbit_sent:
 		return
 	_js_cam_sent = v
-	JavaScriptBridge.eval("window.THX_CAM={zoom:%s,panX:%s,panZ:%s,state:'%s'}" % [v.x, v.y, v.z, state])
+	_js_orbit_sent = o
+	JavaScriptBridge.eval("window.THX_CAM={zoom:%s,panX:%s,panZ:%s,orbit:%s,orbitT:%s,state:'%s'}" % [v.x, v.y, v.z, o, snappedf(rad_to_deg(orbit_t), 0.1), state])
 
 
 func _shot(name: String) -> void:
