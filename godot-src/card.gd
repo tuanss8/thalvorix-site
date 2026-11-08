@@ -130,23 +130,22 @@ func setup(h: Dictionary, t: Texture2D, a: int, d: int, r: String, s: int) -> vo
 	var bq := PlaneMesh.new()
 	bq.size = Vector2(W - 0.08, D - 0.08)
 	back.mesh = bq
-	var backm := StandardMaterial3D.new()
-	backm.albedo_color = Color(0.22, 0.08, 0.36)
-	backm.emission_enabled = true
-	backm.emission = Color(0.35, 0.12, 0.6)
-	backm.emission_energy_multiplier = 0.35
-	back.material_override = backm
+	back.material_override = _back_material()
 	back.rotation.z = PI
 	back.position.y = -T * 0.5 - 0.002
 	add_child(back)
-	var emblem := _flat_label("THX", 72, Color(1.0, 0.82, 0.35))
-	emblem.rotation = Vector3(PI * 0.5, 0, PI)
-	emblem.position = Vector3(0, -T * 0.5 - 0.006, 0)
-	add_child(emblem)
-	var emblem2 := _flat_label("THALVORIX", 26, Color(0.85, 0.75, 1.0))
-	emblem2.rotation = Vector3(PI * 0.5, 0, PI)
-	emblem2.position = Vector3(0, -T * 0.5 - 0.006, 0.42)
-	add_child(emblem2)
+
+# One shared material for every card back (baked texture, see tools/make_cardback.py).
+static var _back_mat: StandardMaterial3D
+static func _back_material() -> StandardMaterial3D:
+	if _back_mat == null:
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_texture = preload("res://cardback.png")
+		m.albedo_color = Color(1.05, 1.05, 1.05)
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		_back_mat = m
+	return _back_mat
 
 
 func _flat_label(txt: String, size: int, color: Color) -> Label3D:

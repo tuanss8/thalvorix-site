@@ -231,6 +231,38 @@ func _build_env() -> void:
 	cam.current = true
 
 
+# Glass board slot: see-through tinted fill, brighter toward the edges, with a
+# thin bright rim drawn in the same pass (unshaded, alpha blend, no depth write,
+# so cards resting on top always win the depth test; no glow pass needed).
+const SLOT_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabled;
+uniform vec4 tint : source_color = vec4(0.3, 0.6, 1.0, 1.0);
+void fragment() {
+	vec2 q = abs(UV - 0.5) * 2.0;              // 0 center .. 1 edge
+	float sx = 1.66, sz = 2.3;                 // plate size, to keep the rim width even
+	float ex = (1.0 - q.x) * sx * 0.5, ez = (1.0 - q.y) * sz * 0.5;
+	float e = min(ex, ez);                     // distance to edge in world units
+	float rim = 1.0 - smoothstep(0.012, 0.03, e);
+	float inner = 1.0 - smoothstep(0.07, 0.09, e);
+	float inner_line = inner * smoothstep(0.05, 0.07, e);
+	float fade = smoothstep(0.15, 1.0, length(q) * 0.7071);   // soft radial, no diagonal seams
+	float diag = UV.x * 0.82 + UV.y * 0.57;
+	float sheen = smoothstep(0.30, 0.42, diag) * (1.0 - smoothstep(0.42, 0.60, diag));  // glass reflection streak
+	float corner = step(min(ex, ez), 0.2) * step(max(ex, ez), 0.2) * (1.0 - smoothstep(0.0, 0.03, e));
+	float a = 0.10 + 0.16 * fade + 0.07 * sheen + 0.55 * inner_line + 0.9 * rim + corner * 0.5;
+	ALBEDO = mix(tint.rgb * 0.9, vec3(1.0), rim * 0.45 + corner * 0.3 + sheen * 0.35) * (1.0 + rim * 0.6);
+	ALPHA = clamp(a, 0.0, 1.0) * 0.95;
+}
+"""
+var _slot_shader: Shader
+func _slot_shader_get() -> Shader:
+	if _slot_shader == null:
+		_slot_shader = Shader.new()
+		_slot_shader.code = SLOT_SHADER
+	return _slot_shader
+
+
 func _unshaded(color: Color, energy := 1.0) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -686,23 +718,12 @@ func _build_table() -> void:
 			var pm := PlaneMesh.new()
 			pm.size = Vector2(1.66, 2.3)
 			sl.mesh = pm
-			var m := StandardMaterial3D.new()
-			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			m.albedo_color = Color(c.r, c.g, c.b, 0.16)
+			var m := ShaderMaterial.new()
+			m.shader = _slot_shader_get()
+			m.set_shader_parameter("tint", c)
 			sl.material_override = m
-			sl.position = Vector3(SLOT_X[i], 0.003, ROW_Z[side])
+			sl.position = Vector3(SLOT_X[i], 0.004, ROW_Z[side])
 			add_child(sl)
-			# slot outline strips
-			for e in [[Vector3(0, 0, -1.15), Vector3(1.66, 0.01, 0.03)], [Vector3(0, 0, 1.15), Vector3(1.66, 0.01, 0.03)],
-					[Vector3(-0.83, 0, 0), Vector3(0.03, 0.01, 2.3)], [Vector3(0.83, 0, 0), Vector3(0.03, 0.01, 2.3)]]:
-				var st := MeshInstance3D.new()
-				var sb := BoxMesh.new()
-				sb.size = e[1]
-				st.mesh = sb
-				st.material_override = _unshaded(c, 1.3)
-				st.position = sl.position + e[0]
-				add_child(st)
 		# deck pile
 		var pile := MeshInstance3D.new()
 		var pb := BoxMesh.new()
@@ -716,6 +737,13 @@ func _build_table() -> void:
 		pile.material_override = pmat
 		pile.position = DECK_POS[side]
 		add_child(pile)
+		var ptop := MeshInstance3D.new()
+		var ptm := PlaneMesh.new()
+		ptm.size = Vector2(1.4, 2.0)
+		ptop.mesh = ptm
+		ptop.material_override = CardScript._back_material()
+		ptop.position = DECK_POS[side] + Vector3(0, 0.502, 0)
+		add_child(ptop)
 		var pl := Label3D.new()
 		pl.font_size = 64
 		pl.pixel_size = 0.005
@@ -724,7 +752,7 @@ func _build_table() -> void:
 		pl.modulate = Color(1, 0.85, 0.4)
 		pl.position = DECK_POS[side] + Vector3(0, 0.9, 0)
 		add_child(pl)
-		piles.append([pile, pl])
+		piles.append([pile, pl, ptop])
 	_update_piles()
 
 
@@ -736,6 +764,9 @@ func _update_piles() -> void:
 		pile.scale = Vector3(1, h, 1)
 		pile.position.y = h * 0.5
 		pile.visible = n > 0
+		var ptop: MeshInstance3D = piles[side][2]
+		ptop.visible = n > 0
+		ptop.position.y = h + 0.004
 		var lbl: Label3D = piles[side][1]
 		lbl.text = "Deck %d" % n
 		lbl.position.y = h + 0.45
