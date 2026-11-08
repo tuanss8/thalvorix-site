@@ -1,24 +1,122 @@
 extends RefCounted
-## Auto-generated from site meta/*.json (20 random heroes).
-const HEROES := [
+## All 100 THALVORIX heroes (id = heroIdOf on-chain = art hd/h<id>.webp), generated from duel-arena.html.
+## Art: res://heroes/h<id>.jpg (256 px).
+const ALL := [
+	{"id": 0, "name": "Aerithane", "role": "Mage", "el": "Fire"},
+	{"id": 1, "name": "Belzorak", "role": "Mage", "el": "Frost"},
+	{"id": 2, "name": "Caldrith", "role": "Mage", "el": "Storm"},
+	{"id": 3, "name": "Dravenna", "role": "Mage", "el": "Shadow"},
+	{"id": 4, "name": "Elyndor", "role": "Mage", "el": "Nature"},
+	{"id": 5, "name": "Fenwraith", "role": "Mage", "el": "Blood"},
+	{"id": 6, "name": "Gorvalis", "role": "Mage", "el": "Time"},
+	{"id": 7, "name": "Hessarine", "role": "Mage", "el": "Void"},
+	{"id": 8, "name": "Ilvaroth", "role": "Mage", "el": "Light"},
+	{"id": 9, "name": "Jorundel", "role": "Mage", "el": "Sound"},
+	{"id": 10, "name": "Kaelthorn", "role": "Mage", "el": "Earth"},
+	{"id": 11, "name": "Lysandre", "role": "Mage", "el": "Wind"},
+	{"id": 12, "name": "Morvayne", "role": "Mage", "el": "Venom"},
 	{"id": 13, "name": "Nythera", "role": "Mage", "el": "Arcane"},
+	{"id": 14, "name": "Orrikan", "role": "Mage", "el": "Crystal"},
 	{"id": 15, "name": "Pyrelith", "role": "Mage", "el": "Spirit"},
+	{"id": 16, "name": "Quorvane", "role": "Mage", "el": "Fire"},
+	{"id": 17, "name": "Rhazelle", "role": "Mage", "el": "Frost"},
+	{"id": 18, "name": "Sylvaris", "role": "Mage", "el": "Storm"},
+	{"id": 19, "name": "Tharokh", "role": "Mage", "el": "Shadow"},
+	{"id": 20, "name": "Ulveshka", "role": "Marksman", "el": "Shadow"},
+	{"id": 21, "name": "Vaelorin", "role": "Marksman", "el": "Nature"},
+	{"id": 22, "name": "Wyrmhal", "role": "Marksman", "el": "Blood"},
+	{"id": 23, "name": "Xandrielle", "role": "Marksman", "el": "Time"},
+	{"id": 24, "name": "Yzolde", "role": "Marksman", "el": "Void"},
+	{"id": 25, "name": "Zarkhaven", "role": "Marksman", "el": "Light"},
+	{"id": 26, "name": "Ashkarra", "role": "Marksman", "el": "Sound"},
+	{"id": 27, "name": "Brevnor", "role": "Marksman", "el": "Earth"},
 	{"id": 28, "name": "Cyrelle", "role": "Marksman", "el": "Wind"},
+	{"id": 29, "name": "Duskmere", "role": "Marksman", "el": "Venom"},
+	{"id": 30, "name": "Embrath", "role": "Marksman", "el": "Arcane"},
+	{"id": 31, "name": "Faelith", "role": "Marksman", "el": "Crystal"},
+	{"id": 32, "name": "Grimvar", "role": "Marksman", "el": "Spirit"},
+	{"id": 33, "name": "Halvessa", "role": "Marksman", "el": "Fire"},
+	{"id": 34, "name": "Isoleth", "role": "Marksman", "el": "Frost"},
+	{"id": 35, "name": "Jaskarn", "role": "Marksman", "el": "Storm"},
+	{"id": 36, "name": "Kythera", "role": "Marksman", "el": "Shadow"},
+	{"id": 37, "name": "Lorvex", "role": "Marksman", "el": "Nature"},
+	{"id": 38, "name": "Maelis", "role": "Marksman", "el": "Blood"},
+	{"id": 39, "name": "Nerazul", "role": "Marksman", "el": "Time"},
 	{"id": 40, "name": "Ombrith", "role": "Fighter", "el": "Time"},
+	{"id": 41, "name": "Phaedrix", "role": "Fighter", "el": "Void"},
+	{"id": 42, "name": "Quillon", "role": "Fighter", "el": "Light"},
+	{"id": 43, "name": "Ravathe", "role": "Fighter", "el": "Sound"},
+	{"id": 44, "name": "Seraphine", "role": "Fighter", "el": "Earth"},
+	{"id": 45, "name": "Torvald", "role": "Fighter", "el": "Wind"},
+	{"id": 46, "name": "Umbrielle", "role": "Fighter", "el": "Venom"},
+	{"id": 47, "name": "Vexmora", "role": "Fighter", "el": "Arcane"},
+	{"id": 48, "name": "Wolfrath", "role": "Fighter", "el": "Crystal"},
+	{"id": 49, "name": "Xyrel", "role": "Fighter", "el": "Spirit"},
+	{"id": 50, "name": "Ysmerah", "role": "Fighter", "el": "Fire"},
+	{"id": 51, "name": "Zephrael", "role": "Fighter", "el": "Frost"},
+	{"id": 52, "name": "Arkvane", "role": "Fighter", "el": "Storm"},
 	{"id": 53, "name": "Bryndis", "role": "Fighter", "el": "Shadow"},
+	{"id": 54, "name": "Corvath", "role": "Fighter", "el": "Nature"},
+	{"id": 55, "name": "Delvanna", "role": "Fighter", "el": "Blood"},
 	{"id": 56, "name": "Erevos", "role": "Fighter", "el": "Time"},
+	{"id": 57, "name": "Feyrin", "role": "Fighter", "el": "Void"},
+	{"id": 58, "name": "Gallowyn", "role": "Fighter", "el": "Light"},
+	{"id": 59, "name": "Hrovask", "role": "Fighter", "el": "Sound"},
+	{"id": 60, "name": "Ingrith", "role": "Assassin", "el": "Sound"},
+	{"id": 61, "name": "Jovanth", "role": "Assassin", "el": "Earth"},
 	{"id": 62, "name": "Korvessa", "role": "Assassin", "el": "Wind"},
+	{"id": 63, "name": "Lethrael", "role": "Assassin", "el": "Venom"},
 	{"id": 64, "name": "Myrkhal", "role": "Assassin", "el": "Arcane"},
 	{"id": 65, "name": "Novaryn", "role": "Assassin", "el": "Crystal"},
+	{"id": 66, "name": "Oskareth", "role": "Assassin", "el": "Spirit"},
+	{"id": 67, "name": "Pallidor", "role": "Assassin", "el": "Fire"},
+	{"id": 68, "name": "Quessa", "role": "Assassin", "el": "Frost"},
+	{"id": 69, "name": "Runevar", "role": "Assassin", "el": "Storm"},
 	{"id": 70, "name": "Skarlith", "role": "Assassin", "el": "Shadow"},
 	{"id": 71, "name": "Tyvandra", "role": "Assassin", "el": "Nature"},
+	{"id": 72, "name": "Ulmerak", "role": "Assassin", "el": "Blood"},
 	{"id": 73, "name": "Velkira", "role": "Assassin", "el": "Time"},
+	{"id": 74, "name": "Wraxis", "role": "Assassin", "el": "Void"},
 	{"id": 75, "name": "Xerathis", "role": "Assassin", "el": "Light"},
 	{"id": 76, "name": "Yllandra", "role": "Assassin", "el": "Sound"},
+	{"id": 77, "name": "Zorvekh", "role": "Assassin", "el": "Earth"},
+	{"id": 78, "name": "Aldrovane", "role": "Assassin", "el": "Wind"},
 	{"id": 79, "name": "Blightmaw", "role": "Assassin", "el": "Venom"},
+	{"id": 80, "name": "Cindralis", "role": "Tank", "el": "Venom"},
+	{"id": 81, "name": "Drakmor", "role": "Tank", "el": "Arcane"},
 	{"id": 82, "name": "Eshvara", "role": "Tank", "el": "Crystal"},
+	{"id": 83, "name": "Frostiel", "role": "Tank", "el": "Spirit"},
+	{"id": 84, "name": "Gharzul", "role": "Tank", "el": "Fire"},
+	{"id": 85, "name": "Hollowen", "role": "Tank", "el": "Frost"},
+	{"id": 86, "name": "Irixa", "role": "Tank", "el": "Storm"},
+	{"id": 87, "name": "Jharvok", "role": "Tank", "el": "Shadow"},
+	{"id": 88, "name": "Kelsithe", "role": "Tank", "el": "Nature"},
+	{"id": 89, "name": "Lunarae", "role": "Tank", "el": "Blood"},
+	{"id": 90, "name": "Mordekai", "role": "Tank", "el": "Time"},
+	{"id": 91, "name": "Nimbrith", "role": "Tank", "el": "Void"},
+	{"id": 92, "name": "Orvessa", "role": "Tank", "el": "Light"},
 	{"id": 93, "name": "Pyrrhane", "role": "Tank", "el": "Sound"},
+	{"id": 94, "name": "Quintara", "role": "Tank", "el": "Earth"},
+	{"id": 95, "name": "Rivenhal", "role": "Tank", "el": "Wind"},
 	{"id": 96, "name": "Sablethorn", "role": "Tank", "el": "Venom"},
+	{"id": 97, "name": "Thessira", "role": "Tank", "el": "Arcane"},
 	{"id": 98, "name": "Ursavane", "role": "Tank", "el": "Crystal"},
 	{"id": 99, "name": "Vandrigal", "role": "Tank", "el": "Spirit"},
 ]
+
+## Default random pool (used when no wallet / no owned heroes).
+const POOL := [13, 15, 28, 40, 53, 56, 62, 64, 65, 70, 71, 73, 75, 76, 79, 82, 93, 96, 98, 99]
+
+
+static func by_id(id: int) -> Dictionary:
+	if id >= 0 and id < ALL.size():
+		return ALL[id]
+	return {}
+
+
+## The 20 default heroes as dictionaries (old HEROES list).
+static func default_pool() -> Array:
+	var out := []
+	for id in POOL:
+		out.append(ALL[id])
+	return out

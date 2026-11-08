@@ -109,7 +109,10 @@ func setup(h: Dictionary, t: Texture2D, a: int, d: int, r: String, s: int) -> vo
 	name_lbl.position = Vector3(0, text_y, -D * 0.5 + 0.08 + art_size + 0.13)
 	add_child(name_lbl)
 
-	var role_lbl := _flat_label("%s · %s" % [h.get("role", ""), h.get("el", "")], 26, col.lightened(0.3))
+	var role_txt := "%s · %s" % [h.get("role", ""), h.get("el", "")]
+	if h.has("token"):
+		role_txt = "#%d · %s" % [int(h.token), h.get("role", "")]
+	var role_lbl := _flat_label(role_txt, 26, col.lightened(0.3))
 	role_lbl.position = Vector3(0, text_y, name_lbl.position.z + 0.15)
 	add_child(role_lbl)
 

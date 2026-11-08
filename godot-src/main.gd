@@ -68,17 +68,72 @@ func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	autoplay = args.has("--autoplay")
 	shots = args.has("--shots")
-	for h in HeroData.HEROES:
-		textures[h.id] = load("res://heroes/h%d.jpg" % h.id)
+	_read_wallet_deck()
+	# Keep the first frame light: on the web, startGame() only resolves (and the
+	# loading overlay only hides) after _ready + the first frame have run
+	# synchronously. Build the scene over the next frames instead.
 	_build_env()
+	await get_tree().process_frame
 	_build_space()
 	_build_table()
+	await get_tree().process_frame
 	_build_ui()
 	_build_audio()
 	if shots:
 		get_tree().create_timer(0.5).timeout.connect(func(): _shot("title"))
 	if autoplay:
 		get_tree().create_timer(1.0).timeout.connect(_on_play_pressed)
+
+
+# ---------------------------------------------------------------- wallet deck
+# index.html may set window.THX_DECK = {wallet, heroes:[{token, hero, rar}]}
+# after a read-only scan of the player's THALVORIX Hero NFTs on BNB Chain.
+var my_deck := []            # hero dicts (with "token" and "rar") owned by the player
+var my_wallet := ""
+
+
+func _read_wallet_deck() -> void:
+	if not OS.has_feature("web"):
+		return
+	var raw = JavaScriptBridge.eval("JSON.stringify(window.THX_DECK || null)", true)
+	if typeof(raw) != TYPE_STRING:
+		return
+	var d = JSON.parse_string(raw)
+	if not (d is Dictionary):
+		return
+	my_wallet = str(d.get("wallet", ""))
+	var list = d.get("heroes", [])
+	if not (list is Array):
+		return
+	for n in list:
+		if not (n is Dictionary):
+			continue
+		var base := HeroData.by_id(int(n.get("hero", -1)))
+		if base.is_empty():
+			continue
+		var h: Dictionary = base.duplicate()
+		h["token"] = int(n.get("token", 0))
+		var r := str(n.get("rar", ""))
+		if RARITIES.has(r):
+			h["rar"] = r
+		my_deck.append(h)
+
+
+func _deck_line() -> String:
+	if my_deck.size() > 0:
+		var w := my_wallet
+		if w.length() > 10:
+			w = w.substr(0, 6) + "…" + w.substr(w.length() - 4)
+		return "Your deck: %d of your Hero NFTs (%s)" % [my_deck.size(), w]
+	if my_wallet != "":
+		return "No Hero NFTs found in this wallet: playing with random heroes"
+	return "Random heroes (no wallet connected)"
+
+
+func _tex(id: int) -> Texture2D:
+	if not textures.has(id):
+		textures[id] = load("res://heroes/h%d.jpg" % id)
+	return textures[id]
 
 
 # ---------------------------------------------------------------- scene
@@ -90,9 +145,10 @@ func _build_env() -> void:
 	env.ambient_light_color = Color(0.42, 0.36, 0.6)
 	env.ambient_light_energy = 0.55
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.glow_enabled = true
-	env.glow_intensity = 0.6
-	env.glow_bloom = 0.05
+	# No glow: in the Compatibility renderer on WebGL2 the glow pass crashed the
+	# browser GPU process (WebGL context lost) during the first frame, which left
+	# the loading screen stuck. Emission materials carry the look instead.
+	env.glow_enabled = false
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
@@ -461,6 +517,9 @@ func _build_ui() -> void:
 		var l := _label(row[0], row[1], row[2])
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		tv.add_child(l)
+	var deck_lbl := _label(_deck_line(), 22, Color(0.6, 0.95, 0.7) if my_deck.size() > 0 else Color(0.7, 0.7, 0.8))
+	deck_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tv.add_child(deck_lbl)
 	var how := _label("Tap one of your cards, then tap an enemy card to attack.\nATK beats DEF: the difference is taken from Life Points.", 24, Color(0.9, 0.9, 0.95))
 	how.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tv.add_child(how)
@@ -550,7 +609,9 @@ func _pick_rarity() -> String:
 
 
 func _make_card(h: Dictionary, side: int) -> Node3D:
-	var rar := _pick_rarity()
+	var rar := str(h.get("rar", ""))
+	if not RARITIES.has(rar):
+		rar = _pick_rarity()
 	var a := randi_range(900, 1800)
 	var d := randi_range(600, 1500)
 	match String(h.role):
@@ -570,7 +631,7 @@ func _make_card(h: Dictionary, side: int) -> Node3D:
 	a = int(round(a * pw / 50.0) * 50)
 	d = int(round(maxf(300, d) * pw / 50.0) * 50)
 	var c: Node3D = CardScript.new()
-	c.setup(h, textures[h.id], a, d, rar, side)
+	c.setup(h, _tex(int(h.id)), a, d, rar, side)
 	c.visible = false
 	c.scale = Vector3.ONE * CARD_SCALE
 	c.position = DECK_POS[side] + Vector3(0, 0.6, 0)
@@ -599,10 +660,23 @@ func _start_game() -> void:
 	_clear_board()
 	lp = [LP_MAX, LP_MAX]
 	for side in 2:
-		var pool: Array = HeroData.HEROES.duplicate()
+		# Cards are drawn with pop_back(), so the player's own NFTs go last
+		# (drawn first); random heroes only pad a wallet with fewer than 8.
+		var mine := []
+		if side == 0 and my_deck.size() > 0:
+			mine = my_deck.duplicate()
+			mine.shuffle()
+			mine = mine.slice(0, DECK_SIZE)
+		var pool: Array = HeroData.default_pool()
 		pool.shuffle()
-		for k in DECK_SIZE:
-			reserve[side].append(_make_card(pool[k], side))
+		var deck := []
+		var k := 0
+		while deck.size() + mine.size() < DECK_SIZE:
+			deck.append(pool[k % pool.size()])
+			k += 1
+		deck.append_array(mine)
+		for h in deck:
+			reserve[side].append(_make_card(h, side))
 	_update_piles()
 	_update_lp(true)
 	state = "anim"
@@ -998,6 +1072,8 @@ func _float_text(t: String, pos: Vector3, col: Color) -> void:
 
 # ---------------------------------------------------------------- per frame
 func _process(delta: float) -> void:
+	if stars == null or rotate_hint == null:
+		return   # scene is still being built over the first frames
 	for s in spin_nodes:
 		s[0].rotate(s[1], s[2] * delta)
 	for o in orbit_pivots:
