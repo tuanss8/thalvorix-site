@@ -90,6 +90,19 @@ func setup(h: Dictionary, t: Texture2D, a: int, d: int, r: String, s: int) -> vo
 	inner.position.y = T * 0.5 + 0.005
 	add_child(inner)
 
+	# Dark stat strip behind ATK/DEF (like the 2D duel cards: bold stats on
+	# a solid dark band, so the enemy's power is readable at a glance).
+	var strip := MeshInstance3D.new()
+	var sm := BoxMesh.new()
+	sm.size = Vector3(W - 0.12, 0.004, 0.22)
+	strip.mesh = sm
+	var smat := StandardMaterial3D.new()
+	smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	smat.albedo_color = Color(0.02, 0.02, 0.05)
+	strip.material_override = smat
+	strip.position = Vector3(0, T * 0.5 + 0.007, D * 0.5 - 0.155)
+	add_child(strip)
+
 	# hero art
 	var art_size := W - 0.16
 	var art := MeshInstance3D.new()
@@ -116,11 +129,11 @@ func setup(h: Dictionary, t: Texture2D, a: int, d: int, r: String, s: int) -> vo
 	role_lbl.position = Vector3(0, text_y, name_lbl.position.z + 0.195)
 	add_child(role_lbl)
 
-	var atk_lbl := _flat_label("ATK %d" % a, 28, Color(1.0, 0.62, 0.38), 0.0042, 0.58)
-	atk_lbl.position = Vector3(-W * 0.26, text_y, D * 0.5 - 0.16)
+	var atk_lbl := _flat_label("ATK %d" % a, 32, Color(1.0, 0.85, 0.7), 0.0042, 0.62)
+	atk_lbl.position = Vector3(-W * 0.27, text_y, D * 0.5 - 0.155)
 	add_child(atk_lbl)
-	var def_lbl := _flat_label("DEF %d" % d, 28, Color(0.5, 0.8, 1.0), 0.0042, 0.58)
-	def_lbl.position = Vector3(W * 0.26, text_y, D * 0.5 - 0.16)
+	var def_lbl := _flat_label("DEF %d" % d, 32, Color(0.85, 0.95, 1.0), 0.0042, 0.62)
+	def_lbl.position = Vector3(W * 0.27, text_y, D * 0.5 - 0.155)
 	add_child(def_lbl)
 
 	# back side (faces -Y; visible when the card lies face down)

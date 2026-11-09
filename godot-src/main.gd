@@ -385,7 +385,7 @@ func _build_space() -> void:
 		_space_tex("planet_ringed"), -0.1, Color(0.9, 0.8, 0.6, 0.8))
 	saturn.rotation_degrees = Vector3(22, 0, -18)
 	var ring := MeshInstance3D.new()
-	ring.mesh = _ring_mesh(3.7, 6.3, 72)
+	ring.mesh = _ring_mesh(3.7, 6.3, 128)
 	var rmat := StandardMaterial3D.new()
 	rmat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	rmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -534,8 +534,8 @@ func _planet(pos: Vector3, radius: float, tex: Texture2D, spin: float, rim := Co
 		var as_ := SphereMesh.new()
 		as_.radius = radius * 1.07
 		as_.height = radius * 2.14
-		as_.radial_segments = 24
-		as_.rings = 12
+		as_.radial_segments = 64
+		as_.rings = 32
 		at.mesh = as_
 		var am := ShaderMaterial.new()
 		if _rim_shader == null:            # one shared Shader = one GPU program compile
@@ -552,7 +552,7 @@ func _planet(pos: Vector3, radius: float, tex: Texture2D, spin: float, rim := Co
 
 # Backdrop textures: the nebula/radial textures are baked from the generators
 # below (same seeds, same output) into res://space/*.png. The planet, sun and
-# ring textures are REAL maps (Solar System Scope / NASA, 512x256 PNGs built by
+# ring textures are REAL maps (Solar System Scope / NASA, 1024x512 PNGs built by
 # ~/workspace/godot/make_planet_textures.py) — do NOT re-bake them from the
 # procedural generators. Re-bake only nebula/radial with
 # `godot --headless --path godot-src -s res://tools/bake_space.gd`.
