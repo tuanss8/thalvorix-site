@@ -26,9 +26,6 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
 .btn:hover{background:#a050ff}
 .btn.alt{background:#2a1d40;color:#d8c8ff}
 .btn.alt:hover{background:#3a2858}
-#diffRow{display:flex;gap:6px;width:min(360px,86vw);margin:0 auto 10px}
-.btn.diff{flex:1;margin:0;padding:10px 6px;font-size:15px;background:#2a1d40;color:#d8c8ff}
-.btn.diff.sel{background:#8c3fe6;color:#fff}
 .btn:disabled{opacity:.5;cursor:default}
 #addrRow{display:flex;gap:6px;width:min(360px,86vw);margin:10px auto 0}
 #addr{flex:1;min-width:0;padding:10px;border-radius:10px;border:1px solid #4a3470;background:#140a22;color:#fff;font-size:14px}
@@ -54,11 +51,6 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
   <h1>THALVORIX</h1>
   <h2>Duel Arena 3D</h2>
   <div id="choose">
-    <div id="diffRow">
-      <button class="btn diff" data-d="easy">Easy</button>
-      <button class="btn diff sel" data-d="normal">Normal</button>
-      <button class="btn diff" data-d="hard">Hard</button>
-    </div>
     <button class="btn" id="btnWallet">Connect wallet · use my Hero NFTs</button>
     <button class="btn alt" id="btnRandom">Play with random heroes</button>
     <div id="addrRow"><input id="addr" placeholder="or paste a BNB Chain address (read-only)" autocomplete="off" spellcheck="false"><button id="addrGo">Use</button></div>
@@ -104,7 +96,7 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
 </script>
 <script src="index.js"></script>
 <script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5812960,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5813232,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 
 // Engine files live in /godot/ (see the preload note above): point the loader
@@ -169,12 +161,25 @@ async function scanHeroes(wallet,onStep){
   const say=(t,err)=>{msg.textContent=t;msg.className=err?'err':''};
   let started=false,running=false;
 
-  // Bot difficulty (Easy/Normal/Hard) — the game reads window.THX_DIFF.
-  window.THX_DIFF='normal';
-  document.querySelectorAll('.btn.diff').forEach(b=>b.onclick=()=>{
-    window.THX_DIFF=b.dataset.d;
-    document.querySelectorAll('.btn.diff').forEach(x=>x.classList.toggle('sel',x===b));
-  });
+  // Bot difficulty comes from the player's rank — the same tiers as
+  // duelBotDiff in the 2D game. Rank is stored per wallet in localStorage as
+  // thx_rank_<wallet> = {rank:{t:0..7,...}} (Ashen Recruit 0 … Mythic 7).
+  // Easy: tiers 0–2 (Ashen Recruit–Bronze Warden), Normal: 3–5 (Silver
+  // Sentinel–Sapphire Knight), Hard: 6–7 (Diamond Warlord–Mythic Thalvorian).
+  // No rank record (new player) = tier 0 = Easy. The game reads THX_TIER.
+  const TIERS=['Ashen Recruit','Iron Vanguard','Bronze Warden','Silver Sentinel','Gold Champion','Sapphire Knight','Diamond Warlord','Mythic Thalvorian'];
+  const diffName=t=>t<=2?'Easy':t<=5?'Normal':'Hard';
+  window.THX_TIER=0;window.THX_TIER_NAME=TIERS[0];
+  function readRank(addr){
+    let t=0;
+    try{
+      const o=JSON.parse(localStorage.getItem('thx_rank_'+String(addr||'').toLowerCase())||'null');
+      if(o&&o.rank&&typeof o.rank.t==='number')t=o.rank.t;
+    }catch(e){}
+    t=Math.max(0,Math.min(7,Math.floor(t)||0));
+    window.THX_TIER=t;window.THX_TIER_NAME=TIERS[t];
+    return t;
+  }
 
   // WebGL2 is required by the Compatibility renderer.
   let gl2=false;try{gl2=!!document.createElement('canvas').getContext('webgl2')}catch(e){}
@@ -273,14 +278,16 @@ async function scanHeroes(wallet,onStep){
   async function useWallet(addr){
     $('btnWallet').disabled=$('btnRandom').disabled=$('addrGo').disabled=true;
     window.THX_DECK={wallet:addr,heroes:[]};
+    const tier=readRank(addr);
+    const rankLine=` Rank: ${TIERS[tier]} · Bot: ${diffName(tier)}.`;
     try{
       say('Reading your THALVORIX Heroes on BNB Chain…');
       const heroes=await scanHeroes(addr,t=>say(t));
       window.THX_DECK.heroes=heroes;
       try{localStorage.setItem('thx_godot_addr',addr)}catch(e){}
-      say(heroes.length?`Found ${heroes.length} Hero NFT(s).`:'No THALVORIX Hero NFTs in this wallet: playing with random heroes.');
+      say((heroes.length?`Found ${heroes.length} Hero NFT(s).`:'No THALVORIX Hero NFTs in this wallet: playing with random heroes.')+rankLine);
     }catch(e){
-      say('Could not read your NFTs ('+(e&&e.message||e)+'): playing with random heroes.',true);
+      say('Could not read your NFTs ('+(e&&e.message||e)+'): playing with random heroes.'+rankLine,true);
     }
     launch();
   }
