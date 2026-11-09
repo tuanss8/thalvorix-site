@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>THALVORIX Duel Arena 3D</title>
+<!-- start the two big downloads before index.js runs (same URLs/mode as the Godot loader, so no double fetch).
+     The engine (index.wasm, 39.5 MB) is shared from /godot/: the GitHub web UI
+     refuses files over 25 MB, so it cannot be re-uploaded here — only the game
+     data (index.pck) lives in this folder. The wasm is byte-identical across
+     exports, so sharing it is safe. -->
+<link rel="preload" href="/godot/index.wasm" as="fetch" type="application/wasm" crossorigin="anonymous">
+<link rel="preload" href="index.pck" as="fetch" crossorigin="anonymous">
+<style>
+html,body,#canvas{margin:0;padding:0;border:0}
+html,body{touch-action:none;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#canvas{touch-action:none}
+#status input{-webkit-user-select:text;user-select:text}
+body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family:'Noto Sans','Segoe UI',Arial,sans-serif}
+#canvas{display:block}
+#canvas:focus{outline:none}
+#status{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,#1d0b33 0%,#08030f 70%);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:5;padding:16px;box-sizing:border-box;text-align:center}
+#status h1{margin:0;font-size:clamp(34px,7vw,64px);letter-spacing:.06em;color:#ffd15a}
+#status h2{margin:4px 0 22px;font-size:clamp(16px,3vw,24px);font-weight:500;color:#d8c8ff}
+.btn{display:block;width:min(360px,86vw);margin:8px auto;padding:14px 18px;border:0;border-radius:14px;font-size:18px;font-weight:600;color:#fff;background:#8c3fe6;cursor:pointer}
+.btn:hover{background:#a050ff}
+.btn.alt{background:#2a1d40;color:#d8c8ff}
+.btn.alt:hover{background:#3a2858}
+#diffRow{display:flex;gap:6px;width:min(360px,86vw);margin:0 auto 10px}
+.btn.diff{flex:1;margin:0;padding:10px 6px;font-size:15px;background:#2a1d40;color:#d8c8ff}
+.btn.diff.sel{background:#8c3fe6;color:#fff}
+.btn:disabled{opacity:.5;cursor:default}
+#addrRow{display:flex;gap:6px;width:min(360px,86vw);margin:10px auto 0}
+#addr{flex:1;min-width:0;padding:10px;border-radius:10px;border:1px solid #4a3470;background:#140a22;color:#fff;font-size:14px}
+#addrGo{padding:10px 14px;border-radius:10px;border:0;background:#3a2858;color:#fff;cursor:pointer}
+#msg{min-height:22px;margin:14px auto 0;max-width:min(520px,90vw);color:#cfc3e8;font-size:15px;line-height:1.4}
+#msg.err{color:#ff9aa8}
+#prog{width:min(360px,80vw);margin-top:16px;height:8px;border-radius:6px;background:#1e1230;overflow:hidden}
+#progBar{height:100%;width:0;background:linear-gradient(90deg,#8c3fe6,#ffd15a);transition:width .2s}
+#progTxt{font-size:13px;color:#9a8cb8;margin-top:6px;min-height:16px}
+.small{font-size:12px;color:#8a7ca8;margin-top:6px}
+#errbox{position:fixed;left:8px;right:8px;bottom:8px;z-index:9;display:none;background:#3b1220;border:1px solid #9b3943;border-radius:10px;padding:10px 12px;color:#ffd9de;font:13px/1.35 monospace;white-space:pre-wrap;max-height:40vh;overflow:auto}
+#errbox button{float:right;margin-left:8px;background:#9b3943;color:#fff;border:0;border-radius:6px;padding:4px 10px;cursor:pointer}
+</style>
+<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+<style>body{background:#07030d}</style>
+</head>
+<body>
+<canvas id="canvas">Your browser does not support the canvas tag.</canvas>
+<noscript>Your browser does not support JavaScript.</noscript>
+
+<div id="status">
+  <h1>THALVORIX</h1>
+  <h2>Duel Arena 3D</h2>
+  <div id="choose">
+    <div id="diffRow">
+      <button class="btn diff" data-d="easy">Easy</button>
+      <button class="btn diff sel" data-d="normal">Normal</button>
+      <button class="btn diff" data-d="hard">Hard</button>
+    </div>
+    <button class="btn" id="btnWallet">Connect wallet · use my Hero NFTs</button>
+    <button class="btn alt" id="btnRandom">Play with random heroes</button>
+    <div id="addrRow"><input id="addr" placeholder="or paste a BNB Chain address (read-only)" autocomplete="off" spellcheck="false"><button id="addrGo">Use</button></div>
+    <div class="small">Read-only: nothing is signed, no transaction is sent.</div>
+  </div>
+  <div id="msg"></div>
+  <div id="prog"><div id="progBar"></div></div>
+  <div id="progTxt"></div>
+</div>
+<div id="errbox"><button id="errClose">Close</button><button id="errReload">Reload</button><span id="errText"></span></div>
+
+<script>
+/* ---------- visible error reporting (so a failure never looks like an endless load) ---------- */
+(function(){
+  const box=document.getElementById('errbox'),txt=document.getElementById('errText');
+  const seen=[];
+  window.THX_showError=function(m){
+    m=String(m||'Unknown error');
+    if(seen.includes(m))return;seen.push(m);if(seen.length>8)seen.shift();
+    txt.textContent=seen.join('\n');box.style.display='block';
+  };
+  document.getElementById('errClose').onclick=()=>{box.style.display='none'};
+  document.getElementById('errReload').onclick=()=>location.reload();
+  window.addEventListener('error',e=>{
+    if(e&&e.target&&e.target!==window&&(e.target.src||e.target.href)){THX_showError('Failed to load: '+(e.target.src||e.target.href));return}
+    THX_showError('Error: '+(e.message||e)+(e.filename?' ('+e.filename.split('/').pop()+':'+e.lineno+')':''));
+  },true);
+  window.addEventListener('unhandledrejection',e=>{const r=e.reason;THX_showError('Unhandled: '+(r&&(r.message||r.stack)||r))});
+  const ce=console.error.bind(console);
+  window.THX_lastErrors=[];
+  console.error=function(...a){try{const s=a.map(x=>x&&x.message?x.message:String(x)).join(' ');THX_lastErrors.push(s);if(THX_lastErrors.length>20)THX_lastErrors.shift();if(/ERROR|SCRIPT ERROR|USER ERROR|Error/i.test(s))THX_showError(s.slice(0,400))}catch(_){}ce(...a)};
+})();
+</script>
+<script>
+/* ---------- keep the browser from zooming the page: pinch / ctrl+wheel / iOS gestures go to the game ---------- */
+(function(){
+  const no=e=>{if(e.cancelable)e.preventDefault()};
+  ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,no,{passive:false}));
+  document.addEventListener('touchmove',e=>{if(e.touches&&e.touches.length>1)no(e)},{passive:false});
+  document.addEventListener('wheel',e=>{if(e.ctrlKey)no(e)},{passive:false});
+  let lastEnd=0;document.addEventListener('touchend',e=>{const t=Date.now();if(t-lastEnd<300&&e.target&&e.target.id==='canvas')no(e);lastEnd=t},{passive:false});
+})();
+</script>
+<script src="index.js"></script>
+<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5812960,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+
+// Engine files live in /godot/ (see the preload note above): point the loader
+// there, keep the game data (index.pck) local, and alias the wasm size under
+// its absolute key so the engine's fileSizes lookups resolve.
+GODOT_CONFIG.executable = '/godot/index';
+GODOT_CONFIG.mainPack = 'index.pck';
+GODOT_CONFIG.fileSizes['/godot/index.wasm'] = GODOT_CONFIG.fileSizes['index.wasm'];
+
+/* ---------- read-only THALVORIX Hero NFT scan (same method as duel-arena.html) ---------- */
+const HERO='0x6D862c8B847323961FCD349ffFbee0133F6B929A',MC3='0xcA11bde05977b3631167028862bE2a173976CA11';
+const SEL={totalMinted:'0xa2309ff8',ownerOf:'0x6352211e',heroIdOf:'0x46f70028',rarityOf:'0xdd3b5f9a',balanceOf:'0x70a08231'};
+const RAR=['Common','Uncommon','Rare','Epic','Legendary'];
+const RPCS=['https://bsc-dataseed.binance.org','https://bsc.rpc.blxrbdn.com','https://bsc-dataseed1.bnbchain.org','https://bsc-rpc.publicnode.com','https://bsc-mainnet.public.blastapi.io'];
+const encAddr=a=>'000000000000000000000000'+a.replace(/^0x/,'').toLowerCase();
+const w64=n=>BigInt(n).toString(16).padStart(64,'0');
+async function rpcCall(method,params){
+  let last;
+  for(const url of RPCS){
+    const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),12000);
+    try{
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params}),signal:ctl.signal});
+      const j=await r.json();if(j.error)throw new Error(j.error.message||'rpc error');return j.result;
+    }catch(e){last=e}finally{clearTimeout(t)}
+  }
+  throw last||new Error('All BSC RPCs failed');
+}
+const ethCall=(to,data)=>rpcCall('eth_call',[{to,data},'latest']);
+async function mcallIds(sel,ids){
+  const s=sel.replace(/^0x/,''),n=ids.length,addr=w64(BigInt(HERO));
+  const els=ids.map(i=>addr+w64(1)+w64(96)+w64(36)+s+w64(i)+'0'.repeat(56));
+  let offs='',o=32*n;for(const e of els){offs+=w64(o);o+=e.length/2}
+  const r=(await ethCall(MC3,'0x82ad56cb'+w64(32)+w64(n)+offs+els.join(''))).slice(2);
+  const cnt=parseInt(r.slice(64,128),16),arr=r.slice(128),out=[];
+  for(let k=0;k<cnt;k++){const off=parseInt(arr.slice(k*64,k*64+64),16)*2,el=arr.slice(off);const ok=parseInt(el.slice(0,64),16)===1,bo=parseInt(el.slice(64,128),16)*2,ln=parseInt(el.slice(bo,bo+64),16);out.push(ok?'0x'+el.slice(bo+64,bo+64+ln*2):null)}
+  return out;
+}
+async function scanHeroes(wallet,onStep){
+  const w=wallet.toLowerCase();
+  const bal=Number(BigInt(await ethCall(HERO,SEL.balanceOf+encAddr(w))));
+  if(!bal)return [];
+  const total=Number(BigInt(await ethCall(HERO,SEL.totalMinted)));
+  const owned=[];
+  for(let s=1;s<=total&&owned.length<bal;s+=300){
+    const ids=[];for(let i=s;i<Math.min(total+1,s+300);i++)ids.push(i);
+    onStep&&onStep(`Scanning Heroes ${s}–${ids[ids.length-1]} of ${total}… (${owned.length}/${bal} found)`);
+    const res=await mcallIds(SEL.ownerOf,ids);
+    res.forEach((r,k)=>{if(r&&('0x'+r.slice(-40)).toLowerCase()===w)owned.push(ids[k])});
+  }
+  const out=[];
+  for(let s=0;s<owned.length;s+=300){
+    const ch=owned.slice(s,s+300);
+    const [hs,rs]=await Promise.all([mcallIds(SEL.heroIdOf,ch),mcallIds(SEL.rarityOf,ch)]);
+    ch.forEach((id,k)=>{if(!hs[k])return;const hero=Number(BigInt(hs[k]));const rar=rs[k]?RAR[Number(BigInt(rs[k]))]||'':'';if(hero>=0&&hero<100)out.push({token:id,hero,rar})});
+  }
+  return out;
+}
+
+(function(){
+  const $=id=>document.getElementById(id);
+  const statusOverlay=$('status'),msg=$('msg'),bar=$('progBar'),progTxt=$('progTxt');
+  const say=(t,err)=>{msg.textContent=t;msg.className=err?'err':''};
+  let started=false,running=false;
+
+  // Bot difficulty (Easy/Normal/Hard) — the game reads window.THX_DIFF.
+  window.THX_DIFF='normal';
+  document.querySelectorAll('.btn.diff').forEach(b=>b.onclick=()=>{
+    window.THX_DIFF=b.dataset.d;
+    document.querySelectorAll('.btn.diff').forEach(x=>x.classList.toggle('sel',x===b));
+  });
+
+  // WebGL2 is required by the Compatibility renderer.
+  let gl2=false;try{gl2=!!document.createElement('canvas').getContext('webgl2')}catch(e){}
+  const missing=Engine.getMissingFeatures({threads:GODOT_THREADS_ENABLED});
+  if(!gl2&&!missing.includes('WebGL2'))missing.push('WebGL2 (enable hardware acceleration in your browser settings)');
+  if(missing.length){
+    $('choose').style.display='none';$('prog').style.display='none';
+    say('This browser cannot run the game. Missing: '+missing.join(', '),true);
+    return;
+  }
+
+  // Load everything right away, while the player chooses a deck: download the
+  // engine (.wasm) and the game data (.pck) in parallel, then compile and
+  // instantiate the engine in the background. "Play" then only has to start it.
+  const exe=GODOT_CONFIG.executable,pack=GODOT_CONFIG.mainPack||(exe+'.pck');
+  const totalBytes=(GODOT_CONFIG.fileSizes[exe+'.wasm']||0)+(GODOT_CONFIG.fileSizes[pack]||0);
+  let stage='download',inited=false,packed=false,t0=performance.now();
+  window.THX_STAGES={start:Math.round(t0)};
+  const stamp=n=>{if(!(n in THX_STAGES))THX_STAGES[n]=Math.round(performance.now())};
+  function setBar(f){bar.style.width=(Math.max(0,Math.min(1,f))*100).toFixed(1)+'%'}
+  function showStage(){
+    if(stage==='download')return;            // onProgress writes the download text
+    const txt={compile:'Preparing engine…',ready:started?'Starting engine…':'Ready',start:'Starting engine…',scene:'Building the arena…'}[stage]||'';
+    progTxt.textContent=txt;
+    setBar({compile:.92,ready:started?.95:.94,start:.96,scene:.98}[stage]||1);
+  }
+  function onProgress(cur,total){
+    if(stage!=='download')return;
+    total=total||totalBytes;
+    if(cur>0&&total>0){
+      const f=cur/total;setBar(f*.9);
+      progTxt.textContent='Downloading game… '+Math.min(99,Math.floor(f*100))+'%';
+      if(cur>=total){stamp('downloaded');stage=inited?'ready':'compile';showStage()}
+    }
+  }
+  const engine=new Engine(Object.assign({},GODOT_CONFIG,{onProgress}));
+  progTxt.textContent='Downloading game… 0%';
+  const packP=engine.preloadFile(pack,pack).then(()=>{packed=true;stamp('pck')});
+  const initP=engine.init(exe).then(()=>{
+    inited=true;stamp('compiled');
+    if(stage==='download'||stage==='compile'){stage='ready';showStage()}
+  });
+  const loadP=Promise.all([initP,packP]);
+  loadP.catch(e=>{THX_showError('Loading failed: '+(e&&e.message||e));say('Loading failed. Check your connection and reload.',true)});
+
+  const canvas=$('canvas');
+  canvas.addEventListener('webglcontextlost',ev=>{
+    THX_showError('The graphics context was lost (the browser GPU process reset). Reload the page. If this keeps happening, update your graphics driver or turn on "Use graphics acceleration" in Chrome settings.');
+  },false);
+
+  // Repeat visits: a service worker (sw.js, versioned per export) keeps the
+  // engine + game data in Cache Storage, so the next load skips the download.
+  // Registered only once the game is running, so it never competes with the
+  // first download (its precache is filled from the HTTP cache).
+  function registerSW(){
+    if(!('serviceWorker' in navigator)||!window.isSecureContext||/[?&]nosw\b/.test(location.search))return;
+    try{navigator.serviceWorker.register('sw.js',{scope:'./'}).catch(()=>{})}catch(e){}
+  }
+
+  function hideOverlay(){
+    if(!statusOverlay.isConnected)return;
+    stamp('overlay');statusOverlay.remove();
+    setTimeout(registerSW,3000);
+  }
+
+  function launch(){
+    if(started)return;started=true;running=true;
+    $('choose').style.display='none';
+    say((window.THX_DECK&&THX_DECK.heroes&&THX_DECK.heroes.length)?`Loaded ${THX_DECK.heroes.length} Hero NFT(s). Starting…`:(msg.textContent||'Starting…'));
+    if(stage!=='download')showStage();
+    const tl=Date.now();
+    const watchdog=setInterval(()=>{
+      const s=Math.round((Date.now()-tl)/1000);
+      if(s>=25&&stage!=='download')progTxt.textContent=`Still starting (${s}s)… slow devices can take a while to prepare the 3D scene.`;
+      if(s===90){
+        const last=(window.THX_lastErrors||[]).slice(-3).join(' | ');
+        THX_showError('The game has not started after 90 s.'+(last?' Last errors: '+last:' No error was reported.')+' Try reloading; if it repeats, check that hardware acceleration is on in your browser.');
+      }
+    },1000);
+    // The overlay stays up (with a stage label) until Godot has drawn the title
+    // screen, so there is never a blank canvas in between.
+    window.THX_onTitle=()=>{stamp('title');clearInterval(watchdog);running=false;hideOverlay()};
+    loadP.then(()=>{
+      stage='start';showStage();stamp('launch');
+      // let the label paint before the (blocking) engine start
+      return new Promise(r=>requestAnimationFrame(()=>setTimeout(r,30)));
+    }).then(()=>engine.start({args:['--main-pack',pack],onProgress})).then(()=>{
+      stamp('started');stage='scene';showStage();
+      setTimeout(()=>{if(statusOverlay.isConnected){clearInterval(watchdog);running=false;hideOverlay()}},20000);
+    },err=>{
+      clearInterval(watchdog);running=false;
+      say('Error: '+(err&&err.message||err),true);THX_showError('Engine failed to start: '+(err&&err.message||err));
+    });
+  }
+
+  async function useWallet(addr){
+    $('btnWallet').disabled=$('btnRandom').disabled=$('addrGo').disabled=true;
+    window.THX_DECK={wallet:addr,heroes:[]};
+    try{
+      say('Reading your THALVORIX Heroes on BNB Chain…');
+      const heroes=await scanHeroes(addr,t=>say(t));
+      window.THX_DECK.heroes=heroes;
+      try{localStorage.setItem('thx_godot_addr',addr)}catch(e){}
+      say(heroes.length?`Found ${heroes.length} Hero NFT(s).`:'No THALVORIX Hero NFTs in this wallet: playing with random heroes.');
+    }catch(e){
+      say('Could not read your NFTs ('+(e&&e.message||e)+'): playing with random heroes.',true);
+    }
+    launch();
+  }
+
+  $('btnRandom').onclick=()=>{window.THX_DECK=null;say('');launch()};
+  $('btnWallet').onclick=async()=>{
+    const p=window.ethereum||(window.BinanceChain&&window.BinanceChain.request?window.BinanceChain:null);
+    if(!p){say('No wallet found in this browser. Open this page in your wallet app\'s browser, or paste your address below.',true);return}
+    try{
+      const accs=await p.request({method:'eth_requestAccounts'});
+      if(!accs||!accs.length){say('No account was shared by the wallet.',true);return}
+      useWallet(accs[0]);
+    }catch(e){say('Wallet connection was cancelled.',true)}
+  };
+  const go=()=>{const a=$('addr').value.trim();if(!/^0x[0-9a-fA-F]{40}$/.test(a)){say('That is not a valid 0x… address.',true);return}useWallet(a)};
+  $('addrGo').onclick=go;$('addr').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+  try{const s=localStorage.getItem('thx_godot_addr');if(s)$('addr').value=s}catch(e){}
+  // ?random or ?autoplay skips the chooser (testing / direct links)
+  if(/[?&](random|autostart)\b/.test(location.search))launch();
+})();
+</script>
+</body>
+</html>
+
