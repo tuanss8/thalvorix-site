@@ -64,6 +64,22 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
 
 <script>
 /* ---------- visible error reporting (so a failure never looks like an endless load) ---------- */
+/* ---------- rank save + volume + quit, for the Godot game (same record as the 2D game) ---------- */
+const SB_URL='https://sfguqwkbrdcttugnjfmf.supabase.co',SB_KEY='sb_publishable_4wBvWCdgdLhY1si1Kxpv9w_yGXcMOpC';
+window.THX_saveRank=function(wallet,rec){
+  try{if(!wallet)return;localStorage.setItem('thx_rank_'+String(wallet).toLowerCase(),JSON.stringify(rec))}catch(e){}
+  // Best-effort cloud sync: reuse the signature the 2D game cached (thx_rsig_<wallet>).
+  try{
+    const c=JSON.parse(localStorage.getItem('thx_rsig_'+String(wallet).toLowerCase())||'null');
+    if(!c||!c.msg||!c.sig||Date.now()-c.iss>=29*864e5)return;
+    fetch(SB_URL+'/functions/v1/save-rank',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({wallet:wallet,msg:c.msg,sig:c.sig,data:{rank:rec.rank,streak:rec.streak||0,mp:rec.mp||0}})})
+      .then(r=>{if(r.status===401){try{localStorage.removeItem('thx_rsig_'+String(wallet).toLowerCase())}catch(e){}}}).catch(()=>{});
+  }catch(e){}
+};
+window.THX_getVol=function(){try{const v=localStorage.getItem('thx_vol');return v===null?100:Math.max(0,Math.min(100,+v))}catch(e){return 100}};
+window.THX_setVol=function(v){try{localStorage.setItem('thx_vol',String(Math.max(0,Math.min(100,Math.round(v)))))}catch(e){}};
+window.THX_quitToMenu=function(){try{sessionStorage.setItem('thx_godot_menu','1')}catch(e){}location.reload()};
+
 (function(){
   const box=document.getElementById('errbox'),txt=document.getElementById('errText');
   const seen=[];
@@ -96,7 +112,7 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
 </script>
 <script src="index.js"></script>
 <script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5813232,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5818912,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 
 // Engine files live in /godot/ (see the preload note above): point the loader
@@ -171,13 +187,14 @@ async function scanHeroes(wallet,onStep){
   const diffName=t=>t<=2?'Easy':t<=5?'Normal':'Hard';
   window.THX_TIER=0;window.THX_TIER_NAME=TIERS[0];
   function readRank(addr){
-    let t=0;
+    let t=0,rec=null;
     try{
-      const o=JSON.parse(localStorage.getItem('thx_rank_'+String(addr||'').toLowerCase())||'null');
-      if(o&&o.rank&&typeof o.rank.t==='number')t=o.rank.t;
+      rec=JSON.parse(localStorage.getItem('thx_rank_'+String(addr||'').toLowerCase())||'null');
+      if(rec&&rec.rank&&typeof rec.rank.t==='number')t=rec.rank.t;
     }catch(e){}
     t=Math.max(0,Math.min(7,Math.floor(t)||0));
     window.THX_TIER=t;window.THX_TIER_NAME=TIERS[t];
+    window.THX_RANK=rec;
     return t;
   }
 
@@ -306,7 +323,25 @@ async function scanHeroes(wallet,onStep){
   $('addrGo').onclick=go;$('addr').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
   try{const s=localStorage.getItem('thx_godot_addr');if(s)$('addr').value=s}catch(e){}
   // ?random or ?autoplay skips the chooser (testing / direct links)
-  if(/[?&](random|autostart)\b/.test(location.search))launch();
+  if(/[?&](random|autostart)\b/.test(location.search)){launch();return}
+  // Quit-to-menu flag (set by the in-game Quit button): show the chooser once.
+  let forceMenu=false;
+  try{forceMenu=sessionStorage.getItem('thx_godot_menu')==='1';if(forceMenu)sessionStorage.removeItem('thx_godot_menu')}catch(e){}
+  // Auto-enter: wallet already connected on thalvorix.xyz (thx_session) ->
+  // skip the chooser and load that wallet's deck straight away.
+  if(!forceMenu){
+    let autoAddr=null;
+    try{
+      const s=JSON.parse(localStorage.getItem('thx_session')||'null');
+      const a=s&&s.addr;
+      if(/^0x[0-9a-fA-F]{40}$/.test(a||''))autoAddr=a;
+    }catch(e){}
+    if(autoAddr){
+      $('choose').style.display='none';
+      say('Loading your deck…');
+      useWallet(autoAddr);
+    }
+  }
 })();
 </script>
 </body>
