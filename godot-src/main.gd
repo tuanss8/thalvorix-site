@@ -101,13 +101,17 @@ var _turn_voice_n := 0
 var _warn_played := false
 var _win_played := false
 var _refill_n := 0
-# Bot difficulty (window.THX_DIFF from the deck chooser, default Normal),
-# mirroring the 2D game's duelBotDiff: Easy scales the bot's stats down and
-# plays half its moves at random, Hard plays its best move every time.
-var diff_name := "Normal"
-var diff_atk := 0.85
-var diff_def := 0.9
-var diff_rand := 0.25
+# Bot difficulty from the player's rank (window.THX_TIER from the deck
+# chooser, read from the 2D game's thx_rank_<wallet> record; default 0 =
+# Ashen Recruit), mirroring the 2D game's duelBotDiff: Easy for tiers 0–2
+# (Ashen Recruit–Bronze Warden), Normal for 3–5 (Silver Sentinel–Sapphire
+# Knight), Hard for 6–7 (Diamond Warlord–Mythic Thalvorian).
+const TIER_NAMES := ["Ashen Recruit", "Iron Vanguard", "Bronze Warden", "Silver Sentinel", "Gold Champion", "Sapphire Knight", "Diamond Warlord", "Mythic Thalvorian"]
+var tier_name := "Ashen Recruit"
+var diff_name := "Easy"
+var diff_atk := 0.6
+var diff_def := 0.8
+var diff_rand := 0.5
 
 # debug / headless verification: `-- --autoplay --shots`
 var _shot_shatter := false
@@ -130,7 +134,7 @@ func _ready() -> void:
 	autoplay = args.has("--autoplay")
 	shots = args.has("--shots")
 	_read_wallet_deck()
-	_read_diff()
+	_read_tier()
 	# Keep the first frame light: on the web, startGame() only resolves (and the
 	# loading overlay only hides) after _ready + the first frame have run
 	# synchronously. Build the scene over the next frames instead.
@@ -189,30 +193,31 @@ func _read_wallet_deck() -> void:
 		my_deck.append(h)
 
 
-# Bot difficulty picked in the deck chooser (window.THX_DIFF = easy/normal/
-# hard, default Normal). Read once at startup; the values mirror the 2D
-# game's duelBotDiff (Easy 0.6/0.8, Normal 0.85/0.9, Hard 1/1).
-func _read_diff() -> void:
+# Bot difficulty from the player's rank tier (window.THX_TIER = 0–7,
+# default 0). Read once at startup; the values mirror the 2D game's
+# duelBotDiff (Easy 0.6/0.8, Normal 0.85/0.9, Hard 1/1).
+func _read_tier() -> void:
 	if not OS.has_feature("web"):
 		return
-	var raw = JavaScriptBridge.eval("JSON.stringify(window.THX_DIFF || null)", true)
-	var d := str(raw).strip_edges().trim_prefix('"').trim_suffix('"')
-	match d:
-		"easy":
-			diff_name = "Easy"
-			diff_atk = 0.6
-			diff_def = 0.8
-			diff_rand = 0.5
-		"hard":
-			diff_name = "Hard"
-			diff_atk = 1.0
-			diff_def = 1.0
-			diff_rand = 0.0
-		_:
-			diff_name = "Normal"
-			diff_atk = 0.85
-			diff_def = 0.9
-			diff_rand = 0.25
+	var raw = JavaScriptBridge.eval("JSON.stringify(window.THX_TIER ?? 0)", true)
+	var t := int(str(raw).strip_edges().trim_prefix('"').trim_suffix('"'))
+	t = clampi(t, 0, 7)
+	tier_name = TIER_NAMES[t]
+	if t <= 2:
+		diff_name = "Easy"
+		diff_atk = 0.6
+		diff_def = 0.8
+		diff_rand = 0.5
+	elif t <= 5:
+		diff_name = "Normal"
+		diff_atk = 0.85
+		diff_def = 0.9
+		diff_rand = 0.25
+	else:
+		diff_name = "Hard"
+		diff_atk = 1.0
+		diff_def = 1.0
+		diff_rand = 0.0
 
 
 func _deck_line() -> String:
@@ -1197,7 +1202,7 @@ func _start_game() -> void:
 	_update_piles()
 	_update_lp(true)
 	state = "anim"
-	_set_status("Bot: %s · Dealing cards…" % diff_name)
+	_set_status("Bot: %s (%s) · Dealing cards…" % [diff_name, tier_name])
 	_banner("DUEL START!")
 	_sfx("fanfare")
 	_turn_voice_n = 0
