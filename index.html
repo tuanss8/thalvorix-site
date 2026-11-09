@@ -1254,7 +1254,7 @@ async function imLoadLogs(){const to=await latestBlock();let from=IC.last+1;cons
  IC.logs.sort((a,b)=>b.bn-a.bn||b.li-a.li)}
 async function imRefresh(force){if(IC.busy)return;if(!force&&IC.loaded&&Date.now()-IC.at<60000)return;IC.busy=true;
  try{await imLoadOwners();try{rewardsToBoxes()}catch(e){}await imLoadLogs();IC.loaded=true;IC.at=Date.now();IC.err=false}catch(e){IC.err=true}finally{IC.busy=false}
- try{rItems()}catch(e){}try{rInv()}catch(e){}imRenderAll()}
+ try{rInv()}catch(e){}imRenderAll()}
 function imRenderAll(){try{imRenderOffers()}catch(e){}try{imRenderHolders()}catch(e){}try{imRenderTraits()}catch(e){}try{imRenderActivity()}catch(e){}try{imRenderAnalytics()}catch(e){}}
 async function imTx(data,value,okMsg){try{toast('Confirm in your wallet…');const h=await sendTx({to:ITEMC,data,value:value?'0x'+value.toString(16):'0x0'});toast('Sent. Waiting for confirmation…');const r=await waitReceipt(h);
  if(r&&r.status==='0x1'){toast(okMsg);try{refreshChain()}catch(e){}}else toast('Transaction failed. Check it on BscScan.');await imRefresh(true);return r}catch(e){toast(e&&e.code===4001?'Cancelled.':'Transaction failed. Please try again.')}}
