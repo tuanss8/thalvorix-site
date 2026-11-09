@@ -129,11 +129,11 @@ func setup(h: Dictionary, t: Texture2D, a: int, d: int, r: String, s: int) -> vo
 	role_lbl.position = Vector3(0, text_y, name_lbl.position.z + 0.195)
 	add_child(role_lbl)
 
-	var atk_lbl := _flat_label("ATK %d" % a, 32, Color(1.0, 0.85, 0.7), 0.0042, 0.62)
-	atk_lbl.position = Vector3(-W * 0.27, text_y, D * 0.5 - 0.155)
+	var atk_lbl := _flat_label("ATK %d" % a, 32, Color(1.0, 0.62, 0.38), 0.0042, 0.58)
+	atk_lbl.position = Vector3(-W * 0.26, text_y, D * 0.5 - 0.155)
 	add_child(atk_lbl)
-	var def_lbl := _flat_label("DEF %d" % d, 32, Color(0.85, 0.95, 1.0), 0.0042, 0.62)
-	def_lbl.position = Vector3(W * 0.27, text_y, D * 0.5 - 0.155)
+	var def_lbl := _flat_label("DEF %d" % d, 32, Color(0.5, 0.8, 1.0), 0.0042, 0.58)
+	def_lbl.position = Vector3(W * 0.26, text_y, D * 0.5 - 0.155)
 	add_child(def_lbl)
 
 	# back side (faces -Y; visible when the card lies face down)
