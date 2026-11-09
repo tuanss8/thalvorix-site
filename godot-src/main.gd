@@ -702,18 +702,26 @@ func _build_table() -> void:
 	table.position.y = -0.15
 	add_child(table)
 
-	var rim := MeshInstance3D.new()
-	var rb := BoxMesh.new()
-	rb.size = Vector3(13.9, 0.12, 8.1)
-	rim.mesh = rb
+	# Gold frame around the table edge (4 thin bars, open middle). It used to be
+	# one solid slab — its gold top face shone through the new glass table and
+	# turned the whole board gold. A frame keeps the middle open so the galaxy
+	# shows through the glass.
 	var rmat := StandardMaterial3D.new()
 	rmat.albedo_color = Color(0.5, 0.35, 0.12)
 	rmat.emission_enabled = true
 	rmat.emission = Color(0.85, 0.6, 0.2)
 	rmat.emission_energy_multiplier = 0.7
-	rim.material_override = rmat
-	rim.position.y = -0.24
-	add_child(rim)
+	for fr in [[Vector3(13.9, 0.12, 0.15), Vector3(0, -0.24, 3.975)],
+			[Vector3(13.9, 0.12, 0.15), Vector3(0, -0.24, -3.975)],
+			[Vector3(0.15, 0.12, 7.8), Vector3(6.875, -0.24, 0)],
+			[Vector3(0.15, 0.12, 7.8), Vector3(-6.875, -0.24, 0)]]:
+		var rim := MeshInstance3D.new()
+		var rb := BoxMesh.new()
+		rb.size = fr[0]
+		rim.mesh = rb
+		rim.material_override = rmat
+		rim.position = fr[1]
+		add_child(rim)
 
 	var mid := MeshInstance3D.new()
 	var mb := BoxMesh.new()
