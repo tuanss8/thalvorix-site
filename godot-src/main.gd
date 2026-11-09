@@ -56,6 +56,7 @@ var zoom_ui_mode := -1         # 0 landscape, 1 portrait
 var star_layers := []          # [node, follow factor] parallax layers
 var _js_cam_sent := Vector3(-1, -1, -1)
 var _js_orbit_sent := -999.0
+var _js_pitch_sent := -999.0
 var spin_nodes := []          # [node, axis, speed]
 var orbit_pivots := []        # [node, speed]
 var stars: MultiMeshInstance3D
@@ -80,8 +81,14 @@ var banner_lbl: Label
 var result_panel: Control
 var result_title: Label
 var result_sub: Label
+var result_btn: Button
 var title_panel: Control
 var mute_btn: Button
+var settings_btn: Button
+var settings_panel: Control
+var settings_title: Label
+var vol_slider: HSlider
+var vol_lbl: Label
 var rotate_hint: Label
 
 # audio
@@ -113,6 +120,36 @@ var diff_atk := 0.6
 var diff_def := 0.8
 var diff_rand := 0.5
 
+# Rank progression (same record as the 2D game: thx_rank_<wallet> in
+# localStorage, 25 stars per division). Read at startup, updated on every
+# finished match, saved via window.THX_saveRank.
+const SPD := 25
+const DIV_NAMES := ["X", "IX", "VIII", "VII", "VI", "V", "IV", "III", "II", "I"]
+var rank_t := 0
+var rank_d := 0
+var rank_s := 0
+var rank_g := 0
+var rank_w := 0
+var rank_l := 0
+var rank_streak := 0
+var rank_mp := 0
+var rank_ten_done := false
+var rank_msg := ""
+var _rank_done := false
+
+# Camera pitch (scroll up/down: view the board from above or below).
+# Default = the original camera elevation (~54 deg).
+const PITCH_MIN := deg_to_rad(15.0)
+const PITCH_MAX := deg_to_rad(80.0)
+const PITCH_STEP := deg_to_rad(6.0)
+var pitch := deg_to_rad(54.0)
+var pitch_t := deg_to_rad(54.0)
+var pitch_default := deg_to_rad(54.0)
+
+# Pause + volume (settings panel).
+var paused := false
+var vol_pct := 100
+
 # debug / headless verification: `-- --autoplay --shots`
 var _shot_shatter := false
 var autoplay := false
@@ -135,6 +172,8 @@ func _ready() -> void:
 	shots = args.has("--shots")
 	_read_wallet_deck()
 	_read_tier()
+	_read_rank()
+	_read_volume()
 	# Keep the first frame light: on the web, startGame() only resolves (and the
 	# loading overlay only hides) after _ready + the first frame have run
 	# synchronously. Build the scene over the next frames instead.
@@ -220,6 +259,118 @@ func _read_tier() -> void:
 		diff_rand = 0.0
 
 
+# Rank record (same shape as the 2D game): window.THX_RANK is the parsed
+# thx_rank_<wallet> localStorage record {rank:{t,d,s,g,w,l,ts,tenWinDone},streak,mp}.
+func _read_rank() -> void:
+	if not OS.has_feature("web"):
+		return
+	var raw = JavaScriptBridge.eval("JSON.stringify(window.THX_RANK || null)", true)
+	if typeof(raw) != TYPE_STRING:
+		return
+	var d = JSON.parse_string(raw)
+	if not (d is Dictionary):
+		return
+	var r = d.get("rank", {})
+	if r is Dictionary:
+		rank_t = clampi(int(r.get("t", 0)), 0, 7)
+		rank_d = clampi(int(r.get("d", 0)), 0, 9)
+		rank_s = clampi(int(r.get("s", 0)), 0, 999)
+		rank_g = maxi(0, int(r.get("g", 0)))
+		rank_w = maxi(0, int(r.get("w", 0)))
+		rank_l = maxi(0, int(r.get("l", 0)))
+		rank_ten_done = bool(r.get("tenWinDone", false))
+	rank_streak = maxi(0, int(d.get("streak", 0)))
+	rank_mp = maxi(0, int(d.get("mp", 0)))
+
+
+func _rank_name() -> String:
+	return "%s %s" % [TIER_NAMES[rank_t], DIV_NAMES[rank_d]]
+
+
+# Mirror the 2D game's onEnd(): win +1 star, loss -1 star, 25 stars clear a
+# division (division I promotes to the next tier's X). Saved to the same
+# localStorage record the 2D game reads, so rank carries across both games.
+func _apply_rank_result(win: bool) -> String:
+	if _rank_done:
+		return rank_msg
+	_rank_done = true
+	var top := rank_t == 7 and rank_d == 9
+	var m := ""
+	rank_mp += 1
+	if win:
+		rank_w += 1
+		rank_streak += 1
+		var promoted := false
+		if top and rank_s >= SPD:
+			rank_g += 1
+			m = " +1 Mythic Glory point."
+		else:
+			rank_s += 1
+			m = " +1 star."
+			if rank_s >= SPD and not top:
+				rank_s = 0
+				if rank_d < 9:
+					rank_d += 1
+				else:
+					rank_t += 1
+					rank_d = 0
+				promoted = true
+				m += " Promoted to %s!" % _rank_name()
+			elif top and rank_s == SPD:
+				m += " Top of the ladder: further wins earn Mythic Glory points."
+		if not promoted:
+			if rank_streak >= 10 and not rank_ten_done:
+				rank_ten_done = true
+				rank_streak = 0
+				m += " 10-win streak!"
+			elif rank_streak >= 10:
+				rank_streak = 0
+	else:
+		rank_l += 1
+		rank_streak = 0
+		if rank_t == 0:
+			m = " No stars lost in Ashen Recruit."
+		elif top and rank_g > 0:
+			rank_g -= 1
+			m = " −1 Mythic Glory point."
+		elif rank_s > 0:
+			rank_s -= 1
+			m = " −1 star."
+		elif rank_d > 0:
+			rank_d -= 1
+			rank_s = SPD - 1
+			m += " −1 star. Dropped to %s." % _rank_name()
+		else:
+			m += " No demotion below %s X." % TIER_NAMES[rank_t]
+	rank_msg = m
+	if my_wallet != "" and OS.has_feature("web"):
+		var rec := {
+			"rank": {"t": rank_t, "d": rank_d, "s": rank_s, "g": rank_g, "w": rank_w, "l": rank_l, "ts": int(Time.get_unix_time_from_system()), "tenWinDone": rank_ten_done},
+			"streak": rank_streak, "mp": rank_mp,
+		}
+		JavaScriptBridge.eval("window.THX_saveRank&&window.THX_saveRank(%s,%s)" % [JSON.stringify(my_wallet), JSON.stringify(rec)])
+	return m
+
+
+# Volume: shared with the site (localStorage 'thx_vol', 0-100).
+func _read_volume() -> void:
+	if not OS.has_feature("web"):
+		return
+	var raw = JavaScriptBridge.eval("JSON.stringify(window.THX_getVol ? window.THX_getVol() : 100)", true)
+	var v := int(str(raw).strip_edges().trim_prefix('"').trim_suffix('"'))
+	vol_pct = clampi(v, 0, 100)
+	_apply_volume()
+
+
+func _apply_volume() -> void:
+	AudioServer.set_bus_volume_db(0, -80.0 if vol_pct <= 0 else linear_to_db(vol_pct / 100.0))
+
+
+func _wait_unpaused() -> void:
+	while paused:
+		await get_tree().process_frame
+
+
 func _deck_line() -> String:
 	if my_deck.size() > 0:
 		var w := my_wallet
@@ -279,6 +430,9 @@ func _build_env() -> void:
 	cam_base = cam.transform
 	cam_dir = (cam.position - CAM_TARGET).normalized()
 	cam_dist = (cam.position - CAM_TARGET).length()
+	pitch_default = asin(clampf(cam_dir.y, -1.0, 1.0))
+	pitch = pitch_default
+	pitch_t = pitch_default
 	cam.far = 400.0
 	cam.current = true
 
@@ -929,12 +1083,22 @@ func _build_ui() -> void:
 	mute_btn.pressed.connect(_toggle_mute)
 	root.add_child(mute_btn)
 
+	settings_btn = _button("Settings", 22)
+	settings_btn.custom_minimum_size = Vector2(140, 52)
+	settings_btn.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	settings_btn.offset_left = -340
+	settings_btn.offset_right = -200
+	settings_btn.offset_top = 14
+	settings_btn.offset_bottom = 66
+	settings_btn.pressed.connect(_on_settings_pressed)
+	root.add_child(settings_btn)
+
 	# zoom buttons: right edge, vertically centred, thumb-sized
 	var zb := VBoxContainer.new()
 	zb.add_theme_constant_override("separation", 12)
 	zb.alignment = BoxContainer.ALIGNMENT_CENTER
 	zb.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for spec in [["+", 44, func(): _zoom_by(0.8)], ["−", 44, func(): _zoom_by(1.25)], ["Reset", 20, _zoom_reset]]:
+	for spec in [["+", 44, func(): _zoom_by(0.8)], ["−", 44, func(): _zoom_by(1.25)], ["▲", 44, func(): _pitch_by(PITCH_STEP)], ["▼", 44, func(): _pitch_by(-PITCH_STEP)], ["Reset", 20, _zoom_reset]]:
 		var b := _button(spec[0], spec[1])
 		b.custom_minimum_size = Vector2(94, 84)
 		b.focus_mode = Control.FOCUS_NONE
@@ -967,10 +1131,10 @@ func _build_ui() -> void:
 	result_sub = _label("", 28)
 	result_sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rv.add_child(result_sub)
-	var again := _button("Play again", 34)
-	again.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	again.pressed.connect(_on_play_pressed)
-	rv.add_child(again)
+	result_btn = _button("Play again", 34)
+	result_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	result_btn.pressed.connect(_on_play_pressed)
+	rv.add_child(result_btn)
 
 	# title panel
 	title_panel = ColorRect.new()
@@ -992,6 +1156,10 @@ func _build_ui() -> void:
 	var deck_lbl := _label(_deck_line(), 22, Color(0.6, 0.95, 0.7) if my_deck.size() > 0 else Color(0.7, 0.7, 0.8))
 	deck_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tv.add_child(deck_lbl)
+	if my_wallet != "":
+		var rank_lbl := _label("Rank: %s · %d/%d ★ · %dW %dL" % [_rank_name(), mini(rank_s, SPD), SPD, rank_w, rank_l], 22, Color(1, 0.85, 0.4))
+		rank_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tv.add_child(rank_lbl)
 	var how := _label("Tap one of your cards, then tap an enemy card to attack.\nATK beats DEF: a quarter of the gap hits Life Points (1000 LP).", 24, Color(0.9, 0.9, 0.95))
 	how.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	tv.add_child(how)
@@ -1009,6 +1177,43 @@ func _build_ui() -> void:
 	rotate_hint.offset_top = -150
 	rotate_hint.visible = false
 	root.add_child(rotate_hint)
+
+	# settings panel (volume, pause, quit) — hidden until Settings is tapped
+	settings_panel = ColorRect.new()
+	(settings_panel as ColorRect).color = Color(0, 0, 0, 0.6)
+	settings_panel.set_anchors_preset(Control.PRESET_FULL_RECT)
+	settings_panel.visible = false
+	root.add_child(settings_panel)
+	var sc := CenterContainer.new()
+	sc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	settings_panel.add_child(sc)
+	var sv := VBoxContainer.new()
+	sv.alignment = BoxContainer.ALIGNMENT_CENTER
+	sv.add_theme_constant_override("separation", 16)
+	sc.add_child(sv)
+	settings_title = _label("Settings", 48, Color(1, 0.85, 0.35))
+	settings_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sv.add_child(settings_title)
+	vol_lbl = _label("Volume: %d%%" % vol_pct, 26)
+	vol_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sv.add_child(vol_lbl)
+	vol_slider = HSlider.new()
+	vol_slider.min_value = 0
+	vol_slider.max_value = 100
+	vol_slider.step = 1
+	vol_slider.value = vol_pct
+	vol_slider.custom_minimum_size = Vector2(420, 40)
+	vol_slider.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	vol_slider.value_changed.connect(_on_vol_changed)
+	sv.add_child(vol_slider)
+	var resume := _button("Resume", 32)
+	resume.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	resume.pressed.connect(_on_resume_pressed)
+	sv.add_child(resume)
+	var quitb := _button("Quit to menu", 32)
+	quitb.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	quitb.pressed.connect(_on_quit_pressed)
+	sv.add_child(quitb)
 
 
 # The UI is laid out on a 1280-wide base, so in portrait it is drawn ~3x smaller:
@@ -1038,6 +1243,37 @@ func _toggle_mute() -> void:
 	muted = not muted
 	AudioServer.set_bus_mute(0, muted)
 	mute_btn.text = "Sound: OFF" if muted else "Sound: ON"
+
+
+func _on_settings_pressed() -> void:
+	paused = true
+	settings_title.text = "Paused" if state != "title" and state != "over" else "Settings"
+	settings_panel.visible = true
+
+
+func _on_resume_pressed() -> void:
+	paused = false
+	settings_panel.visible = false
+
+
+func _on_quit_pressed() -> void:
+	paused = false
+	settings_panel.visible = false
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.THX_quitToMenu&&window.THX_quitToMenu()")
+	else:
+		title_panel.visible = true
+		result_panel.visible = false
+		state = "title"
+
+
+func _on_vol_changed(v: float) -> void:
+	vol_pct = clampi(int(v), 0, 100)
+	_apply_volume()
+	if vol_lbl != null:
+		vol_lbl.text = "Volume: %d%%" % vol_pct
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("window.THX_setVol&&window.THX_setVol(%d)" % vol_pct)
 
 
 func _set_status(t: String) -> void:
@@ -1110,6 +1346,9 @@ func _voice_turn(n: String) -> void:
 
 # ---------------------------------------------------------------- game setup
 func _on_play_pressed() -> void:
+	paused = false
+	if settings_panel != null:
+		settings_panel.visible = false
 	title_panel.visible = false
 	result_panel.visible = false
 	_start_game()
@@ -1179,6 +1418,8 @@ func _clear_board() -> void:
 
 func _start_game() -> void:
 	game_id += 1
+	_rank_done = false
+	rank_msg = ""
 	_clear_board()
 	lp = [LP_MAX, LP_MAX]
 	for side in 2:
@@ -1304,6 +1545,7 @@ func _check_end() -> bool:
 	if p_out and b_out:
 		win = lp[0] > lp[1]
 	state = "over"
+	_apply_rank_result(win)
 	_select(null)
 	var why := ""
 	if win:
@@ -1321,7 +1563,12 @@ func _show_result(win: bool, why: String) -> void:
 	await get_tree().create_timer(0.7).timeout
 	result_title.text = "VICTORY" if win else "DEFEAT"
 	result_title.add_theme_color_override("font_color", Color(1, 0.85, 0.35) if win else Color(1, 0.4, 0.45))
-	result_sub.text = "%s\nYour LP %d  ·  Enemy LP %d" % [why, max(lp[0], 0), max(lp[1], 0)]
+	var sub := "%s\nYour LP %d  ·  Enemy LP %d" % [why, max(lp[0], 0), max(lp[1], 0)]
+	if my_wallet != "":
+		sub += "\n%s · %d/%d ★%s" % [_rank_name(), mini(rank_s, SPD), SPD, rank_msg]
+	result_sub.text = sub
+	if result_btn != null:
+		result_btn.text = "Next" if win else "Play again"
 	result_panel.visible = true
 	result_panel.modulate.a = 0.0
 	create_tween().tween_property(result_panel, "modulate:a", 1.0, 0.35)
@@ -1335,6 +1582,7 @@ func _show_result(win: bool, why: String) -> void:
 
 func _player_turn() -> void:
 	var gid := game_id
+	await _wait_unpaused()
 	state = "anim"
 	await _refill_both()
 	if gid != game_id:
@@ -1359,6 +1607,7 @@ func _player_turn() -> void:
 
 func _bot_turn() -> void:
 	var gid := game_id
+	await _wait_unpaused()
 	state = "bot"
 	await _refill_both()
 	if gid != game_id:
@@ -1369,6 +1618,7 @@ func _bot_turn() -> void:
 	_voice_turn("enemy_turn")
 	_set_status("Enemy is thinking…")
 	await get_tree().create_timer(1.1).timeout
+	await _wait_unpaused()
 	if gid != game_id or state == "over":
 		return
 	var pair := _best_pair(1)
@@ -1462,10 +1712,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var f: float = event.factor if event.factor > 0.0 else 1.0
 		if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			_zoom_by(pow(0.9, f))
+			_pitch_by(PITCH_STEP * f)
 			return
 		if event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			_zoom_by(pow(1.0 / 0.9, f))
+			_pitch_by(-PITCH_STEP * f)
 			return
 		if event.button_index != MOUSE_BUTTON_LEFT:
 			return
@@ -1506,6 +1756,8 @@ func _orbit_drag(dx: float) -> void:
 
 
 func _tap(pos: Vector2) -> void:
+	if paused:
+		return
 	if state != "player" or autoplay:
 		return
 	var c = _pick(pos)
@@ -1520,6 +1772,12 @@ func _tap(pos: Vector2) -> void:
 		_set_status("First select one of YOUR cards (bottom row)")
 
 
+func _pitch_by(d: float) -> void:
+	if state == "title":
+		return
+	pitch_t = clampf(pitch_t + d, PITCH_MIN, PITCH_MAX)
+
+
 func _zoom_by(f: float) -> void:
 	if state == "title":
 		return
@@ -1530,6 +1788,7 @@ func _zoom_reset() -> void:
 	zoom_t = 1.0
 	pan_t = Vector2.ZERO
 	orbit_t = 0.0
+	pitch_t = pitch_default
 
 
 func _pan_limit(z: float) -> Vector2:
@@ -1542,7 +1801,9 @@ func _pan_limit(z: float) -> Vector2:
 func _cam_transform(z: float, p: Vector2) -> Transform3D:
 	var target := CAM_TARGET + Vector3(p.x, 0.0, p.y)
 	var yaw := Basis(Vector3.UP, orbit)          # orbit around the (panned) look-at point
-	return Transform3D(yaw * cam_base.basis, target + yaw * (cam_dir * cam_dist * z))
+	var dir := Vector3(0.0, sin(pitch), cos(pitch))   # camera direction from the target, by elevation
+	var pos := target + yaw * (dir * cam_dist * z)
+	return Transform3D(Basis(), pos).looking_at(target, Vector3.UP)
 
 
 # point on the table plane (y = 0) under a screen position, for the current zoom/pan
@@ -1620,6 +1881,7 @@ func _pick(screen_pos: Vector2):
 # ---------------------------------------------------------------- combat
 func _attack(att: Node3D, tgt: Node3D) -> void:
 	var gid := game_id
+	await _wait_unpaused()
 	var att_side: int = att.side
 	state = "anim"
 	_select(null)
@@ -1827,6 +2089,9 @@ func _process(delta: float) -> void:
 	orbit = lerpf(orbit, orbit_t, 1.0 - exp(-9.0 * delta))
 	if absf(orbit - orbit_t) < 0.0005:
 		orbit = orbit_t
+	pitch = lerpf(pitch, pitch_t, 1.0 - exp(-9.0 * delta))
+	if absf(pitch - pitch_t) < 0.0005:
+		pitch = pitch_t
 	var tr := _cam_transform(zoom, pan)
 	var cam_off := tr.origin - cam_base.origin
 	for l in star_layers:
@@ -1848,11 +2113,13 @@ func _publish_cam() -> void:
 		return
 	var v := Vector3(snappedf(zoom_t, 0.01), snappedf(pan_t.x, 0.01), snappedf(pan_t.y, 0.01))
 	var o := snappedf(rad_to_deg(orbit), 0.1)
-	if v == _js_cam_sent and o == _js_orbit_sent:
+	var pi := snappedf(rad_to_deg(pitch), 0.1)
+	if v == _js_cam_sent and o == _js_orbit_sent and pi == _js_pitch_sent:
 		return
 	_js_cam_sent = v
 	_js_orbit_sent = o
-	JavaScriptBridge.eval("window.THX_CAM={zoom:%s,panX:%s,panZ:%s,orbit:%s,orbitT:%s,state:'%s'}" % [v.x, v.y, v.z, o, snappedf(rad_to_deg(orbit_t), 0.1), state])
+	_js_pitch_sent = pi
+	JavaScriptBridge.eval("window.THX_CAM={zoom:%s,panX:%s,panZ:%s,orbit:%s,orbitT:%s,pitch:%s,state:'%s'}" % [v.x, v.y, v.z, o, snappedf(rad_to_deg(orbit_t), 0.1), pi, state])
 
 
 func _shot(name: String) -> void:
