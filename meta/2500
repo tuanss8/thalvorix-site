@@ -1,0 +1,28 @@
+{
+  "name": "Aerithane #2500",
+  "description": "Thalvorix Hero NFT. Aerithane is a Mage of Common rarity, wielding Fire power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/hd/h0.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Aerithane"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Mage"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Fire"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 0
+    }
+  ]
+}
