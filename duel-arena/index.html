@@ -78,7 +78,7 @@ window.THX_saveRank=function(wallet,rec){
 };
 window.THX_getVol=function(){try{const v=localStorage.getItem('thx_vol');return v===null?100:Math.max(0,Math.min(100,+v))}catch(e){return 100}};
 window.THX_setVol=function(v){try{localStorage.setItem('thx_vol',String(Math.max(0,Math.min(100,Math.round(v)))))}catch(e){}};
-window.THX_quitToMenu=function(){try{sessionStorage.setItem('thx_godot_menu','1')}catch(e){}location.reload()};
+window.THX_quitToSite=function(){location.href='/'};
 
 (function(){
   const box=document.getElementById('errbox'),txt=document.getElementById('errText');
@@ -324,12 +324,9 @@ async function scanHeroes(wallet,onStep){
   try{const s=localStorage.getItem('thx_godot_addr');if(s)$('addr').value=s}catch(e){}
   // ?random or ?autoplay skips the chooser (testing / direct links)
   if(/[?&](random|autostart)\b/.test(location.search)){launch();return}
-  // Quit-to-menu flag (set by the in-game Quit button): show the chooser once.
-  let forceMenu=false;
-  try{forceMenu=sessionStorage.getItem('thx_godot_menu')==='1';if(forceMenu)sessionStorage.removeItem('thx_godot_menu')}catch(e){}
   // Auto-enter: wallet already connected on thalvorix.xyz (thx_session) ->
   // skip the chooser and load that wallet's deck straight away.
-  if(!forceMenu){
+  {
     let autoAddr=null;
     try{
       const s=JSON.parse(localStorage.getItem('thx_session')||'null');
