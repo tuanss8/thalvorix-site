@@ -117,20 +117,20 @@ body {
    the final byte count before handing the pack to the engine. */
 const _fetchOrig = window.fetch.bind(window);
 const _pckChunks = 4;
-const _pckChunkLen = [2379620, 2379620, 2379620, 652992];
-const _pckBytes = 5843888;
+const _pckChunkLen = [2379620, 2379620, 2379620, 684348];
+const _pckBytes = 5867404;
 let _pckPromise = null;
 async function _fetchChunk(i) {
   for (let attempt = 1; attempt <= 3; attempt++) {
     const r = await _fetchOrig('index.pck.b64.' + i);
     const b64 = await r.text();
-    if (b64.length !== _pckChunkLen[i - 1]) continue; // truncated, retry
+    if (b64.length !== _pckChunkLen[i - 1]) continue;
     try {
       const bin = atob(b64);
       const arr = new Uint8Array(bin.length);
       for (let j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
       return arr;
-    } catch (e) { /* bad base64, retry */ }
+    } catch (e) { }
   }
   throw new Error('index.pck.b64.' + i + ' failed to load after 3 attempts');
 }
@@ -162,7 +162,7 @@ window.fetch = function (url, opts) {
 };
 </script>
 <script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"/godot/index","experimentalVK":false,"fileSizes":{"index.pck":5843888,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"/godot/index","experimentalVK":false,"fileSizes":{"index.pck":5867404,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 const engine = new Engine(GODOT_CONFIG);
 
