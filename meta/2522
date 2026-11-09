@@ -1,0 +1,28 @@
+{
+  "name": "Jorundel #2522",
+  "description": "Thalvorix Hero NFT. Jorundel is a Mage of Uncommon rarity, wielding Sound power. Play your hero, conquer the lanes, and earn legendary loot in Thalvorix.",
+  "image": "https://thalvorix.xyz/hd/h9.webp",
+  "external_url": "https://thalvorix.xyz/",
+  "attributes": [
+    {
+      "trait_type": "Hero",
+      "value": "Jorundel"
+    },
+    {
+      "trait_type": "Role",
+      "value": "Mage"
+    },
+    {
+      "trait_type": "Rarity",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Element",
+      "value": "Sound"
+    },
+    {
+      "trait_type": "Hero ID",
+      "value": 9
+    }
+  ]
+}
