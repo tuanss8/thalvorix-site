@@ -1210,7 +1210,7 @@ func _build_ui() -> void:
 	resume.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	resume.pressed.connect(_on_resume_pressed)
 	sv.add_child(resume)
-	var quitb := _button("Quit to menu", 32)
+	var quitb := _button("Back to website", 32)
 	quitb.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	quitb.pressed.connect(_on_quit_pressed)
 	sv.add_child(quitb)
@@ -1260,7 +1260,7 @@ func _on_quit_pressed() -> void:
 	paused = false
 	settings_panel.visible = false
 	if OS.has_feature("web"):
-		JavaScriptBridge.eval("window.THX_quitToMenu&&window.THX_quitToMenu()")
+		JavaScriptBridge.eval("window.THX_quitToSite&&window.THX_quitToSite()")
 	else:
 		title_panel.visible = true
 		result_panel.visible = false
