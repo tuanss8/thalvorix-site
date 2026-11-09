@@ -999,7 +999,7 @@ func _build_audio() -> void:
 	music.stream = ms
 	music.volume_db = -9.0
 	add_child(music)
-	for n in ["hit", "deal", "flip", "shatter", "win", "lose", "select"]:
+	for n in ["hit", "deal", "flip", "shatter", "win", "lose", "select", "clash", "turn", "lp", "fanfare"]:
 		sfx[n] = load("res://audio/%s.wav" % n)
 	for i in 6:
 		var p := AudioStreamPlayer.new()
@@ -1111,6 +1111,7 @@ func _start_game() -> void:
 	state = "anim"
 	_set_status("Dealing cards…")
 	_banner("DUEL START!")
+	_sfx("fanfare")
 	if shots and game_id == 1:
 		get_tree().create_timer(1.0).timeout.connect(func(): _shot("deal"))
 	await _refill_both()
@@ -1238,6 +1239,7 @@ func _player_turn() -> void:
 		return
 	state = "player"
 	_banner("YOUR TURN", Color(0.55, 0.85, 1.0))
+	_sfx("turn")
 	_set_status("Select one of your cards")
 	if autoplay:
 		await get_tree().create_timer(0.9).timeout
@@ -1535,6 +1537,7 @@ func _attack(att: Node3D, tgt: Node3D) -> void:
 	if gid != game_id:
 		return
 	_sfx("hit")
+	_sfx("clash")
 	shake = 0.28
 	_impact_flash(tgt.position + Vector3(0, 0.4, 0), Color(1, 0.7, 0.35))
 	var tw2 := create_tween()
@@ -1551,12 +1554,14 @@ func _attack(att: Node3D, tgt: Node3D) -> void:
 	if diff > 0:
 		diff = dmg
 		lp[tgt.side] -= diff
+		_sfx("lp")
 		_float_text("-%d" % diff, tgt.position + Vector3(0, 0.8, 0), Color(1, 0.45, 0.4))
 		await get_tree().create_timer(0.12).timeout
 		_shatter(tgt)
 		_set_status("%s destroys %s! %d damage to %s LP." % [a_name, t_name, diff, "enemy" if tgt.side == 1 else "your"])
 	elif diff < 0:
 		lp[att.side] -= dmg
+		_sfx("lp")
 		_float_text("-%d" % dmg, start + Vector3(0, 0.8, 0), Color(1, 0.45, 0.4))
 		_set_status("%s blocks! DEF %d > ATK %d. %d recoil to %s LP." % [t_name, tgt.def, att.atk, dmg, "your" if att.side == 0 else "enemy"])
 	else:

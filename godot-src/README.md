@@ -6,7 +6,7 @@ Godot 4.7.2-stable, GDScript only, Compatibility renderer (WebGL2). Published bu
 - `card.gd` – 3D card (art, name, ATK/DEF, back, glow)
 - `hero_data.gd` – all 100 heroes (id = on-chain `heroIdOf`, art `hd/h<id>.webp` resized to 256 px JPG in `heroes/`) + the 20-hero default pool
 - `shell.html` – custom web shell: deck chooser (connect wallet / paste address / random), read-only NFT scan via public BSC RPC + Multicall3, on-screen error box, WebGL-context-lost notice and a 60 s start watchdog. Passes the deck to Godot as `window.THX_DECK`.
-- `audio/` – music (from `web-music.m4a`, ogg) + generated SFX wav
+- `audio/` – music (`music.ogg`, 56 s war loop, starts on Play) + generated SFX wav (22050 Hz mono). SFX: `deal` (card fly-in), `flip` (card flip), `select` (card picked), `hit` + `clash` (attack impact: low thud + metallic sword ring), `shatter` (card destroyed), `lp` (LP damage, pitch-drop thud), `turn` (player turn chime), `fanfare` (duel-start trumpet), `win`/`lose`. Mute via the "Sound: ON/OFF" button. New SFX (2026-11-09, `clash`/`turn`/`lp`/`fanfare`) are synthesized with numpy — see `~/workspace/godot/make_duel_sfx.py`.
 
 Rules: 5 slots per side, 8-card deck each, LP 4000. Pick your card, then an enemy card.
 ATK > target DEF → target destroyed, owner loses the difference. ATK < DEF → attacker's owner loses the difference.
