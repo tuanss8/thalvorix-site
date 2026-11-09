@@ -1026,7 +1026,7 @@ const statBars=(h,b)=>{const m=1+b/100;return[['HP',h.hp*m,1200],['ATK',h.atk*m,
 const skills=h=>h.sk.map(s=>`<div class="x-skill"><b style="color:${h.col}">${s[0]} · ${s[1].name}</b><p>${s[1].fx}</p></div>`).join('');
 const card3d=(n,big)=>{const h=n.hero,r=n.rar[0],ult=h.sk[2];return`<div class="x-3d g-${r}${big?' x-3d--big':''}" ${big?'data-spin style="--rx:0deg;--ry:0deg;--mx:50%;--my:50%;--fo:'+FOIL[r]+'"':`data-tilt style="--fo:${FOIL[r]};animation-delay:-${(n.id%9)*.7}s"`}><div class="x-3d__card"><div class="x-3d__face"><img class="x-3d__por" src="${PSRC[h.id]}" alt="${h.name}, ${r} ${h.role}" loading="lazy" draggable="false" /><span class="x-3d__frame"></span><span class="x-3d__foil"></span><span class="x-3d__top"><i title="${h.role}">${ICON[h.role]}</i><span>#${n.id}</span></span><span class="x-3d__plate"><b>${h.name}</b><span class="t-${r}">${r} · ${h.role}</span><em style="background:${h.col}">${h.el}</em></span></div>${big?`<div class="x-3d__back"><p class="t-${r}"><b>${r}</b> · ${n.rar[4]} frame<br>+${n.rar[3]}% HP and damage in matches</p>${statBars(h,n.rar[3])}<div class="x-skill"><b style="color:${h.col}">Ultimate · ${ult[1].name}</b><p>${ult[1].fx}</p></div></div>`:''}</div></div>`};
 function showHero(h,n){if(!n)return openModal(`<div class="x-row">${por(h,220)}<div><h3>${h.name}</h3><p class="x-muted">${h.role} · ${h.el} · Range ${h.range}</p></div></div>${statBars(h,0)}${skills(h)}<button class="x-cta" data-close>Close</button>`);
-const act=!S.wallet?'':(n.owner===S.wallet?(n.listed?`<span class="chip">Listed ${fmt(n.price)}</span><button class="btn" data-delist="${n.id}">Delist</button>`:`<button class="x-cta" data-list="${n.id}">Sell</button>`):(n.listed?`<button class="x-cta" data-buy="${n.id}">Buy for ${fmt(n.price)}</button>`:''));const offB=HOFF&&!(S.wallet&&String(n.owner||'').toLowerCase()===S.wallet.toLowerCase())?`<button class="btn" data-hoffer="${n.id}">Make offer</button>`:'';
+const act='';const offB='';
 openModal(`${card3d(n,1)}<p class="x-muted" style="text-align:center">Drag the card to spin it. The back shows stats, skill and rarity.</p><div class="x-row" style="justify-content:center"><button class="btn" data-flip>Flip card</button></div><h3>${h.name} <span class="x-muted">#${n.id}</span></h3><p class="x-muted">${h.role} · ${h.el} · Range ${h.range}</p>${skills(h)}<div class="x-row">${act}${offB}<button class="x-cta" data-close>Close</button></div>`)}
 const nftCard=(n,act)=>`<div class="x-card x-ncard"><button class="x-pbtn" data-n="${n.id}" aria-label="View #${n.id} ${n.hero.name}, ${n.rar[0]}">${card3d(n)}</button>${nftStarsHtml(n.rar[0])}<span class="t-${n.rar[0]}">${n.rar[0]}</span>${act}</div>`;
 const itemDetail=i=>`<div class="x-irow">${ico(i,1)}<div><h3>${i.name}</h3><p class="t-${i.tier}">${i.tier} ${i.type}</p><p class="x-muted">${i.el} element · #${String(i.id+1).padStart(5,'0')}</p></div></div>`;
@@ -1229,15 +1229,11 @@ const iBaseWei=i=>BigInt(Math.round(i.price*1e4))*100000000000000n;    // exact 
 const iBnb=w=>Number(w)/1e18;
 const imCur=i=>i.lp>0?i.lp:i.price;
 const imForSale=i=>(!i.co&&!i.owned)||(i.lp>0&&i.co!==iMe());
-function imAct(i){const me=iMe();
- if(i.co&&i.co===me)return i.lp>0?`<button class="btn" data-idelist="${i.id}">Delist</button>`:`<button class="btn" data-isell="${i.id}">List</button>`;
- if(!i.co&&i.owned)return `<button class="btn" data-iclaim="${i.id}">Claim to sell</button>`;
- if(!i.co||i.lp>0)return `<button class="btn" data-ibuy="${i.id}">Buy</button>`;
- return `<button class="btn" data-ioffer="${i.id}">Offer</button>`}
+function imAct(i){return ''}
 function imDetail(i){const me=iMe(),own=i.co?(i.co===me?'You':shortAddr(i.co)):(i.owned?'You (in-game reward)':'Not owned yet');
  const st=i.lp>0?`Listed for <b class="x-gold">${fmt(i.lp)}</b>`:!i.co?`First sale price <b class="x-gold">${fmt(i.price)}</b>`:`Not listed · base value ${fmt(i.price)}`;
  const offs=Object.values(IC.offers).filter(o=>o.id===i.id&&o.exp*1000>Date.now()).sort((a,b)=>b.amt-a.amt);
- return `${itemDetail(i)}<p class="x-muted">Owner: ${own}</p><p>${st}</p>${offs.length?`<p class="x-muted">Best offer: <b class="x-gold">${fmt(offs[0].amt)}</b> (${offs.length} offer${offs.length>1?'s':''})</p>`:''}<div class="x-row">${imAct(i)}${i.co&&i.co!==me?`<button class="btn" data-ioffer="${i.id}">Make offer</button>`:''}<a class="btn" href="${BSCSCAN}/token/${ITEMC}?a=${i.id}" target="_blank" rel="noopener">BscScan</a><button class="btn" data-close>Close</button></div>`}
+ return `${itemDetail(i)}<p class="x-muted">Owner: ${own}</p><p>${st}</p>${offs.length?`<p class="x-muted">Best offer: <b class="x-gold">${fmt(offs[0].amt)}</b> (${offs.length} offer${offs.length>1?'s':''})</p>`:''}<div class="x-row">${imAct(i)}<a class="btn" href="${BSCSCAN}/token/${ITEMC}?a=${i.id}" target="_blank" rel="noopener">BscScan</a><button class="btn" data-close>Close</button></div>`}
 function imDecPage(hex){const r=hex.slice(2),w=k=>r.slice(k*64,k*64+64),oa=parseInt(w(0),16)/32,ob=parseInt(w(1),16)/32,n=parseInt(w(oa),16),own=[],lp=[];
  for(let k=0;k<n;k++){own.push('0x'+w(oa+1+k).slice(24));lp.push(BigInt('0x'+w(ob+1+k)))}return{own,lp}}
 async function imLoadOwners(){const me=iMe(),Z='0x'+'0'.repeat(40);const parts=await Promise.all([...Array(10)].map((_,k)=>ethCall(ITEMC,ISEL.page+_w64(k*1000)+_w64(1000))));
@@ -1362,7 +1358,7 @@ if(e.target.id==='modal'||e.target.closest('[data-close]')){$('#modal').hidden=t
 const N=id=>findNft(id);
 if((v=g('h')))return showHero(HEROES[v]);
 if((v=g('pick'))){const id=+v;if(!S.deckOff)S.deckOff=new Set();if(S.deckOff.has(id))S.deckOff.delete(id);else{if(comboNfts().length<=1)return toast('Keep at least 1 NFT in your deck');S.deckOff.add(id)}rPlay();return}
-if((v=g('idet'))){const i=ITEMS[v];return openModal(`${itemDetail(i)}<p>Price: <b class="x-gold">${fmt(i.price)}</b></p>${feeTxt(i.price)}<div class="x-row">${i.owned?`<button class="x-cta" data-isell="${i.id}">Sell</button>`:`<button class="x-cta" data-ibuy="${i.id}">Buy</button>`}<button class="btn" data-close>Close</button></div>`)}
+if((v=g('idet'))){const i=ITEMS[v];return openModal(`${itemDetail(i)}<p>Price: <b class="x-gold">${fmt(i.price)}</b></p>${feeTxt(i.price)}<div class="x-row"><button class="btn" data-close>Close</button></div>`)}
 if((v=g('n'))){const n=N(v);if(!n)return;return showHero(n.hero,n)}
 if((v=g('buy'))){const n=N(v);if(!n)return;if(!S.wallet)return toast('Connect your wallet first');if(n.owner===S.wallet)return;return confirmDlg(`Buy #${n.id} ${n.hero.name}?`,n.price,`<button class="x-cta" data-buyok="${n.id}">Confirm purchase</button>`,0,`<p class="t-${n.rar[0]}">${n.rar[0]} · +${n.rar[3]}%</p>`)}
 else if((v=g('buyok'))){const n=N(v);$('#modal').hidden=true;if(n)doBuy(n)}
