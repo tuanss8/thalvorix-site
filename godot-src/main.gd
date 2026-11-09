@@ -233,9 +233,9 @@ func _build_env() -> void:
 	cam.current = true
 
 
-# Glass board slot: see-through tinted fill, brighter toward the edges, with a
-# thin bright rim drawn in the same pass (unshaded, alpha blend, no depth write,
-# so cards resting on top always win the depth test; no glow pass needed).
+# Board slot: (nearly) clear fill so the galaxy shows through the board, with
+# only a thin bright rim + corner accents marking the slot (unshaded, alpha
+# blend, no depth write, so cards resting on top always win the depth test).
 const SLOT_SHADER := """
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, shadows_disabled;
@@ -246,14 +246,11 @@ void fragment() {
 	float ex = (1.0 - q.x) * sx * 0.5, ez = (1.0 - q.y) * sz * 0.5;
 	float e = min(ex, ez);                     // distance to edge in world units
 	float rim = 1.0 - smoothstep(0.012, 0.03, e);
-	float inner = 1.0 - smoothstep(0.07, 0.09, e);
-	float inner_line = inner * smoothstep(0.05, 0.07, e);
-	float fade = smoothstep(0.15, 1.0, length(q) * 0.7071);   // soft radial, no diagonal seams
-	float diag = UV.x * 0.82 + UV.y * 0.57;
-	float sheen = smoothstep(0.30, 0.42, diag) * (1.0 - smoothstep(0.42, 0.60, diag));  // glass reflection streak
 	float corner = step(min(ex, ez), 0.2) * step(max(ex, ez), 0.2) * (1.0 - smoothstep(0.0, 0.03, e));
-	float a = 0.10 + 0.16 * fade + 0.07 * sheen + 0.55 * inner_line + 0.9 * rim + corner * 0.5;
-	ALBEDO = mix(tint.rgb * 0.9, vec3(1.0), rim * 0.45 + corner * 0.3 + sheen * 0.35) * (1.0 + rim * 0.6);
+	// Fill is (nearly) clear so the galaxy shows through the board; only the
+	// rim + corner accents mark the slot.
+	float a = 0.02 + 0.5 * rim + corner * 0.35;
+	ALBEDO = mix(tint.rgb * 0.9, vec3(1.0), rim * 0.45 + corner * 0.3) * (1.0 + rim * 0.6);
 	ALPHA = clamp(a, 0.0, 1.0) * 0.95;
 }
 """
@@ -380,13 +377,14 @@ func _build_space() -> void:
 	_mark("sp_nebula")
 	await get_tree().process_frame
 
-	# --- planets (lit by the sun, procedural equirectangular textures)
-	var lava := _planet(Vector3(-13.5, -12.0, -21.0), 4.6,
-		_space_tex("planet_lava"), 0.06, Color(1.0, 0.45, 0.2, 0.9))
+	# --- planets: real equirectangular maps (Solar System Scope / NASA), loaded
+	# from res://space/*.png. Filenames are kept from the old procedural set.
+	var jupiter := _planet(Vector3(-13.5, -12.0, -21.0), 4.6,
+		_space_tex("planet_lava"), 0.06, Color(0.85, 0.7, 0.5, 0.85))
 	await get_tree().process_frame
-	var ringed := _planet(Vector3(14.0, -9.0, -17.0), 2.8,
-		_space_tex("planet_ringed"), -0.1, Color(0.65, 0.5, 1.0, 0.8))
-	ringed.rotation_degrees = Vector3(22, 0, -18)
+	var saturn := _planet(Vector3(14.0, -9.0, -17.0), 2.8,
+		_space_tex("planet_ringed"), -0.1, Color(0.9, 0.8, 0.6, 0.8))
+	saturn.rotation_degrees = Vector3(22, 0, -18)
 	var ring := MeshInstance3D.new()
 	ring.mesh = _ring_mesh(3.7, 6.3, 72)
 	var rmat := StandardMaterial3D.new()
@@ -394,11 +392,11 @@ func _build_space() -> void:
 	rmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	rmat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	rmat.albedo_texture = _space_tex("ring")
-	rmat.albedo_color = Color(1.0, 0.92, 1.0, 0.9)
+	rmat.albedo_color = Color(0.95, 0.88, 0.75, 0.9)
 	ring.material_override = rmat
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var ring_pivot := Node3D.new()
-	ring_pivot.position = ringed.position
+	ring_pivot.position = saturn.position
 	ring_pivot.rotation_degrees = Vector3(22, 0, -18)
 	add_child(ring_pivot)
 	ring_pivot.add_child(ring)
@@ -411,9 +409,9 @@ func _build_space() -> void:
 		_space_tex("planet_ice"), 0.14, Color(0.5, 0.9, 1.0, 0.7))
 	await get_tree().process_frame
 
-	# moon orbiting the big planet
+	# moon orbiting the big planet (Jupiter, like a Galilean moon)
 	var pivot := Node3D.new()
-	pivot.position = lava.position
+	pivot.position = jupiter.position
 	pivot.rotation_degrees.z = 12
 	add_child(pivot)
 	var moon := _planet(Vector3(7.8, 1.5, 0), 0.95,
@@ -422,7 +420,7 @@ func _build_space() -> void:
 	orbit_pivots.append([pivot, 0.16])
 	_mark("sp_planets")
 
-	# distant sun: unshaded core + additive corona billboard
+	# distant sun: real fiery surface + additive corona billboard
 	var sun := MeshInstance3D.new()
 	var ss := SphereMesh.new()
 	ss.radius = 2.0
@@ -430,7 +428,13 @@ func _build_space() -> void:
 	ss.radial_segments = 16
 	ss.rings = 8
 	sun.mesh = ss
-	sun.material_override = _unshaded(Color(1.0, 0.86, 0.55), 1.3)
+	var sun_mat := _unshaded(Color(1.0, 0.86, 0.55), 1.3)
+	sun_mat.albedo_texture = _space_tex("planet_sun")
+	sun_mat.emission_enabled = true
+	sun_mat.emission_texture = _space_tex("planet_sun")
+	sun_mat.emission = Color(1.0, 0.8, 0.45)
+	sun_mat.emission_energy_multiplier = 1.3
+	sun.material_override = sun_mat
 	sun.position = Vector3(30.0, -24.0, -70.0)
 	add_child(sun)
 	var cor := MeshInstance3D.new()
@@ -547,9 +551,12 @@ func _planet(pos: Vector3, radius: float, tex: Texture2D, spin: float, rim := Co
 	return p
 
 
-# Backdrop textures are baked from the generators below (same seeds, same output)
-# into res://space/*.png, so startup does no per-pixel GDScript work. Re-bake with
-# `godot --headless --path godot-src -s res://tools/bake_space.gd` after changing them.
+# Backdrop textures: the nebula/radial textures are baked from the generators
+# below (same seeds, same output) into res://space/*.png. The planet, sun and
+# ring textures are REAL maps (Solar System Scope / NASA, 512x256 PNGs built by
+# ~/workspace/godot/make_planet_textures.py) — do NOT re-bake them from the
+# procedural generators. Re-bake only nebula/radial with
+# `godot --headless --path godot-src -s res://tools/bake_space.gd`.
 func _space_tex(n: String) -> Texture2D:
 	return load("res://space/%s.png" % n)
 
@@ -685,7 +692,10 @@ func _build_table() -> void:
 	tb.size = Vector3(13.6, 0.3, 7.8)
 	table.mesh = tb
 	var tmat := StandardMaterial3D.new()
-	tmat.albedo_color = Color(0.075, 0.05, 0.13)
+	# Dark glass: the galaxy (stars + nebulae below the table plane) shows
+	# through the board. The gold rim + mid line still anchor the table.
+	tmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	tmat.albedo_color = Color(0.075, 0.05, 0.13, 0.32)
 	tmat.metallic = 0.35
 	tmat.roughness = 0.45
 	table.material_override = tmat
