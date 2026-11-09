@@ -10,6 +10,12 @@ import hashlib, json, os, sys
 out = sys.argv[1] if len(sys.argv) > 1 else "godot"
 FILES = ["index.html", "index.js", "index.wasm", "index.pck", "index.audio.worklet.js",
          "index.audio.position.worklet.js", "index.png", "index.icon.png", "index.apple-touch-icon.png"]
+# duel-arena/ shares the engine (index.wasm + audio worklets) from /godot/ —
+# the GitHub web UI refuses files over 25 MB, so the 39.5 MB wasm cannot live
+# here. Only the files that actually exist in this folder go into the cache.
+if out.rstrip("/").endswith("duel-arena"):
+    FILES = [f for f in FILES if f not in ("index.wasm", "index.audio.worklet.js",
+                                          "index.audio.position.worklet.js")]
 FILES = [f for f in FILES if os.path.isfile(os.path.join(out, f))]
 h = hashlib.sha256()
 sizes = {}

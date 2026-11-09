@@ -4,8 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>$GODOT_PROJECT_NAME</title>
-<!-- start the two big downloads before index.js runs (same URLs/mode as the Godot loader, so no double fetch) -->
-<link rel="preload" href="index.wasm" as="fetch" type="application/wasm" crossorigin="anonymous">
+<!-- start the two big downloads before index.js runs (same URLs/mode as the Godot loader, so no double fetch).
+     The engine (index.wasm, 39.5 MB) is shared from /godot/: the GitHub web UI
+     refuses files over 25 MB, so it cannot be re-uploaded here — only the game
+     data (index.pck) lives in this folder. The wasm is byte-identical across
+     exports, so sharing it is safe. -->
+<link rel="preload" href="/godot/index.wasm" as="fetch" type="application/wasm" crossorigin="anonymous">
 <link rel="preload" href="index.pck" as="fetch" crossorigin="anonymous">
 <style>
 html,body,#canvas{margin:0;padding:0;border:0}
@@ -100,6 +104,13 @@ $GODOT_HEAD_INCLUDE
 <script>
 const GODOT_CONFIG = $GODOT_CONFIG;
 const GODOT_THREADS_ENABLED = $GODOT_THREADS_ENABLED;
+
+// Engine files live in /godot/ (see the preload note above): point the loader
+// there, keep the game data (index.pck) local, and alias the wasm size under
+// its absolute key so the engine's fileSizes lookups resolve.
+GODOT_CONFIG.executable = '/godot/index';
+GODOT_CONFIG.mainPack = 'index.pck';
+GODOT_CONFIG.fileSizes['/godot/index.wasm'] = GODOT_CONFIG.fileSizes['index.wasm'];
 
 /* ---------- read-only THALVORIX Hero NFT scan (same method as duel-arena.html) ---------- */
 const HERO='0x6D862c8B847323961FCD349ffFbee0133F6B929A',MC3='0xcA11bde05977b3631167028862bE2a173976CA11';
