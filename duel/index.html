@@ -112,27 +112,42 @@ body {
 		<script src="/godot/index.js"></script>
 		
 <script>
-/* Fetch patch: serve index.pck from base64 chunks (index.pck.b64.1..N). */
+/* Fetch patch: serve index.pck from base64 chunks (index.pck.b64.1..N).
+   Retries each chunk (a truncated CDN response makes atob throw); verifies
+   the final byte count before handing the pack to the engine. */
 const _fetchOrig = window.fetch.bind(window);
 const _pckChunks = 4;
+const _pckChunkLen = [2379620, 2379620, 2379620, 652992];
+const _pckBytes = 5843888;
 let _pckPromise = null;
+async function _fetchChunk(i) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const r = await _fetchOrig('index.pck.b64.' + i);
+    const b64 = await r.text();
+    if (b64.length !== _pckChunkLen[i - 1]) continue; // truncated, retry
+    try {
+      const bin = atob(b64);
+      const arr = new Uint8Array(bin.length);
+      for (let j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
+      return arr;
+    } catch (e) { /* bad base64, retry */ }
+  }
+  throw new Error('index.pck.b64.' + i + ' failed to load after 3 attempts');
+}
 function _loadPck() {
   if (_pckPromise) return _pckPromise;
   _pckPromise = (async () => {
     const parts = [];
     let total = 0;
     for (let i = 1; i <= _pckChunks; i++) {
-      const r = await _fetchOrig('index.pck.b64.' + i);
-      const b64 = await r.text();
-      const bin = atob(b64);
-      const arr = new Uint8Array(bin.length);
-      for (let j = 0; j < bin.length; j++) arr[j] = bin.charCodeAt(j);
+      const arr = await _fetchChunk(i);
       parts.push(arr);
       total += arr.length;
     }
+    if (total !== _pckBytes) throw new Error('index.pck size mismatch: got ' + total);
     const out = new Uint8Array(total);
     let off = 0;
-    for (const p of parts) { out.set(p, off); off += p.length; }
+    for (const part of parts) { out.set(part, off); off += part.length; }
     return out;
   })();
   return _pckPromise;
