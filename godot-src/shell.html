@@ -22,6 +22,9 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
 .btn:hover{background:#a050ff}
 .btn.alt{background:#2a1d40;color:#d8c8ff}
 .btn.alt:hover{background:#3a2858}
+#diffRow{display:flex;gap:6px;width:min(360px,86vw);margin:0 auto 10px}
+.btn.diff{flex:1;margin:0;padding:10px 6px;font-size:15px;background:#2a1d40;color:#d8c8ff}
+.btn.diff.sel{background:#8c3fe6;color:#fff}
 .btn:disabled{opacity:.5;cursor:default}
 #addrRow{display:flex;gap:6px;width:min(360px,86vw);margin:10px auto 0}
 #addr{flex:1;min-width:0;padding:10px;border-radius:10px;border:1px solid #4a3470;background:#140a22;color:#fff;font-size:14px}
@@ -45,6 +48,11 @@ $GODOT_HEAD_INCLUDE
   <h1>THALVORIX</h1>
   <h2>Duel Arena 3D</h2>
   <div id="choose">
+    <div id="diffRow">
+      <button class="btn diff" data-d="easy">Easy</button>
+      <button class="btn diff sel" data-d="normal">Normal</button>
+      <button class="btn diff" data-d="hard">Hard</button>
+    </div>
     <button class="btn" id="btnWallet">Connect wallet · use my Hero NFTs</button>
     <button class="btn alt" id="btnRandom">Play with random heroes</button>
     <div id="addrRow"><input id="addr" placeholder="or paste a BNB Chain address (read-only)" autocomplete="off" spellcheck="false"><button id="addrGo">Use</button></div>
@@ -147,6 +155,13 @@ async function scanHeroes(wallet,onStep){
   const statusOverlay=$('status'),msg=$('msg'),bar=$('progBar'),progTxt=$('progTxt');
   const say=(t,err)=>{msg.textContent=t;msg.className=err?'err':''};
   let started=false,running=false;
+
+  // Bot difficulty (Easy/Normal/Hard) — the game reads window.THX_DIFF.
+  window.THX_DIFF='normal';
+  document.querySelectorAll('.btn.diff').forEach(b=>b.onclick=()=>{
+    window.THX_DIFF=b.dataset.d;
+    document.querySelectorAll('.btn.diff').forEach(x=>x.classList.toggle('sel',x===b));
+  });
 
   // WebGL2 is required by the Compatibility renderer.
   let gl2=false;try{gl2=!!document.createElement('canvas').getContext('webgl2')}catch(e){}

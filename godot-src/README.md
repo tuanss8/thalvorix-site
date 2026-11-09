@@ -1,12 +1,13 @@
 # THALVORIX Duel Arena 3D — Godot prototype
 
-Godot 4.7.2-stable, GDScript only, Compatibility renderer (WebGL2). Published build: https://thalvorix.xyz/godot/
+Godot 4.7.2-stable, GDScript only, Compatibility renderer (WebGL2). Published build: https://thalvorix.xyz/duel-arena/ (moved from /godot/ 2026-11-09 per Yazz — /godot/ now redirects there; the 2D duel game still lives at /duel-arena.html).
 
 - `main.gd` – scene, UI, rules, bot, animations (everything is built in code)
 - `card.gd` – 3D card (art, name, ATK/DEF, back, glow)
 - `hero_data.gd` – all 100 heroes (id = on-chain `heroIdOf`, art `hd/h<id>.webp` resized to 256 px JPG in `heroes/`) + the 20-hero default pool
-- `shell.html` – custom web shell: deck chooser (connect wallet / paste address / random), read-only NFT scan via public BSC RPC + Multicall3, on-screen error box, WebGL-context-lost notice and a 60 s start watchdog. Passes the deck to Godot as `window.THX_DECK`.
-- `audio/` – SFX wav only (22050 Hz mono). The 56 s war-loop `music.ogg` was REMOVED 2026-11-09 per Yazz — no background music; the file is deleted from the repo (still in git history if ever wanted back). SFX: `deal` (card fly-in), `flip` (card flip), `select` (card picked), `hit` + `clash` (attack impact: low thud + metallic sword ring), `shatter` (card destroyed), `lp` (LP damage, pitch-drop thud), `turn` (player turn chime), `fanfare` (duel-start trumpet), `win`/`lose`. Voice barks (formant-synthesized, added 2026-11-09) were REMOVED the same day per Yazz — no voice sounds; the generator stays at `~/workspace/godot/make_voice_sfx.py` if ever wanted back. Mute via the "Sound: ON/OFF" button (mutes SFX now). New SFX (2026-11-09, `clash`/`turn`/`lp`/`fanfare`) are synthesized with numpy — see `~/workspace/godot/make_duel_sfx.py`.
+- `shell.html` – custom web shell: deck chooser (connect wallet / paste address / random) + bot difficulty buttons (Easy/Normal/Hard → `window.THX_DIFF`, default Normal), read-only NFT scan via public BSC RPC + Multicall3, on-screen error box, WebGL-context-lost notice and a 60 s start watchdog. Passes the deck to Godot as `window.THX_DECK`.
+- `audio/` – SFX wav (22050 Hz mono) + recorded voice callouts (mp3, the same clips as the 2D duel game in `/vo`). The 56 s war-loop `music.ogg` was REMOVED 2026-11-09 per Yazz — no background music; the file is deleted from the repo (still in git history if ever wanted back). SFX: `deal` (card fly-in), `flip` (card flip), `select` (card picked), `hit` + `clash` (attack impact: low thud + metallic sword ring), `shatter` (card destroyed), `lp` (LP damage, pitch-drop thud), `turn` (player turn chime), `fanfare` (duel-start trumpet), `win`/`lose`. Voice lines (added 2026-11-09 per Yazz — the formant-synthesized barks added that morning were REMOVED the same day; these are the REAL recorded clips from the 2D game): `duel_started`, `your_turn`/`enemy_turn` (1st turn + every 4th), `attack1-3` (random per attack), `destroy1-2` (per shatter), `summon1-3` (per refill after the first deal), `victory`/`defeat`, `warn_en` (your LP ≤ 250, once) / `win_en` (enemy LP ≤ 250, once). One voice player: a new line stops the old one, throttled to one line per 600 ms (like the 2D game's `vplay()`). Mute via the "Sound: ON/OFF" button (mutes SFX + voice). New SFX (2026-11-09, `clash`/`turn`/`lp`/`fanfare`) are synthesized with numpy — see `~/workspace/godot/make_duel_sfx.py`.
+- Bot difficulty (2026-11-09, mirrors the 2D game's `duelBotDiff`): Easy = bot ATK ×0.6 / DEF ×0.8 and 50% random moves; Normal = ×0.85 / ×0.9 and 25% random (the original behaviour); Hard = ×1.0 / ×1.0 and always the best move. The 2D game ties difficulty to the player's rank tier; this game has no rank system, so the player picks it in the chooser instead.
 
 Rules: 5 slots per side, 8-card deck each, LP 4000. Pick your card, then an enemy card.
 ATK > target DEF → target destroyed, owner loses the difference. ATK < DEF → attacker's owner loses the difference.
@@ -14,15 +15,15 @@ Equal → both destroyed. Empty slots refill from the deck at each turn. Win at 
 
 Export (single-threaded web, no COOP/COEP needed), then generate the service worker:
 
-    godot --headless --path godot-src --export-release "Web" godot/index.html
-    python3 godot-src/tools/post_export.py godot
+    godot --headless --path godot-src --export-release "Web" duel-arena/index.html
+    python3 godot-src/tools/post_export.py duel-arena
 
-`post_export.py` writes `godot/sw.js` (cache name = hash of the exported files). Always run it after an export, or repeat visitors keep the previous cached build until it runs.
+`post_export.py` writes `duel-arena/sw.js` (cache name = hash of the exported files). Always run it after an export, or repeat visitors keep the previous cached build until it runs.
 
 Loading pipeline (2026-11-09):
 - `<link rel="preload">` for index.wasm/index.pck in the shell head starts both downloads before index.js runs (same URL + cors mode as the Godot loader: one fetch each, verified).
 - The shell starts downloading `index.wasm` + `index.pck` and compiles/instantiates the engine (`engine.init`) as soon as the page opens, while the player picks a deck; Play only calls `engine.start`. Progress shows `Downloading game… N%` (both files), then `Preparing engine…` (compile), `Starting engine…`, `Building the arena…`. The overlay stays until Godot calls `window.THX_onTitle()` after the title frame (20 s fallback).
-- `sw.js` (registered 3 s after the title shows, scope `/godot/`) precaches this build from the HTTP cache and serves it cache-first on repeat visits; a new export = new cache name, old caches are deleted on activate. `?nosw` skips registration.
+- `sw.js` (registered 3 s after the title shows, scope `/duel-arena/`) precaches this build from the HTTP cache and serves it cache-first on repeat visits; a new export = new cache name, old caches are deleted on activate. `?nosw` skips registration. The old `/godot/` folder keeps only a redirect stub (`index.html` → `/duel-arena/`) and a stub `sw.js` that clears old caches and unregisters itself.
 - Startup order in `main.gd`: lights/camera → table + UI → title frame → backdrop over the following frames → one hidden card drawn under the table to pre-compile card shaders. Backdrop textures are baked PNGs in `space/` (regenerate with `godot --headless --path godot-src -s res://tools/bake_space.gd`); the generator functions stay in `main.gd`. The 4 planet rim shells share one Shader (one GPU program).
 - Timing marks: `window.THX_T` (GDScript side, performance.now ms) and `window.THX_STAGES` (shell side).
 

@@ -90,6 +90,25 @@ var sfx_pool := []
 var sfx_i := 0
 var muted := false
 
+# Recorded voice callouts (res://audio/*.mp3 — the same clips as the 2D duel
+# game in /vo, added 2026-11-09 per Yazz). One player: a new line stops the
+# old one, and lines are throttled to one per 600 ms, like the 2D game's
+# vplay(). Turn lines only on the 1st and every 4th turn, also like the 2D game.
+var voice := {}
+var voice_player: AudioStreamPlayer
+var _voice_last_ms := -10000
+var _turn_voice_n := 0
+var _warn_played := false
+var _win_played := false
+var _refill_n := 0
+# Bot difficulty (window.THX_DIFF from the deck chooser, default Normal),
+# mirroring the 2D game's duelBotDiff: Easy scales the bot's stats down and
+# plays half its moves at random, Hard plays its best move every time.
+var diff_name := "Normal"
+var diff_atk := 0.85
+var diff_def := 0.9
+var diff_rand := 0.25
+
 # debug / headless verification: `-- --autoplay --shots`
 var _shot_shatter := false
 var autoplay := false
@@ -111,6 +130,7 @@ func _ready() -> void:
 	autoplay = args.has("--autoplay")
 	shots = args.has("--shots")
 	_read_wallet_deck()
+	_read_diff()
 	# Keep the first frame light: on the web, startGame() only resolves (and the
 	# loading overlay only hides) after _ready + the first frame have run
 	# synchronously. Build the scene over the next frames instead.
@@ -167,6 +187,32 @@ func _read_wallet_deck() -> void:
 		if RARITIES.has(r):
 			h["rar"] = r
 		my_deck.append(h)
+
+
+# Bot difficulty picked in the deck chooser (window.THX_DIFF = easy/normal/
+# hard, default Normal). Read once at startup; the values mirror the 2D
+# game's duelBotDiff (Easy 0.6/0.8, Normal 0.85/0.9, Hard 1/1).
+func _read_diff() -> void:
+	if not OS.has_feature("web"):
+		return
+	var raw = JavaScriptBridge.eval("JSON.stringify(window.THX_DIFF || null)", true)
+	var d := str(raw).strip_edges().trim_prefix('"').trim_suffix('"')
+	match d:
+		"easy":
+			diff_name = "Easy"
+			diff_atk = 0.6
+			diff_def = 0.8
+			diff_rand = 0.5
+		"hard":
+			diff_name = "Hard"
+			diff_atk = 1.0
+			diff_def = 1.0
+			diff_rand = 0.0
+		_:
+			diff_name = "Normal"
+			diff_atk = 0.85
+			diff_def = 0.9
+			diff_rand = 0.25
 
 
 func _deck_line() -> String:
@@ -1017,6 +1063,12 @@ func _build_audio() -> void:
 		p.volume_db = -4.0
 		add_child(p)
 		sfx_pool.append(p)
+	# Recorded voice callouts (same clips as the 2D duel game in /vo).
+	for n in ["attack1", "attack2", "attack3", "defeat", "destroy1", "destroy2", "duel_started", "enemy_turn", "online_duel", "opp_turn", "summon1", "summon2", "summon3", "victory", "warn_en", "warn_id", "win_en", "win_id", "your_turn"]:
+		voice[n] = load("res://audio/%s.mp3" % n)
+	voice_player = AudioStreamPlayer.new()
+	voice_player.volume_db = 0.0
+	add_child(voice_player)
 
 
 func _sfx(n: String, pitch := 1.0) -> void:
@@ -1027,6 +1079,28 @@ func _sfx(n: String, pitch := 1.0) -> void:
 	p.stream = sfx[n]
 	p.pitch_scale = pitch * randf_range(0.95, 1.05)
 	p.play()
+
+
+# Play one recorded voice line. A new line stops the one still playing, and
+# lines are throttled to one per 600 ms unless forced — the 2D game's vplay().
+func _voice(n: String, force := false) -> void:
+	if muted or not voice.has(n) or voice[n] == null:
+		return
+	var now := Time.get_ticks_msec()
+	if not force and now - _voice_last_ms < 600:
+		return
+	_voice_last_ms = now
+	voice_player.stop()
+	voice_player.stream = voice[n]
+	voice_player.play()
+
+
+# Turn lines only on the 1st turn and every 4th turn after that (2D game's
+# TURNV rule), so the announcer doesn't talk over every single turn.
+func _voice_turn(n: String) -> void:
+	_turn_voice_n += 1
+	if _turn_voice_n == 1 or _turn_voice_n % 4 == 0:
+		_voice(n, true)
 
 
 # ---------------------------------------------------------------- game setup
@@ -1065,6 +1139,11 @@ func _make_card(h: Dictionary, side: int) -> Node3D:
 			a += 200; d -= 150
 		"Support":
 			a -= 100; d += 250
+	# Bot difficulty: scale the bot's stats (side 1) before the rarity
+	# rounding, so the card labels show the scaled ATK/DEF too.
+	if side == 1:
+		a = int(round(a * diff_atk))
+		d = int(round(d * diff_def))
 	var pw: float = RARITY_POW[rar]
 	a = int(round(a * pw / 50.0) * 50)
 	d = int(round(maxf(300, d) * pw / 50.0) * 50)
@@ -1118,9 +1197,14 @@ func _start_game() -> void:
 	_update_piles()
 	_update_lp(true)
 	state = "anim"
-	_set_status("Dealing cards…")
+	_set_status("Bot: %s · Dealing cards…" % diff_name)
 	_banner("DUEL START!")
 	_sfx("fanfare")
+	_turn_voice_n = 0
+	_warn_played = false
+	_win_played = false
+	_refill_n = 0
+	_voice("duel_started", true)
 	if shots and game_id == 1:
 		get_tree().create_timer(1.0).timeout.connect(func(): _shot("deal"))
 	await _refill_both()
@@ -1154,6 +1238,11 @@ func _refill_both() -> void:
 		k += 1
 	if k > 0:
 		await get_tree().create_timer((k - 1) * 0.08 + 0.45).timeout
+	# Summon line when fresh cards hit the field (2D game plays one per fill).
+	# Skipped on the very first deal so it never cuts off "Duel started!".
+	_refill_n += 1
+	if _refill_n > 1:
+		_voice(["summon1", "summon2", "summon3"].pick_random())
 
 
 func _fly_in(c: Node3D, to: Vector3, delay: float) -> void:
@@ -1217,6 +1306,7 @@ func _check_end() -> bool:
 	else:
 		why = "Your Life Points reached 0." if lp[0] <= 0 else "You have no cards left."
 	_sfx("win" if win else "lose")
+	_voice("victory" if win else "defeat", true)
 	_set_status("")
 	_show_result(win, why)
 	return true
@@ -1249,6 +1339,7 @@ func _player_turn() -> void:
 	state = "player"
 	_banner("YOUR TURN", Color(0.55, 0.85, 1.0))
 	_sfx("turn")
+	_voice_turn("your_turn")
 	_set_status("Select one of your cards")
 	if autoplay:
 		await get_tree().create_timer(0.9).timeout
@@ -1270,6 +1361,7 @@ func _bot_turn() -> void:
 	if _check_end():
 		return
 	_banner("ENEMY TURN", Color(1, 0.5, 0.55))
+	_voice_turn("enemy_turn")
 	_set_status("Enemy is thinking…")
 	await get_tree().create_timer(1.1).timeout
 	if gid != game_id or state == "over":
@@ -1291,7 +1383,7 @@ func _best_pair(side: int) -> Array:
 	var tgts := _field_cards(1 - side)
 	if atts.is_empty() or tgts.is_empty():
 		return []
-	if randf() < 0.25:
+	if randf() < diff_rand:
 		return [atts.pick_random(), tgts.pick_random()]
 	var best := []
 	var best_s := -INF
@@ -1547,6 +1639,7 @@ func _attack(att: Node3D, tgt: Node3D) -> void:
 		return
 	_sfx("hit")
 	_sfx("clash")
+	_voice(["attack1", "attack2", "attack3"].pick_random())
 	shake = 0.28
 	_impact_flash(tgt.position + Vector3(0, 0.4, 0), Color(1, 0.7, 0.35))
 	var tw2 := create_tween()
@@ -1579,6 +1672,15 @@ func _attack(att: Node3D, tgt: Node3D) -> void:
 		_shatter(att)
 		_set_status("Equal power! %s and %s destroy each other." % [a_name, t_name])
 	_update_lp()
+	# Hero lines when a side is about to lose (2D game's duelSpeak): warn
+	# when your LP is low, "about to win" when the enemy's is. Once per duel,
+	# and never on the killing blow (victory/defeat plays instead).
+	if lp[0] <= 250 and lp[0] > 0 and not _warn_played:
+		_warn_played = true
+		_voice("warn_en", true)
+	if lp[1] <= 250 and lp[1] > 0 and not _win_played:
+		_win_played = true
+		_voice("win_en", true)
 	await get_tree().create_timer(1.1).timeout
 	if gid != game_id:
 		return
@@ -1602,6 +1704,7 @@ func _shatter(c: Node3D) -> void:
 	if field[c.side][c.slot] == c:
 		field[c.side][c.slot] = null
 	_sfx("shatter")
+	_voice(["destroy1", "destroy2"].pick_random())
 	shake = maxf(shake, 0.2)
 	var origin: Vector3 = c.global_position
 	var cols := 4
