@@ -149,18 +149,22 @@ static func _back_material() -> StandardMaterial3D:
 func _flat_label(txt: String, size: int, color: Color, base_ps := 0.0045, max_w := 1.10) -> Label3D:
 	var l := Label3D.new()
 	l.text = txt
-	l.font_size = size
-	# Auto-fit: grow short text, shrink long text so it never wraps or
-	# overflows the card — names stay big and readable at a glance.
-	var sw := ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
-	l.pixel_size = minf(base_ps, max_w / maxf(1.0, sw)) if sw > 0.0 else base_ps
-	l.outline_size = 10
+	# Render glyphs at 2x font size and halve pixel_size: same world size,
+	# but much smoother letters (low-res glyph textures looked pixelated).
+	var rs := size * 2
+	l.font_size = rs
+	var sw := ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, rs).x
+	l.pixel_size = minf(base_ps * 0.5, max_w / maxf(1.0, sw)) if sw > 0.0 else base_ps * 0.5
+	l.outline_size = 20
 	l.outline_modulate = Color(0, 0, 0, 0.9)
 	l.modulate = color
 	l.rotation.x = -PI * 0.5
-	l.alpha_cut = Label3D.ALPHA_CUT_DISCARD
+	# No hard alpha cut: blend the glyph edges smoothly instead of the
+	# jagged discard threshold.
+	l.alpha_cut = Label3D.ALPHA_CUT_DISABLED
+	l.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
 	l.double_sided = false
-	l.width = 600
+	l.width = 1200
 	return l
 
 

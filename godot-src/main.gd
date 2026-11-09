@@ -1010,7 +1010,7 @@ func _banner(t: String, col := Color(1, 0.85, 0.4)) -> void:
 # ---------------------------------------------------------------- audio
 func _build_audio() -> void:
 	# Background music removed 2026-11-09 per Yazz — SFX only now.
-	for n in ["hit", "deal", "flip", "shatter", "win", "lose", "select", "clash", "turn", "lp", "fanfare", "voice_atk1", "voice_atk2", "voice_hurt", "voice_win", "voice_lose"]:
+	for n in ["hit", "deal", "flip", "shatter", "win", "lose", "select", "clash", "turn", "lp", "fanfare"]:
 		sfx[n] = load("res://audio/%s.wav" % n)
 	for i in 6:
 		var p := AudioStreamPlayer.new()
@@ -1217,7 +1217,6 @@ func _check_end() -> bool:
 	else:
 		why = "Your Life Points reached 0." if lp[0] <= 0 else "You have no cards left."
 	_sfx("win" if win else "lose")
-	_sfx("voice_win" if win else "voice_lose")
 	_set_status("")
 	_show_result(win, why)
 	return true
@@ -1548,7 +1547,6 @@ func _attack(att: Node3D, tgt: Node3D) -> void:
 		return
 	_sfx("hit")
 	_sfx("clash")
-	_sfx("voice_atk1" if randi() % 2 == 0 else "voice_atk2")
 	shake = 0.28
 	_impact_flash(tgt.position + Vector3(0, 0.4, 0), Color(1, 0.7, 0.35))
 	var tw2 := create_tween()
@@ -1604,7 +1602,6 @@ func _shatter(c: Node3D) -> void:
 	if field[c.side][c.slot] == c:
 		field[c.side][c.slot] = null
 	_sfx("shatter")
-	_sfx("voice_hurt")
 	shake = maxf(shake, 0.2)
 	var origin: Vector3 = c.global_position
 	var cols := 4
