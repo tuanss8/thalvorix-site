@@ -85,7 +85,6 @@ var mute_btn: Button
 var rotate_hint: Label
 
 # audio
-var music: AudioStreamPlayer
 var sfx := {}
 var sfx_pool := []
 var sfx_i := 0
@@ -710,11 +709,11 @@ func _build_table() -> void:
 	rmat.albedo_color = Color(0.5, 0.35, 0.12)
 	rmat.emission_enabled = true
 	rmat.emission = Color(0.85, 0.6, 0.2)
-	rmat.emission_energy_multiplier = 0.7
-	for fr in [[Vector3(13.9, 0.12, 0.15), Vector3(0, -0.24, 3.975)],
-			[Vector3(13.9, 0.12, 0.15), Vector3(0, -0.24, -3.975)],
-			[Vector3(0.15, 0.12, 7.8), Vector3(6.875, -0.24, 0)],
-			[Vector3(0.15, 0.12, 7.8), Vector3(-6.875, -0.24, 0)]]:
+	rmat.emission_energy_multiplier = 0.4
+	for fr in [[Vector3(13.76, 0.08, 0.08), Vector3(0, -0.24, 3.94)],
+			[Vector3(13.76, 0.08, 0.08), Vector3(0, -0.24, -3.94)],
+			[Vector3(0.08, 0.08, 7.8), Vector3(6.84, -0.24, 0)],
+			[Vector3(0.08, 0.08, 7.8), Vector3(-6.84, -0.24, 0)]]:
 		var rim := MeshInstance3D.new()
 		var rb := BoxMesh.new()
 		rb.size = fr[0]
@@ -1010,13 +1009,7 @@ func _banner(t: String, col := Color(1, 0.85, 0.4)) -> void:
 
 # ---------------------------------------------------------------- audio
 func _build_audio() -> void:
-	music = AudioStreamPlayer.new()
-	var ms: AudioStream = load("res://audio/music.ogg")
-	if ms is AudioStreamOggVorbis:
-		(ms as AudioStreamOggVorbis).loop = true
-	music.stream = ms
-	music.volume_db = -9.0
-	add_child(music)
+	# Background music removed 2026-11-09 per Yazz — SFX only now.
 	for n in ["hit", "deal", "flip", "shatter", "win", "lose", "select", "clash", "turn", "lp", "fanfare"]:
 		sfx[n] = load("res://audio/%s.wav" % n)
 	for i in 6:
@@ -1040,8 +1033,6 @@ func _sfx(n: String, pitch := 1.0) -> void:
 func _on_play_pressed() -> void:
 	title_panel.visible = false
 	result_panel.visible = false
-	if not music.playing:
-		music.play()
 	_start_game()
 
 

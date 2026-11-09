@@ -60,7 +60,10 @@ func _cols() -> Array:
 
 
 func _rrect(r: Rect2, rad: float, c0: Color, c1: Color) -> void:
-	if r.size.x <= 0.5:
+	# Skip hair-thin rects: a sliver a few px wide triangulates into a
+	# degenerate polygon ("Invalid polygon data, triangulation failed").
+	# A rect this narrow is invisible on the bar anyway.
+	if r.size.x <= 4.0 or r.size.y <= 0.5:
 		return
 	rad = minf(rad, minf(r.size.x, r.size.y) * 0.5)
 	var pts := PackedVector2Array()
@@ -73,9 +76,19 @@ func _rrect(r: Rect2, rad: float, c0: Color, c1: Color) -> void:
 		for i in 7:
 			var a: float = starts[k] + PI * 0.5 * i / 6.0
 			var p: Vector2 = centers[k] + Vector2(cos(a), sin(a)) * rad
+			# Arc endpoints coincide with the next arc's start — drop the
+			# duplicate vertex, it also breaks triangulation.
+			if not pts.is_empty() and p.distance_to(pts[pts.size() - 1]) < 0.001:
+				continue
 			pts.append(p)
 			var f := clampf((p.x - r.position.x) / maxf(1.0, r.size.x), 0.0, 1.0)
 			cols.append(c0.lerp(c1, f))
+	# Godot's triangulator still rejects some rounded-rect shapes (the LP
+	# bar draining through certain widths). Never hand it an invalid polygon:
+	# check first and skip the draw — a missing sliver is invisible, a red
+	# error banner is not.
+	if Geometry2D.triangulate_polygon(pts).is_empty():
+		return
 	draw_polygon(pts, cols)
 
 
