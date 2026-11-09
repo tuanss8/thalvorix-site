@@ -105,21 +105,21 @@ func setup(h: Dictionary, t: Texture2D, a: int, d: int, r: String, s: int) -> vo
 	add_child(art)
 
 	var text_y := T * 0.5 + 0.012
-	var name_lbl := _flat_label(String(h.get("name", "?")).to_upper(), 52, Color(1, 0.95, 0.85))
+	var name_lbl := _flat_label(String(h.get("name", "?")).to_upper(), 44, Color(1, 0.95, 0.85))
 	name_lbl.position = Vector3(0, text_y, -D * 0.5 + 0.08 + art_size + 0.13)
 	add_child(name_lbl)
 
 	var role_txt := "%s · %s" % [h.get("role", ""), h.get("el", "")]
 	if h.has("token"):
 		role_txt = "#%d · %s" % [int(h.token), h.get("role", "")]
-	var role_lbl := _flat_label(role_txt, 32, col.lightened(0.55))
+	var role_lbl := _flat_label(role_txt, 28, col.lightened(0.55))
 	role_lbl.position = Vector3(0, text_y, name_lbl.position.z + 0.195)
 	add_child(role_lbl)
 
-	var atk_lbl := _flat_label("ATK %d" % a, 32, Color(1.0, 0.62, 0.38), 0.0045, 0.60)
+	var atk_lbl := _flat_label("ATK %d" % a, 28, Color(1.0, 0.62, 0.38), 0.0042, 0.58)
 	atk_lbl.position = Vector3(-W * 0.26, text_y, D * 0.5 - 0.16)
 	add_child(atk_lbl)
-	var def_lbl := _flat_label("DEF %d" % d, 32, Color(0.5, 0.8, 1.0), 0.0045, 0.60)
+	var def_lbl := _flat_label("DEF %d" % d, 28, Color(0.5, 0.8, 1.0), 0.0042, 0.58)
 	def_lbl.position = Vector3(W * 0.26, text_y, D * 0.5 - 0.16)
 	add_child(def_lbl)
 
@@ -146,7 +146,7 @@ static func _back_material() -> StandardMaterial3D:
 	return _back_mat
 
 
-func _flat_label(txt: String, size: int, color: Color, base_ps := 0.0048, max_w := 1.14) -> Label3D:
+func _flat_label(txt: String, size: int, color: Color, base_ps := 0.0045, max_w := 1.10) -> Label3D:
 	var l := Label3D.new()
 	l.text = txt
 	l.font_size = size
@@ -154,7 +154,7 @@ func _flat_label(txt: String, size: int, color: Color, base_ps := 0.0048, max_w 
 	# overflows the card — names stay big and readable at a glance.
 	var sw := ThemeDB.fallback_font.get_string_size(txt, HORIZONTAL_ALIGNMENT_LEFT, -1, size).x
 	l.pixel_size = minf(base_ps, max_w / maxf(1.0, sw)) if sw > 0.0 else base_ps
-	l.outline_size = 12
+	l.outline_size = 10
 	l.outline_modulate = Color(0, 0, 0, 0.9)
 	l.modulate = color
 	l.rotation.x = -PI * 0.5
