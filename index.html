@@ -504,6 +504,7 @@ const HEROES=NAMES.map((name,i)=>{const r=Math.floor(i/20),j=i%20,role=ROLES[r],
 const fx=(tp,b)=>({name:el+' '+tp[0],fx:tp[1].replace('{e}',el.toLowerCase()).replace('{n}',Math.round(b*(.8+R()*.4)))});
 return{id:i,name,role,el,col:ECOL[e],hp:v(s[0]),atk:v(s[1]),def:v(s[2]),spd:v(s[3]),range:s[4],emb:`hsl(${hash(name)%360} 55% 32%)`,sk:[['Passive',fx(t[0][j%4],15)],['Skill',fx(t[1][Math.floor(j/4)%5],180)],['Ultimate',fx(t[2][(j+Math.floor(j/4))%4],420)]]}});
 const S={bal:null,thxBal:null,totalMinted:0,freeLeft:null,hasAgent:null,nfts:[],myNfts:[],boxes:[],streak:0,rank:{t:0,d:0,s:0,g:0,w:0,l:0,ts:0,tenWinDone:false},wallet:null,chainOk:false,pick:null,matchesPlayed:0,provider:null,signed:false,apiLogin:false,invError:false};
+try{const _tm=parseInt(localStorage.getItem('thx_totalMinted')||'0',10);if(_tm>0)S.totalMinted=_tm}catch(e){}
 /* ---------- Real Web3 on BSC mainnet: hand-rolled ABI calls, no libraries ---------- */
 const HERO='0x6D862c8B847323961FCD349ffFbee0133F6B929A',THX='0x4fCdA9835B50BDF454BA96a813d564Ad3060c540',HERO_DEPLOY_BLOCK=131023134,PUB_RPC='https://bsc-mainnet.public.blastapi.io',BSCSCAN='https://bscscan.com';
 const AI_REG='0x60B9262456dE011F7d15a54CdD8c48bAaa8B022F';
@@ -517,7 +518,7 @@ const weiToBnb=w=>{const b=typeof w==='bigint'?w:BigInt(w),W=1000000000000000000
 const fmtThx=s=>{const p=String(s).split('.');return p[0].replace(/\B(?=(\d{3})+(?!\d))/g,',')+(p[1]?'.'+p[1].replace(/0+$/,''):'')};
 const prov=()=>S.provider||(typeof window!=='undefined'?window.ethereum:null);
 const hasProvider=()=>!!prov();
-const RPCS=['https://bsc.rpc.blxrbdn.com','https://bsc-dataseed.binance.org','https://bsc-dataseed1.bnbchain.org',PUB_RPC];
+const RPCS=['https://bsc.rpc.blxrbdn.com','https://bsc-dataseed.binance.org','https://bsc-dataseed1.bnbchain.org','https://bsc-dataseed2.bnbchain.org','https://bsc-dataseed3.bnbchain.org','https://bsc-dataseed4.bnbchain.org',PUB_RPC];
 const EIP6963=[];
 if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('eip6963:announceProvider',ev=>{const d=ev&&ev.detail;if(d&&d.info&&d.provider&&!EIP6963.some(x=>x.info.uuid===d.info.uuid))EIP6963.push({info:d.info,provider:d.provider})})}
 const bagKey=w=>'thalvorix_bag_'+String(w).toLowerCase();
@@ -862,7 +863,7 @@ async function refreshInventory(){
   rInv();
 }
 async function refreshChain(){
-  try{const tm=await ethCall(HERO,SEL.totalMinted);S.totalMinted=Number(BigInt(tm))}catch(e){}
+  try{const tm=await ethCall(HERO,SEL.totalMinted);S.totalMinted=Number(BigInt(tm));try{localStorage.setItem('thx_totalMinted',String(S.totalMinted))}catch(e){}}catch(e){if(!S.totalMinted)setTimeout(()=>{refreshChain().catch(()=>{})},5000)}
   if(S.wallet){
     try{S.bal=parseFloat(weiToBnb(await ethBalance(S.wallet)))}catch(e){}
     try{const f=await ethCall(HERO,SEL.freeMinted+encAddr(S.wallet));S.freeLeft=Math.max(0,2-Number(BigInt(f)))}catch(e){}
@@ -1704,7 +1705,7 @@ attachProvListeners(prov());
 refreshChain().catch(()=>{});
     
 const LIVE={items:[],busy:false};
-async function liveScan(){if(LIVE.busy)return;LIVE.busy=true;try{const total=Number(BigInt(await ethCall(HERO,SEL.totalMinted)));if(!total){liveRender();return}const top=LIVE.items.length?Math.max(...LIVE.items.map(x=>x.id)):0;const ids=[];for(let i=total;i>=Math.max(1,total-14)&&i>top;i--)ids.push(i);if(!ids.length){if(!LIVE.items.length)liveRender();return}const [hs,rs,os]=await Promise.all([mcallIds(SEL.heroIdOf,ids).catch(()=>[]),mcallIds(SEL.rarityOf,ids).catch(()=>[]),mcallIds(SEL.ownerOf,ids).catch(()=>[])]);const by={};try{const latest=await latestBlock(),T0='0x'+'0'.repeat(64),jobs=[];for(let k=0;k<6;k++){const t=latest-k*1000,f=t-999;jobs.push(rpcCall('eth_getLogs',[{fromBlock:'0x'+f.toString(16),toBlock:'0x'+t.toString(16),address:HERO,topics:[TOPIC_TRANSFER,T0]}]).catch(()=>[]))}(await Promise.all(jobs)).forEach(a=>(a||[]).forEach(l=>{by[Number(BigInt(l.topics[3]))]='0x'+l.topics[2].slice(26)}))}catch(e){}const nw=ids.map((id,k)=>{const x={id};try{x.hero=HEROES[Number(BigInt(hs[k]))];x.rar=RAR[Number(BigInt(rs[k]))]}catch(e){}let o=by[id]||(os[k]?'0x'+String(os[k]).slice(-40):'');if(o&&o.toLowerCase()===HERO.toLowerCase())o='';x.by=o;return x});LIVE.items=nw.concat(LIVE.items).sort((a,b)=>b.id-a.id).slice(0,15);liveRender()}catch(e){}finally{LIVE.busy=false}}
+async function liveScan(){if(LIVE.busy)return;LIVE.busy=true;try{const total=Number(BigInt(await ethCall(HERO,SEL.totalMinted)));if(!total){liveRender();return}const top=LIVE.items.length?Math.max(...LIVE.items.map(x=>x.id)):0;const ids=[];for(let i=total;i>=Math.max(1,total-14)&&i>top;i--)ids.push(i);if(!ids.length){if(!LIVE.items.length)liveRender();return}const [hs,rs,os]=await Promise.all([mcallIds(SEL.heroIdOf,ids).catch(()=>[]),mcallIds(SEL.rarityOf,ids).catch(()=>[]),mcallIds(SEL.ownerOf,ids).catch(()=>[])]);const by={};try{const latest=await latestBlock(),T0='0x'+'0'.repeat(64),jobs=[];for(let k=0;k<6;k++){const t=latest-k*1000,f=t-999;jobs.push(rpcCall('eth_getLogs',[{fromBlock:'0x'+f.toString(16),toBlock:'0x'+t.toString(16),address:HERO,topics:[TOPIC_TRANSFER,T0]}]).catch(()=>[]))}(await Promise.all(jobs)).forEach(a=>(a||[]).forEach(l=>{by[Number(BigInt(l.topics[3]))]='0x'+l.topics[2].slice(26)}))}catch(e){}const nw=ids.map((id,k)=>{const x={id};try{x.hero=HEROES[Number(BigInt(hs[k]))];x.rar=RAR[Number(BigInt(rs[k]))]}catch(e){}let o=by[id]||(os[k]?'0x'+String(os[k]).slice(-40):'');if(o&&o.toLowerCase()===HERO.toLowerCase())o='';x.by=o;return x});LIVE.items=nw.concat(LIVE.items).sort((a,b)=>b.id-a.id).slice(0,15);liveRender()}catch(e){try{liveRender()}catch(_){}setTimeout(()=>{if(!document.hidden)liveScan()},10000)}finally{LIVE.busy=false}}
 function liveRender(){const tr=document.getElementById('liveTrack');if(!tr)return;const esc=v=>String(v).replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]);const html=LIVE.items.length?LIVE.items.map(x=>'<span>'+(x.hero?'<b>'+esc(x.hero.name)+'</b>'+(x.rar?' · '+esc(x.rar[0]):''):'<b>Hero #'+x.id+'</b>')+(x.by?' minted by '+esc(shortAddr(x.by)):' minted')+' &#183;</span>').join(''):'<span>No mints yet. Be the first to mint a free hero!</span>';tr.innerHTML=html;tr.style.setProperty('--live-dur',Math.max(25,LIVE.items.length*6)+'s');try{if(NM.tab==='activity')nmRenderActivity()}catch(e){}}
 setTimeout(()=>{liveScan();setInterval(()=>{if(!document.hidden)liveScan()},60000)},1500);
 </script>
