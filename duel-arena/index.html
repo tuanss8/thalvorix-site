@@ -24,8 +24,6 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
 #status h2{margin:4px 0 22px;font-size:clamp(16px,3vw,24px);font-weight:500;color:#d8c8ff}
 .btn{display:block;width:min(360px,86vw);margin:8px auto;padding:14px 18px;border:0;border-radius:14px;font-size:18px;font-weight:600;color:#fff;background:#8c3fe6;cursor:pointer}
 .btn:hover{background:#a050ff}
-.btn.alt{background:#2a1d40;color:#d8c8ff}
-.btn.alt:hover{background:#3a2858}
 .btn:disabled{opacity:.5;cursor:default}
 #addrRow{display:flex;gap:6px;width:min(360px,86vw);margin:10px auto 0}
 #addr{flex:1;min-width:0;padding:10px;border-radius:10px;border:1px solid #4a3470;background:#140a22;color:#fff;font-size:14px}
@@ -52,7 +50,6 @@ body{color:#fff;background:#07030d;overflow:hidden;touch-action:none;font-family
   <h2>Duel Arena 3D</h2>
   <div id="choose">
     <button class="btn" id="btnWallet">Connect wallet · use my Hero NFTs</button>
-    <button class="btn alt" id="btnRandom">Play with random heroes</button>
     <div id="addrRow"><input id="addr" placeholder="or paste a BNB Chain address (read-only)" autocomplete="off" spellcheck="false"><button id="addrGo">Use</button></div>
     <div class="small">Read-only: nothing is signed, no transaction is sent.</div>
   </div>
@@ -112,7 +109,7 @@ window.THX_quitToSite=function(){location.href='/'};
 </script>
 <script src="index.js"></script>
 <script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5818912,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":5818736,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
 const GODOT_THREADS_ENABLED = false;
 
 // Engine files live in /godot/ (see the preload note above): point the loader
@@ -293,23 +290,31 @@ async function scanHeroes(wallet,onStep){
   }
 
   async function useWallet(addr){
-    $('btnWallet').disabled=$('btnRandom').disabled=$('addrGo').disabled=true;
+    $('btnWallet').disabled=$('addrGo').disabled=true;
     window.THX_DECK={wallet:addr,heroes:[]};
     const tier=readRank(addr);
     const rankLine=` Rank: ${TIERS[tier]} · Bot: ${diffName(tier)}.`;
     try{
       say('Reading your THALVORIX Heroes on BNB Chain…');
       const heroes=await scanHeroes(addr,t=>say(t));
+      if(!heroes.length){
+        say('This wallet has no THALVORIX Hero NFTs. Mint a Hero NFT at thalvorix.xyz to play.',true);
+        $('choose').style.display='';
+        $('btnWallet').disabled=$('addrGo').disabled=false;
+        return;
+      }
       window.THX_DECK.heroes=heroes;
       try{localStorage.setItem('thx_godot_addr',addr)}catch(e){}
-      say((heroes.length?`Found ${heroes.length} Hero NFT(s).`:'No THALVORIX Hero NFTs in this wallet: playing with random heroes.')+rankLine);
+      say(`Found ${heroes.length} Hero NFT(s).`+rankLine);
     }catch(e){
-      say('Could not read your NFTs ('+(e&&e.message||e)+'): playing with random heroes.'+rankLine,true);
+      say('Could not read your NFTs ('+(e&&e.message||e)+'). Check your connection and try again.',true);
+      $('choose').style.display='';
+      $('btnWallet').disabled=$('addrGo').disabled=false;
+      return;
     }
     launch();
   }
 
-  $('btnRandom').onclick=()=>{window.THX_DECK=null;say('');launch()};
   $('btnWallet').onclick=async()=>{
     const p=window.ethereum||(window.BinanceChain&&window.BinanceChain.request?window.BinanceChain:null);
     if(!p){say('No wallet found in this browser. Open this page in your wallet app\'s browser, or paste your address below.',true);return}
@@ -322,8 +327,6 @@ async function scanHeroes(wallet,onStep){
   const go=()=>{const a=$('addr').value.trim();if(!/^0x[0-9a-fA-F]{40}$/.test(a)){say('That is not a valid 0x… address.',true);return}useWallet(a)};
   $('addrGo').onclick=go;$('addr').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
   try{const s=localStorage.getItem('thx_godot_addr');if(s)$('addr').value=s}catch(e){}
-  // ?random or ?autoplay skips the chooser (testing / direct links)
-  if(/[?&](random|autostart)\b/.test(location.search)){launch();return}
   // Auto-enter: wallet already connected on thalvorix.xyz (thx_session) ->
   // skip the chooser and load that wallet's deck straight away.
   {

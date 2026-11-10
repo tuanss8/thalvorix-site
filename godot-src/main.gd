@@ -83,6 +83,7 @@ var result_title: Label
 var result_sub: Label
 var result_btn: Button
 var title_panel: Control
+var play_btn: Button        # title-screen Play; disabled when my_deck is empty
 var mute_btn: Button
 var settings_btn: Button
 var settings_panel: Control
@@ -378,8 +379,8 @@ func _deck_line() -> String:
 			w = w.substr(0, 6) + "…" + w.substr(w.length() - 4)
 		return "Your deck: %d of your Hero NFTs (%s)" % [my_deck.size(), w]
 	if my_wallet != "":
-		return "No Hero NFTs found in this wallet: playing with random heroes"
-	return "Random heroes (no wallet connected)"
+		return "No Hero NFTs found in this wallet"
+	return "Connect a wallet with Hero NFTs to play"
 
 
 func _tex(id: int) -> Texture2D:
@@ -1165,6 +1166,8 @@ func _build_ui() -> void:
 	tv.add_child(how)
 	var play := _button("Play", 38)
 	play.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	play.disabled = my_deck.is_empty()
+	play_btn = play
 	play.pressed.connect(_on_play_pressed)
 	tv.add_child(play)
 
@@ -1346,6 +1349,13 @@ func _voice_turn(n: String) -> void:
 
 # ---------------------------------------------------------------- game setup
 func _on_play_pressed() -> void:
+	# No wallet deck, no game: without Hero NFTs the player cannot start.
+	# The title Play button is also disabled when my_deck is empty; this
+	# guard covers the result panel's "Play again"/"Next" button too
+	# (it connects here as well), and autoplay's timer call.
+	if my_deck.is_empty():
+		_set_status(_deck_line())
+		return
 	paused = false
 	if settings_panel != null:
 		settings_panel.visible = false
@@ -1417,27 +1427,31 @@ func _clear_board() -> void:
 
 
 func _start_game() -> void:
+	# No wallet deck, no game: the player deck is the player's own Hero
+	# NFTs only — no random-heroes fallback since 2026-11-10 per Yazz.
+	# (_on_play_pressed guards this too; this covers any other caller.)
+	if my_deck.is_empty():
+		_set_status(_deck_line())
+		return
 	game_id += 1
 	_rank_done = false
 	rank_msg = ""
 	_clear_board()
 	lp = [LP_MAX, LP_MAX]
 	for side in 2:
-		# Cards are drawn with pop_back(), so the player's own NFTs go last
-		# (drawn first); random heroes only pad a wallet with fewer than 8.
-		var mine := []
-		if side == 0 and my_deck.size() > 0:
-			mine = my_deck.duplicate()
-			mine.shuffle()
-			mine = mine.slice(0, DECK_SIZE)
-		var pool: Array = HeroData.default_pool()
-		pool.shuffle()
+		# Cards are drawn with pop_back(). Side 0 is the player's own Hero
+		# NFTs only (shuffled, max DECK_SIZE — a wallet with fewer than 8
+		# plays with just those, no padding); side 1 (bot) is always
+		# random heroes from the default pool.
 		var deck := []
-		var k := 0
-		while deck.size() + mine.size() < DECK_SIZE:
-			deck.append(pool[k % pool.size()])
-			k += 1
-		deck.append_array(mine)
+		if side == 0:
+			deck = my_deck.duplicate()
+			deck.shuffle()
+			deck = deck.slice(0, DECK_SIZE)
+		else:
+			var pool: Array = HeroData.default_pool()
+			pool.shuffle()
+			deck = pool.slice(0, DECK_SIZE)
 		for h in deck:
 			reserve[side].append(_make_card(h, side))
 	_update_piles()

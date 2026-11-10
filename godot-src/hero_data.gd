@@ -104,7 +104,7 @@ const ALL := [
 	{"id": 99, "name": "Vandrigal", "role": "Tank", "el": "Spirit"},
 ]
 
-## Default random pool (used when no wallet / no owned heroes).
+## Default random pool (bot deck + card prewarm; never the player deck).
 const POOL := [13, 15, 28, 40, 53, 56, 62, 64, 65, 70, 71, 73, 75, 76, 79, 82, 93, 96, 98, 99]
 
 
