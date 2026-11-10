@@ -1,0 +1,96 @@
+{
+ "totalMinted": 2612,
+ "updated": "2026-11-11T03:20:00+07:00",
+ "recent": [
+  {
+   "id": 2612,
+   "heroId": 54,
+   "rarity": 0,
+   "owner": "0xe6cd585a2cb109998774ca0acd6f8fed85eed424"
+  },
+  {
+   "id": 2611,
+   "heroId": 7,
+   "rarity": 0,
+   "owner": "0xa550cd5e01466c49711502c16f3338390d3141e1"
+  },
+  {
+   "id": 2610,
+   "heroId": 2,
+   "rarity": 0,
+   "owner": "0x41a6d65daa14c63a4e82fc56f601b909e89d2131"
+  },
+  {
+   "id": 2609,
+   "heroId": 40,
+   "rarity": 0,
+   "owner": "0x41a6d65daa14c63a4e82fc56f601b909e89d2131"
+  },
+  {
+   "id": 2608,
+   "heroId": 68,
+   "rarity": 0,
+   "owner": "0xf6927ab8a903057724d928f165b1c5cfe13823f1"
+  },
+  {
+   "id": 2607,
+   "heroId": 42,
+   "rarity": 0,
+   "owner": "0x28279187f0a8020f3903b3d8f0d51122cff8f774"
+  },
+  {
+   "id": 2606,
+   "heroId": 79,
+   "rarity": 0,
+   "owner": "0xf8ddaee09f6cf9ee22168130e0dd7baaf80f082a"
+  },
+  {
+   "id": 2605,
+   "heroId": 30,
+   "rarity": 1,
+   "owner": "0xdd802f560ef8b817621223995b4ba167d4427671"
+  },
+  {
+   "id": 2604,
+   "heroId": 96,
+   "rarity": 0,
+   "owner": "0x5dc839844d2bce000cd63b37cc082ff4ad56ca2b"
+  },
+  {
+   "id": 2603,
+   "heroId": 49,
+   "rarity": 0,
+   "owner": "0x5dc839844d2bce000cd63b37cc082ff4ad56ca2b"
+  },
+  {
+   "id": 2602,
+   "heroId": 34,
+   "rarity": 0,
+   "owner": "0xf957144af229133097ad1dbe5df38a96e1c562b5"
+  },
+  {
+   "id": 2601,
+   "heroId": 20,
+   "rarity": 1,
+   "owner": "0x6d4268590b6a281dd27e969953d08c7d7f66d6a8"
+  },
+  {
+   "id": 2600,
+   "heroId": 20,
+   "rarity": 0,
+   "owner": "0xb341493b8f6f15c1061e34772f32b568aae785f8"
+  },
+  {
+   "id": 2599,
+   "heroId": 73,
+   "rarity": 0,
+   "owner": "0xfab7e8921034dadd1f1b30236b4cfeb541e7d413"
+  },
+  {
+   "id": 2598,
+   "heroId": 28,
+   "rarity": 2,
+   "owner": "0x2dbe89e27101ce680fb8f3970025529e9aad738f"
+  }
+ ]
+}
