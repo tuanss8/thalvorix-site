@@ -258,13 +258,12 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
       <nav class="x-tabs" id="tabs" aria-label="App sections">
         <a class="x-brand" href="https://x.com/THALVORIX" target="_blank" rel="noopener" style="text-decoration:none" aria-label="THALVORIX on X">THALVORIX</a>
         <button data-t="home" aria-selected="true">Home</button>
+        <button data-t="token">THALVORIX Token</button>
         <button data-t="mint">Free Mint</button>
         <button data-t="heroes">Heroes</button>
         <button data-t="play">Play Game</button>
         <button data-t="inv">bag</button>
         <button data-t="burn">Burn Box</button>
-        <button data-t="stake">Stake</button>
-        <button data-t="token">THALVORIX Token</button>
         <button data-t="settings">Settings</button>
         
       </nav>
@@ -436,15 +435,6 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
         <section class="section x-panel" id="p-burn" hidden>
           <div class="head"><p class="head__eyebrow">Event</p><h2>Burn Box</h2></div>
           <div class="x-burn" id="burnBox"></div>
-        </section>
-        <section class="section x-panel" id="p-stake" hidden>
-          <div class="head"><p class="head__eyebrow">Earn THX</p><h2>Stake Items</h2></div>
-          <p class="x-muted" id="stakeNote">Stake your items to earn THX every day. Higher rarity earns more. THX is recorded to your wallet and can be claimed when the THX token launches. Staked items cannot be sold, listed or claimed until you unstake them.</p>
-          <div class="x-row" id="stakeBar"></div>
-          <h3>Staked</h3>
-          <div class="x-grid" id="stakeOn"></div>
-          <h3>Your items</h3>
-          <div class="x-grid" id="stakeOff"></div>
         </section>
         <section class="section x-panel" id="p-inv" hidden>
           <div class="head"><p class="head__eyebrow" id="invEyebrow">my bag</p><h2>Your heroes and loot</h2></div>
@@ -695,14 +685,14 @@ async function burnBoxes(k){if(BURN_BUSY||!S.wallet)return;const n=(S.boxes||[])
 const PRESALE='0xcc40eaf664ee84fc696c32e615ce71b838777641';
 const PSEL={buy:'0xc243c72b',totalSold:'0x9106d7ba',nftDiscountBought:'0xd788bcbe',discountCapOf:'0x194b5448'};
 const PS_END=1795554420,PS_RATE=13600000n,PS_NFT_RATE=68000000n,PS_MIN=1500000000000000n,PS_MAX=5000000000000000000n;
-let PS_BUSY=false,PS_HEROES=null,PS_BOUGHT=null,PS_IDS=null,PS_CAP=null;
+let PS_BUSY=false,PS_HEROES=null,PS_BOUGHT=null,PS_IDS=null,PS_CAP=null,PS_PENDING_BUY=false;
 async function psOwnedIds(force){if(!force&&PS_IDS!==null)return PS_IDS;if(!S.wallet)return PS_IDS=[];const cached=(S.myNfts||[]);if(!force&&cached.length){PS_IDS=cached.map(n=>n.id).sort((a,b)=>a-b);return PS_IDS}try{const w=S.wallet.toLowerCase();let tm=S.totalMinted;try{tm=Number(BigInt(await ethCall(HERO,SEL.totalMinted)))}catch(e){}if(!tm){PS_IDS=[];return PS_IDS}const ids=[];for(let i=1;i<=tm;i++)ids.push(i);const owned=[];for(let s=0;s<ids.length;s+=300){const ch=ids.slice(s,s+300),res=await mcallIds(SEL.ownerOf,ch);res.forEach((r,k)=>{if(r&&decAddr(r).toLowerCase()===w)owned.push(ch[k])})}PS_IDS=owned.sort((a,b)=>a-b)}catch(e){PS_IDS=[]}return PS_IDS}
 async function psLoadCap(){if(!S.wallet||!PS_HEROES)return;const ids=await psOwnedIds(false);if(!ids.length){PS_CAP=null;return}try{PS_CAP=BigInt(await ethCall(PRESALE,PSEL.discountCapOf+encAddr(S.wallet)+encUint(64)+encUint(ids.length)+ids.map(i=>encUint(i)).join('')))/1000000000000000000n}catch(e){PS_CAP=null}}
 function psCountTxt(){const s=Math.max(0,PS_END-Math.floor(Date.now()/1000)),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);return s<=0?'ended':(d?d+'d ':'')+h+'h '+m+'m left'}
 async function presaleRefresh(){const c=$('#psCount');if(c)c.textContent=psCountTxt();const st=$('#psStats');if(st){try{const _pr=await Promise.all([ethCall(PRESALE,PSEL.totalSold),ethCall(THX,SEL.balanceOf+encAddr(PRESALE))]);const sold=BigInt(_pr[0]);const left=BigInt(_pr[1]);st.innerHTML='Sold: <b style="color:#fff">'+fmtInt(sold/1000000000000000000n)+' THX</b> &middot; Remaining: <b style="color:#fff">'+fmtInt(left/1000000000000000000n)+' THX</b>';}catch(e){/* keep the embedded Sold/Remaining values shown on page load */}}if(S.wallet){try{PS_HEROES=Number(BigInt(await ethCall(HERO,SEL.balanceOf+encAddr(S.wallet))));PS_BOUGHT=BigInt(await ethCall(PRESALE,PSEL.nftDiscountBought+encAddr(S.wallet)))/1000000000000000000n;if(PS_HEROES>0)await psLoadCap();else{PS_IDS=[];PS_CAP=null}}catch(e){PS_HEROES=null;PS_BOUGHT=null;PS_CAP=null}}else{PS_HEROES=null;PS_BOUGHT=null;PS_IDS=null;PS_CAP=null}psHolder();psEst()}
 function psHolder(){const el=$('#psHolder');if(!el)return;if(!S.wallet||PS_HEROES==null){el.hidden=true;return}el.hidden=false;if(!PS_HEROES){el.textContent='You hold no Hero NFT — you buy at the normal rate (1 BNB = 13,600,000 THX).';return}if(PS_CAP==null){el.textContent='You hold '+PS_HEROES+' Hero NFT'+(PS_HEROES>1?'s':'')+' — 80% off! Loading your discount quota\u2026';return}const left=PS_CAP-(PS_BOUGHT||0n);el.innerHTML='You hold <b style="color:#fff">'+PS_HEROES+' Hero NFT'+(PS_HEROES>1?'s':'')+'</b> — 80% off! Discount quota left: <b style="color:#fff">'+fmtInt(left)+' THX</b> (max '+fmtInt(PS_CAP)+' THX, by NFT tier).'}
 function psEst(){const inp=$('#psAmt'),est=$('#psEst');if(!inp||!est)return;const wei=bnbToWei(inp.value||'0');if(wei==null||wei<=0n){est.textContent='Enter a BNB amount (min 0.0015, max 5).';return}if(S.wallet&&PS_HEROES>0&&PS_CAP!=null){const left=PS_CAP-(PS_BOUGHT||0n),want=wei*PS_NFT_RATE/1000000000000000000n;if(want>left){est.textContent='You get '+fmtInt(left)+' THX max (discount quota limit for your NFTs). Lower the amount.';}else{est.textContent='You get \u2248 '+fmtInt(want)+' THX (Hero holder 80% off).';}}else if(S.wallet&&PS_HEROES>0){est.textContent='You get \u2248 '+fmtInt(wei*PS_NFT_RATE/1000000000000000000n)+' THX (Hero holder 80% off).';}else{est.textContent='You get \u2248 '+fmtInt(wei*PS_RATE/1000000000000000000n)+' THX.';}}
-async function presaleBuy(){if(PS_BUSY)return;if(!S.wallet){toast('Connect your wallet first');openWalletPicker();return}await presaleRefresh();const inp=$('#psAmt'),msg=$('#psMsg');const wei=bnbToWei((inp.value||'').trim());if(wei==null){toast('Enter a valid BNB amount');return}if(wei<PS_MIN){toast('Minimum buy is 0.0015 BNB');return}if(wei>PS_MAX){toast('Maximum buy is 5 BNB per transaction');return}let ids=[];if(PS_HEROES>0){ids=await psOwnedIds(false);if(PS_CAP==null&&ids.length){await psOwnedIds(true);await psLoadCap();ids=await psOwnedIds(false)}if(!ids.length){toast('Could not load your Hero NFTs — open your Bag first, then try again.');return}if(PS_CAP!=null){const left=PS_CAP-(PS_BOUGHT||0n),want=wei*PS_NFT_RATE/1000000000000000000n;if(want>left){toast('Exceeds your discount quota ('+fmtInt(left)+' THX left). Lower the amount.');return}}}PS_BUSY=true;if(msg)msg.textContent='Waiting for wallet confirmation\u2026';try{const data=PSEL.buy+encUint(32)+encUint(ids.length)+ids.map(i=>encUint(i)).join('');const hash=await sendTx({to:PRESALE,data,value:'0x'+wei.toString(16)});if(msg)msg.innerHTML='Transaction sent: <a href="https://bscscan.com/tx/'+hash+'" target="_blank" rel="noopener">view on BscScan</a>';const r=await waitReceipt(hash,120000);if(r&&r.status==='0x1'){toast('Presale buy confirmed! THX is in your wallet.');if(msg)msg.textContent='Confirmed! THX has been sent to your wallet.';try{S.thxBal=weiToBnb(await ethCall(THX,SEL.balanceOf+encAddr(S.wallet)))}catch(e){}presaleRefresh();}else if(r){toast('Transaction failed.');if(msg)msg.textContent='Transaction failed.';}else if(msg){msg.textContent='Transaction sent — check BscScan for confirmation.';}}catch(e){toast('Buy cancelled or failed.');if(msg)msg.textContent='';}finally{PS_BUSY=false}}
+async function presaleBuy(){if(PS_BUSY)return;if(!S.wallet){PS_PENDING_BUY=true;toast('Connect your wallet first');openWalletPicker();return}if(S.apiLogin){toast('Buying needs a connected wallet. Connect with MetaMask, OKX or Trust Wallet (not the manual address option).');return}if(!prov()){toast('No wallet detected in this browser. Install MetaMask or OKX Wallet, then try again.');return}await presaleRefresh();const inp=$('#psAmt'),msg=$('#psMsg');const wei=bnbToWei((inp.value||'').trim());if(wei==null){toast('Enter a valid BNB amount');return}if(wei<PS_MIN){toast('Minimum buy is 0.0015 BNB');return}if(wei>PS_MAX){toast('Maximum buy is 5 BNB per transaction');return}let ids=[];if(PS_HEROES>0){ids=await psOwnedIds(false);if(PS_CAP==null&&ids.length){await psOwnedIds(true);await psLoadCap();ids=await psOwnedIds(false)}if(!ids.length){if(!confirm('Could not load your Hero NFTs, so the 80% discount cannot be applied. Buy at the normal price anyway?'))return;toast('Buying at the normal price (1 BNB = 13,600,000 THX). Open your Bag first to load your NFTs for the 80% discount.')}if(PS_CAP!=null){const left=PS_CAP-(PS_BOUGHT||0n),want=wei*PS_NFT_RATE/1000000000000000000n;if(want>left){toast('Exceeds your discount quota ('+fmtInt(left)+' THX left). Lower the amount.');return}}}PS_BUSY=true;if(msg)msg.textContent='Waiting for wallet confirmation\u2026';try{const data=PSEL.buy+encUint(32)+encUint(ids.length)+ids.map(i=>encUint(i)).join('');const hash=await sendTx({to:PRESALE,data,value:'0x'+wei.toString(16)});if(msg)msg.innerHTML='Transaction sent: <a href="https://bscscan.com/tx/'+hash+'" target="_blank" rel="noopener">view on BscScan</a>';const r=await waitReceipt(hash,120000);if(r&&r.status==='0x1'){toast('Presale buy confirmed! THX is in your wallet.');if(msg)msg.textContent='Confirmed! THX has been sent to your wallet.';try{S.thxBal=weiToBnb(await ethCall(THX,SEL.balanceOf+encAddr(S.wallet)))}catch(e){}presaleRefresh();}else if(r){toast('Transaction failed.');if(msg)msg.textContent='Transaction failed.';}else if(msg){msg.textContent='Transaction sent — check BscScan for confirmation.';}}catch(e){toast('Buy cancelled or failed.');if(msg)msg.textContent='';}finally{PS_BUSY=false}}
 try{$('#psBuy').onclick=presaleBuy;$('#psAmt').oninput=()=>psEst();}catch(e){}
 setInterval(()=>{const c=$('#psCount');if(c&&!$('#p-token').hidden)c.textContent=psCountTxt()},30000);
 /* Stake Items: stake owned items to earn THX (rates kept server-side in stake-item). */
@@ -816,7 +806,7 @@ function attachProvListeners(p){
   p.on('chainChanged',async cid=>{S.chainOk=(cid==='0x38');if(S.wallet)await refreshChain().catch(()=>{});});
   }catch(e){}
 }
-async function connectWith(provider){
+async function connectWith(provider,noSign){
   const m=$('#walletMsg');
   try{
     const accs=await provider.request({method:'eth_requestAccounts'});
@@ -826,11 +816,8 @@ async function connectWith(provider){
     attachProvListeners(provider);
     const ok=await ensureBsc();
     if(!ok){m.innerHTML='Please switch your wallet to <b>BSC Mainnet</b>, then press Connect Wallet again.';S.wallet=null;S.provider=null;return false}
-    const msg=`Sign in to Thalvorix\n\nSign this message to prove you own this wallet.\n\nWallet: ${addr}\nTime: ${new Date().toISOString()}`;
-    let sig=null;
-    try{sig=await provider.request({method:'personal_sign',params:[hexMsg(msg),addr]})}catch(e){sig=null}
-    if(!sig){m.textContent='Signature required to connect. Please sign the login message to continue.';S.wallet=null;S.provider=null;S.signed=false;return false}
-    S.signed=true;itemsLoad(addr);boxesLoad(addr);checkBoxGrants();{const pi=EIP6963.find(x=>x.provider===provider);sessSave({addr,mode:'wallet',rdns:pi?pi.info.rdns:'injected',ps:false})}
+    if(noSign){S.signed=false}else{const msg=`Sign in to Thalvorix\n\nSign this message to prove you own this wallet.\n\nWallet: ${addr}\nTime: ${new Date().toISOString()}`;let sig=null;try{sig=await provider.request({method:'personal_sign',params:[hexMsg(msg),addr]})}catch(e){sig=null}if(!sig){m.textContent='Signature required to connect. Please sign the login message to continue.';S.wallet=null;S.provider=null;S.signed=false;return false}S.signed=true}
+    itemsLoad(addr);boxesLoad(addr);checkBoxGrants();{const pi=EIP6963.find(x=>x.provider===provider);sessSave({addr,mode:'wallet',rdns:pi?pi.info.rdns:'injected',ps:false})}
     const b=$('#connectBtn');if(b)b.textContent='Connected '+shortAddr(addr);
     return true;
   }catch(e){m.textContent='Wallet connection was cancelled.';S.wallet=null;S.provider=null;return false}
@@ -883,7 +870,7 @@ async function openWalletPicker(){
   const d=$('#dlg');if(d)d.innerHTML=h;
 }
 async function pickWallet(k){const W=WALLETS.find(x=>x.k===k);if(!W)return;const p=walletProv(W);
-  if(p){$('#modal').hidden=true;const ok=await connectWith(p);if(ok){puzzleNew();await refreshChain().catch(()=>{})}return}
+  if(p){$('#modal').hidden=true;const ok=await connectWith(p,PS_PENDING_BUY);if(ok){puzzleNew();await refreshChain().catch(()=>{});if(PS_PENDING_BUY){PS_PENDING_BUY=false;presaleBuy()}}return}
   if(isMobileUA()){if(W.m){location.href=W.m;return}try{await navigator.clipboard.writeText(SITE_URL)}catch(e){}toast(`Link copied. Open ${W.n}, go to its DApp browser and paste thalvorix.xyz`);setTimeout(()=>{location.href=W.d},1200);return}
   window.open(W.d,'_blank','noopener');toast(`${W.n} not found in this browser. Install it, then refresh this page.`)}
 async function sendTx(tx){
@@ -1122,7 +1109,7 @@ const fmt=n=>n.toFixed(n>0&&n<.01?Math.min(6,2-Math.floor(Math.log10(n))):3).rep
 confirmDlg=(t,p,ok,label,extra='')=>openModal(`<h3>${t}</h3>${extra}<p>Price: <b class="x-gold">${fmt(p)}</b></p><div class="x-row">${ok}<button class="btn" data-close>Cancel</button></div>`),mine=()=>S.myNfts;const findNft=id=>S.myNfts.find(n=>n.id==id)||S.nfts.find(n=>n.id==id);
 let tt;function toast(m){const t=$('#toast');t.textContent=m;t.style.opacity=1;clearTimeout(tt);tt=setTimeout(()=>t.style.opacity=0,3500)}
 let tab='home';
-function go(t){tab=t;try{sessionStorage.setItem('thx_tab',t)}catch(e){}$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}}if(t==='burn'){try{burnRender()}catch(e){}}if(t==='token'){try{presaleRefresh()}catch(e){}}if(t==='stake'){try{stakeFetch()}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
+function go(t){tab=t;try{sessionStorage.setItem('thx_tab',t)}catch(e){}$$('#tabs button[data-t]').forEach(b=>b.setAttribute('aria-selected',b.dataset.t===t));$$('.x-panel').forEach(p=>p.hidden=p.id!=='p-'+t);window.scrollTo(0,0);try{nftMusicSync()}catch(e){}if(t==='play'){try{const dm=document.getElementById('duelMusicBtn');if(dm)dm.textContent=M.on?'Music: ON':'Music: OFF'}catch(e){}}if(t==='burn'){try{burnRender()}catch(e){}}if(t==='token'){try{presaleRefresh()}catch(e){}}if((t==='inv'||t==='nft')&&S.wallet){refreshInventory().catch(()=>{})}render()}
 $('#tabs').onclick=e=>{const b=e.target.closest('button[data-t]');if(!b)return;go(b.dataset.t)};
 // ---------- Settings: language switcher (EN / ID / ZH / JA / HI) ----------
 const I18N={
@@ -1492,7 +1479,7 @@ if((v=g('mboxopen')))return openMysteryBox(+v);
 if(S.mboxPending&&(e.target.id==='modal'))return;
 if((v=g('go'))){e.preventDefault();go(v);return}
 if(e.target.closest('[data-flip]')){const el=$('#dlg [data-spin]');if(el){const ry=(parseFloat(el.dataset.ry)||0)+180;el.dataset.ry=ry;el.style.setProperty('--ry',ry+'deg')}return}
-if(e.target.id==='modal'||e.target.closest('[data-close]')){$('#modal').hidden=true;return}
+if(e.target.id==='modal'||e.target.closest('[data-close]')){$('#modal').hidden=true;PS_PENDING_BUY=false;return}
 const N=id=>findNft(id);
 if((v=g('h')))return showHero(HEROES[v]);
 if((v=g('pick'))){const id=+v;if(!S.deckOff)S.deckOff=new Set();if(S.deckOff.has(id))S.deckOff.delete(id);else{if(comboNfts().length<=1)return toast('Keep at least 1 NFT in your deck');S.deckOff.add(id)}rPlay();return}
@@ -1508,11 +1495,11 @@ else if((v=g('ibuyok'))){const i=ITEMS[v];$('#modal').hidden=true;if(i.owned)ret
 else if((v=g('isell'))){const i=ITEMS[v];if(!i.owned)return;return confirmDlg(`Sell ${i.name}?`,i.price,`<button class="x-cta" data-isellok="${i.id}">Confirm sale</button>`,0,itemDetail(i))}
 else if((v=g('isellok'))){const i=ITEMS[v];$('#modal').hidden=true;if(!i.owned)return;i.owned=false;try{logAct('Sell','Item',`${i.name} (${i.tier})`,i.price,'Item Market',whoMe())}catch(e){}toast(`Sold ${i.name}`);saveItemsIfWallet()}
 else if((v=g('wpick'))){await pickWallet(v)}
-else if((v=g('wallet'))){$('#modal').hidden=true;const w=v==='injected'?window.ethereum:(EIP6963[+v]?EIP6963[+v].provider:null);if(w){const ok=await connectWith(w);if(ok){puzzleNew();await refreshChain().catch(()=>{});}}}
+else if((v=g('wallet'))){$('#modal').hidden=true;const w=v==='injected'?window.ethereum:(EIP6963[+v]?EIP6963[+v].provider:null);if(w){const ok=await connectWith(w,PS_PENDING_BUY);if(ok){puzzleNew();await refreshChain().catch(()=>{});if(PS_PENDING_BUY){PS_PENDING_BUY=false;presaleBuy()}}}}
 else if(g('disconnectok')){$('#modal').hidden=true;doDisconnect()}
 else if(g('leftback')){const ls=$('#leftScreen');if(ls){ls.hidden=true;ls.style.display='none';}go('home');return}
-else if(g('apilogin')){const inp=$('#apiAddr');const ok=await apiLogin(inp?inp.value:'');if(ok){$('#modal').hidden=true;puzzleNew();await refreshChain().catch(()=>{})}}
-else if(g('apiwallet')){const p=window.ethereum;if(!p){toast('No wallet detected in this browser. Enter the address manually.')}else{try{const accs=await p.request({method:'eth_requestAccounts'});if(accs&&accs.length){const ok=await apiLogin(accs[0]);if(ok){$('#modal').hidden=true;puzzleNew();await refreshChain().catch(()=>{})}}}catch(e){toast('Could not read the wallet address.')}}}
+else if(g('apilogin')){const inp=$('#apiAddr');const ok=await apiLogin(inp?inp.value:'');if(ok){$('#modal').hidden=true;if(PS_PENDING_BUY){PS_PENDING_BUY=false;toast('Buying needs a connected wallet. Connect with MetaMask, OKX or Trust Wallet to buy.')}puzzleNew();await refreshChain().catch(()=>{})}}
+else if(g('apiwallet')){const p=window.ethereum;if(!p){toast('No wallet detected in this browser. Enter the address manually.')}else{try{const accs=await p.request({method:'eth_requestAccounts'});if(accs&&accs.length){const ok=await apiLogin(accs[0]);if(ok){$('#modal').hidden=true;if(PS_PENDING_BUY){PS_PENDING_BUY=false;toast('Buying needs a connected wallet. Connect with MetaMask, OKX or Trust Wallet to buy.')}puzzleNew();await refreshChain().catch(()=>{})}}}catch(e){toast('Could not read the wallet address.')}}}
 else return;render()});
 
 // ---------- RPG: turn-based duel, NFT stars + power, rank-based bot difficulty ----------
