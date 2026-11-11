@@ -9,8 +9,8 @@ pragma solidity ^0.8.20;
  * - Holder Hero NFT: diskon 80% -> 1 BNB = 5.000.000 THX.
  * - Cap diskon (total THX harga diskon per wallet, dijumlah dari NFT yang
  *   dipegang DAN disertakan di transaksi buy):
- *   Common 7.500, Uncommon 7.500, Rare 10.000, Epic 50.000, Legendary 100.000 THX.
- *   (Common/Uncommon 7.500 = persis 1x pembelian minimal holder: 0,0015 BNB.)
+ *   Common 7.500, Uncommon 8.000, Rare 10.000, Epic 50.000, Legendary 100.000 THX.
+ *   (Common 7.500 = persis 1x pembelian minimal holder: 0,0015 BNB.)
  * - Pembeli menyertakan tokenId NFT-nya di buy(tokenIds). TokenId harus urut
  *   naik (unik) dan harus milik pembeli (dicek via ownerOf). Array kosong =
  *   beli harga NORMAL (tanpa diskon, tanpa cap) — jadi holder yang sudah
@@ -104,11 +104,11 @@ contract ThalvorixPresaleTiered {
     }
 
     /// @notice Cap diskon per 1 NFT menurut tier-nya (dalam THX, 18 desimal).
-    /// 0 Common 7.500, 1 Uncommon 7.500, 2 Rare 10.000, 3 Epic 50.000, 4 Legendary 100.000.
-    /// Common/Uncommon 7.500 = persis 1x pembelian minimal holder (0,0015 BNB).
+    /// 0 Common 7.500, 1 Uncommon 8.000, 2 Rare 10.000, 3 Epic 50.000, 4 Legendary 100.000.
+    /// Common 7.500 = persis 1x pembelian minimal holder (0,0015 BNB).
     function tierCap(uint8 rarity) public pure returns (uint256) {
         if (rarity == 0) return 7500 * 1e18;
-        if (rarity == 1) return 7500 * 1e18;
+        if (rarity == 1) return 8000 * 1e18;
         if (rarity == 2) return 10000 * 1e18;
         if (rarity == 3) return 50000 * 1e18;
         return 100000 * 1e18; // 4 Legendary
