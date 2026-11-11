@@ -4,13 +4,13 @@ pragma solidity ^0.8.20;
 /**
  * @title ThalvorixPresaleTiered
  * @notice Presale untuk token THX (Thalvorix) di BNB Chain, dengan cap diskon
- * per tier NFT (bukan flat per NFT).
- * - Harga normal: 1 BNB = 1.000.000 THX
- * - Holder Hero NFT: diskon 80% -> 1 BNB = 5.000.000 THX.
+ * per tier NFT (bukan flat per NFT). Supply presale 500.000.000 THX.
+ * - Harga normal: 1 USDT = 20.000 THX (1 THX = $0,00005; 1 BNB = 13.600.000 THX saat BNB $680)
+ * - Holder Hero NFT: diskon 80% -> 1 USDT = 100.000 THX (1 BNB = 68.000.000 THX).
  * - Cap diskon (total THX harga diskon per wallet, dijumlah dari NFT yang
  *   dipegang DAN disertakan di transaksi buy):
- *   Common 7.500, Uncommon 8.000, Rare 10.000, Epic 50.000, Legendary 100.000 THX.
- *   (Common 7.500 = persis 1x pembelian minimal holder: 0,0015 BNB.)
+ *   Common 150.000, Uncommon 160.000, Rare 200.000, Epic 1.000.000, Legendary 2.000.000 THX.
+ *   (Pembelian minimal holder 0,0015 BNB = 102.000 THX; semua tier bisa beli >= 1x.)
  * - Pembeli menyertakan tokenId NFT-nya di buy(tokenIds). TokenId harus urut
  *   naik (unik) dan harus milik pembeli (dicek via ownerOf). Array kosong =
  *   beli harga NORMAL (tanpa diskon, tanpa cap) — jadi holder yang sudah
@@ -49,8 +49,10 @@ contract ThalvorixPresaleTiered {
     address public owner;
 
     // ---- Harga (THX per 1 BNB, THX memakai 18 desimal) ----
-    uint256 public constant RATE = 1_000_000 * 1e18;      // normal: 1 BNB = 1.000.000 THX
-    uint256 public constant NFT_RATE = 5_000_000 * 1e18;  // holder NFT (diskon 80%): 1 BNB = 5.000.000 THX
+    // 1 USDT = 20.000 THX (1 THX = $0,00005); saat BNB $680:
+    // 1 BNB = 13.600.000 THX normal, 68.000.000 THX holder.
+    uint256 public constant RATE = 13_600_000 * 1e18;     // normal: 1 BNB = 13.600.000 THX
+    uint256 public constant NFT_RATE = 68_000_000 * 1e18; // holder NFT (diskon 80%): 1 BNB = 68.000.000 THX
 
     // ---- Batas beli ----
     uint256 public constant MIN_BUY = 0.0015 ether;       // min beli 0,0015 BNB (~$1)
@@ -104,14 +106,14 @@ contract ThalvorixPresaleTiered {
     }
 
     /// @notice Cap diskon per 1 NFT menurut tier-nya (dalam THX, 18 desimal).
-    /// 0 Common 7.500, 1 Uncommon 8.000, 2 Rare 10.000, 3 Epic 50.000, 4 Legendary 100.000.
-    /// Common 7.500 = persis 1x pembelian minimal holder (0,0015 BNB).
+    /// 0 Common 150.000, 1 Uncommon 160.000, 2 Rare 200.000, 3 Epic 1.000.000, 4 Legendary 2.000.000.
+    /// Pembelian minimal holder (0,0015 BNB) = 102.000 THX, jadi semua tier bisa beli >= 1x.
     function tierCap(uint8 rarity) public pure returns (uint256) {
-        if (rarity == 0) return 7500 * 1e18;
-        if (rarity == 1) return 8000 * 1e18;
-        if (rarity == 2) return 10000 * 1e18;
-        if (rarity == 3) return 50000 * 1e18;
-        return 100000 * 1e18; // 4 Legendary
+        if (rarity == 0) return 150000 * 1e18;
+        if (rarity == 1) return 160000 * 1e18;
+        if (rarity == 2) return 200000 * 1e18;
+        if (rarity == 3) return 1000000 * 1e18;
+        return 2000000 * 1e18; // 4 Legendary
     }
 
     /// @notice Total cap diskon untuk daftar tokenId (harus milik `user`,
