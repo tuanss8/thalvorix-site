@@ -692,7 +692,49 @@ function psCountTxt(){const s=Math.max(0,PS_END-Math.floor(Date.now()/1000)),d=M
 async function presaleRefresh(){const c=$('#psCount');if(c)c.textContent=psCountTxt();const st=$('#psStats');if(st){try{const _pr=await Promise.all([ethCall(PRESALE,PSEL.totalSold),ethCall(THX,SEL.balanceOf+encAddr(PRESALE))]);const sold=BigInt(_pr[0]);const left=BigInt(_pr[1]);st.innerHTML='Sold: <b style="color:#fff">'+fmtInt(sold/1000000000000000000n)+' THX</b> &middot; Remaining: <b style="color:#fff">'+fmtInt(left/1000000000000000000n)+' THX</b>';}catch(e){/* keep the embedded Sold/Remaining values shown on page load */}}if(S.wallet){try{PS_HEROES=Number(BigInt(await ethCall(HERO,SEL.balanceOf+encAddr(S.wallet))));PS_BOUGHT=BigInt(await ethCall(PRESALE,PSEL.nftDiscountBought+encAddr(S.wallet)))/1000000000000000000n;if(PS_HEROES>0)await psLoadCap();else{PS_IDS=[];PS_CAP=null}}catch(e){PS_HEROES=null;PS_BOUGHT=null;PS_CAP=null}}else{PS_HEROES=null;PS_BOUGHT=null;PS_IDS=null;PS_CAP=null}psHolder();psEst()}
 function psHolder(){const el=$('#psHolder');if(!el)return;if(!S.wallet||PS_HEROES==null){el.hidden=true;return}el.hidden=false;if(!PS_HEROES){el.textContent='You hold no Hero NFT — you buy at the normal rate (1 BNB = 13,600,000 THX).';return}if(PS_CAP==null){el.textContent='You hold '+PS_HEROES+' Hero NFT'+(PS_HEROES>1?'s':'')+' — 80% off! Loading your discount quota\u2026';return}const left=PS_CAP-(PS_BOUGHT||0n);el.innerHTML='You hold <b style="color:#fff">'+PS_HEROES+' Hero NFT'+(PS_HEROES>1?'s':'')+'</b> — 80% off! Discount quota left: <b style="color:#fff">'+fmtInt(left)+' THX</b> (max '+fmtInt(PS_CAP)+' THX, by NFT tier).'}
 function psEst(){const inp=$('#psAmt'),est=$('#psEst');if(!inp||!est)return;const wei=bnbToWei(inp.value||'0');if(wei==null||wei<=0n){est.textContent='Enter a BNB amount (min 0.0015, max 5).';return}if(S.wallet&&PS_HEROES>0&&PS_CAP!=null){const left=PS_CAP-(PS_BOUGHT||0n),want=wei*PS_NFT_RATE/1000000000000000000n;if(want>left){est.textContent='You get '+fmtInt(left)+' THX max (discount quota limit for your NFTs). Lower the amount.';}else{est.textContent='You get \u2248 '+fmtInt(want)+' THX (Hero holder 80% off).';}}else if(S.wallet&&PS_HEROES>0){est.textContent='You get \u2248 '+fmtInt(wei*PS_NFT_RATE/1000000000000000000n)+' THX (Hero holder 80% off).';}else{est.textContent='You get \u2248 '+fmtInt(wei*PS_RATE/1000000000000000000n)+' THX.';}}
-async function presaleBuy(){if(PS_BUSY)return;if(!S.wallet){PS_PENDING_BUY=true;toast('Connect your wallet first');openWalletPicker();return}if(S.apiLogin){toast('Buying needs a connected wallet. Connect with MetaMask, OKX or Trust Wallet (not the manual address option).');return}if(!prov()){toast('No wallet detected in this browser. Install MetaMask or OKX Wallet, then try again.');return}const msg=$('#psMsg');if(msg)msg.textContent='Processing\u2026 please wait, your wallet will ask for confirmation.';try{await presaleRefresh()}catch(e){}const inp=$('#psAmt');const wei=bnbToWei((inp.value||'').trim());if(wei==null){toast('Enter a valid BNB amount');if(msg)msg.textContent='';return}if(wei<PS_MIN){toast('Minimum buy is 0.0015 BNB');if(msg)msg.textContent='';return}if(wei>PS_MAX){toast('Maximum buy is 5 BNB per transaction');if(msg)msg.textContent='';return}let ids=[];if(PS_HEROES>0){if(msg)msg.textContent='Loading your Hero NFTs for the 80% discount\u2026';try{ids=await Promise.race([psOwnedIds(false),new Promise(r=>setTimeout(()=>r(null),8000))])||[]}catch(e){ids=[]}if(ids.length&&PS_CAP==null){try{await Promise.race([psOwnedIds(true),new Promise(r=>setTimeout(()=>r(null),8000))]);await psLoadCap();ids=await psOwnedIds(false)||[]}catch(e){}}if(!ids.length){if(!confirm('Could not load your Hero NFTs, so the 80% discount cannot be applied. Buy at the normal price anyway?')){if(msg)msg.textContent='';return}toast('Buying at the normal price (1 BNB = 13,600,000 THX). Open your Bag first to load your NFTs for the 80% discount.');ids=[]}if(PS_CAP!=null){const left=PS_CAP-(PS_BOUGHT||0n),want=wei*PS_NFT_RATE/1000000000000000000n;if(want>left){toast('Exceeds your discount quota ('+fmtInt(left)+' THX left). Lower the amount.');if(msg)msg.textContent='';return}}}PS_BUSY=true;if(msg)msg.textContent='Waiting for wallet confirmation\u2026 please confirm the transaction in your wallet.';try{const data=PSEL.buy+encUint(32)+encUint(ids.length)+ids.map(i=>encUint(i)).join('');const hash=await sendTx({to:PRESALE,data,value:'0x'+wei.toString(16)});if(msg)msg.innerHTML='Transaction sent: <a href="https://bscscan.com/tx/'+hash+'" target="_blank" rel="noopener">view on BscScan</a>';const r=await waitReceipt(hash,120000);if(r&&r.status==='0x1'){toast('Presale buy confirmed! THX is in your wallet.');if(msg)msg.textContent='Confirmed! THX has been sent to your wallet.';try{S.thxBal=weiToBnb(await ethCall(THX,SEL.balanceOf+encAddr(S.wallet)))}catch(e){}presaleRefresh();}else if(r){toast('Transaction failed.');if(msg)msg.textContent='Transaction failed.';}else if(msg){msg.textContent='Transaction sent — check BscScan for confirmation.';}}catch(e){const em=String((e&&e.message)||e||'');toast('Buy cancelled or failed.');if(msg)msg.textContent='Buy failed: '+em.slice(0,120)+' \u2014 check your wallet is on BSC Mainnet and try again.';}finally{PS_BUSY=false}}
+async function presaleBuy(){
+  if(PS_BUSY)return;
+  if(!S.wallet){PS_PENDING_BUY=true;toast('Connect your wallet first');openWalletPicker();return}
+  if(S.apiLogin){toast('Buying needs a connected wallet. Connect with MetaMask, OKX or Trust Wallet (not the manual address option).');return}
+  if(!prov()){toast('No wallet detected in this browser. Install MetaMask or OKX Wallet, then try again.');return}
+  const inp=$('#psAmt'),msg=$('#psMsg');
+  const wei=bnbToWei((inp.value||'').trim());
+  if(wei==null){toast('Enter a valid BNB amount');return}
+  if(wei<PS_MIN){toast('Minimum buy is 0.0015 BNB');return}
+  if(wei>PS_MAX){toast('Maximum buy is 5 BNB per transaction');return}
+  PS_BUSY=true;
+  const buyBtn=$('#psBuy');if(buyBtn){buyBtn.disabled=true;buyBtn.textContent='Processing\u2026'}
+  if(msg)msg.textContent='Preparing your purchase\u2026';
+  try{
+    try{await Promise.race([presaleRefresh(),new Promise(r=>setTimeout(r,10000))])}catch(e){}
+    let ids=[];
+    if(PS_HEROES>0){
+      if(msg)msg.textContent='Checking your Hero discount\u2026';
+      try{ids=await Promise.race([psOwnedIds(false),new Promise(r=>setTimeout(()=>r([]),15000))])}catch(e){ids=[]}
+      if(PS_CAP==null&&ids.length){try{await Promise.race([psLoadCap(),new Promise(r=>setTimeout(r,10000))])}catch(e){}}
+      if(!ids.length){
+        if(!confirm('Could not load your Hero NFTs, so the 80% discount cannot be applied. Buy at the normal price anyway?'))return;
+        toast('Buying at the normal price (1 BNB = 13,600,000 THX). Open your Bag first to load your NFTs for the 80% discount.');
+      }
+      if(PS_CAP!=null){const left=PS_CAP-(PS_BOUGHT||0n),want=wei*PS_NFT_RATE/1000000000000000000n;if(want>left){toast('Exceeds your discount quota ('+fmtInt(left)+' THX left). Lower the amount.');return}}
+    }
+    if(msg)msg.textContent='Waiting for wallet confirmation\u2026';
+    const data=PSEL.buy+encUint(32)+encUint(ids.length)+ids.map(i=>encUint(i)).join('');
+    const hash=await sendTx({to:PRESALE,data,value:'0x'+wei.toString(16)});
+    if(msg)msg.innerHTML='Transaction sent: <a href="https://bscscan.com/tx/'+hash+'" target="_blank" rel="noopener">view on BscScan</a>';
+    const r=await waitReceipt(hash,120000);
+    if(r&&r.status==='0x1'){toast('Presale buy confirmed! THX is in your wallet.');if(msg)msg.textContent='Confirmed! THX has been sent to your wallet.';try{S.thxBal=weiToBnb(await ethCall(THX,SEL.balanceOf+encAddr(S.wallet)))}catch(e){}presaleRefresh();}
+    else if(r){toast('Transaction failed.');if(msg)msg.textContent='Transaction failed.';}
+    else if(msg){msg.textContent='Transaction sent \u2014 check BscScan for confirmation.';}
+  }catch(e){
+    const c=e&&e.code;
+    const why=c===4001?'Transaction rejected in your wallet.':(e&&/wrong network/i.test(e.message||'')?'Wrong network \u2014 switch your wallet to BNB Smart Chain, then try again.':(e&&e.message?e.message:'Buy cancelled or failed.'));
+    toast(why);if(msg)msg.textContent=why;
+  }finally{
+    PS_BUSY=false;
+    if(buyBtn){buyBtn.disabled=false;buyBtn.textContent='Buy THX'}
+  }
+}
 try{$('#psBuy').onclick=presaleBuy;$('#psAmt').oninput=()=>psEst();}catch(e){}
 setInterval(()=>{const c=$('#psCount');if(c&&!$('#p-token').hidden)c.textContent=psCountTxt()},30000);
 /* Stake Items: stake owned items to earn THX (rates kept server-side in stake-item). */
@@ -816,12 +858,14 @@ async function connectWith(provider,noSign){
     attachProvListeners(provider);
     const ok=await ensureBsc();
     if(!ok){m.innerHTML='Please switch your wallet to <b>BSC Mainnet</b>, then press Connect Wallet again.';S.wallet=null;S.provider=null;return false}
-    if(noSign){S.signed=false}else{const msg=`Sign in to Thalvorix\n\nSign this message to prove you own this wallet.\n\nWallet: ${addr}\nTime: ${new Date().toISOString()}`;let sig=null;try{sig=await provider.request({method:'personal_sign',params:[hexMsg(msg),addr]})}catch(e){sig=null}if(!sig){m.textContent='Signature required to connect. Please sign the login message to continue.';S.wallet=null;S.provider=null;S.signed=false;return false}S.signed=true}
+    S.signed=false;/* Connecting never needs a signature now — one flow for every player. Actions that need a signature (NFT buy/list/delist) ask for it only when you use them. */
     itemsLoad(addr);boxesLoad(addr);checkBoxGrants();{const pi=EIP6963.find(x=>x.provider===provider);sessSave({addr,mode:'wallet',rdns:pi?pi.info.rdns:'injected',ps:false})}
+    presaleRefresh().catch(()=>{});/* warm up the holder discount in the background so Buy THX is fast */
     const b=$('#connectBtn');if(b)b.textContent='Connected '+shortAddr(addr);
     return true;
   }catch(e){m.textContent='Wallet connection was cancelled.';S.wallet=null;S.provider=null;return false}
 }
+async function signIn(){const p=prov();if(!p||!S.wallet)return false;const msg=`Sign in to Thalvorix\n\nSign this message to prove you own this wallet.\n\nWallet: ${S.wallet}\nTime: ${new Date().toISOString()}`;try{const sig=await p.request({method:'personal_sign',params:[hexMsg(msg),S.wallet]});if(!sig)return false;S.signed=true;return true}catch(e){return false}}
 async function apiLogin(addr){
   const m=$('#walletMsg');
   const a=String(addr||'').trim().toLowerCase();
@@ -1010,7 +1054,8 @@ async function refreshChain(){
 async function doBuy(n){
   try{
     if(!S.wallet)return toast('Connect your wallet first');
-    if(S.apiLogin||!S.signed){toast('Wallet sign-in required to buy. Connect your wallet and sign in.');openWalletPicker();return}
+    if(S.apiLogin){toast('Buying needs a connected wallet.');return}
+    if(!S.signed){toast('Please sign in your wallet to buy.');if(!(await signIn()))return}
     if(!prov()){toast('Connect a wallet to send this transaction.');openWalletPicker();return}
     if(S.bal==null||S.bal<n.price)return toast('Not enough BNB');
     const hash=await sendTx({to:HERO,data:SEL.buy+encUint(n.id),value:'0x'+n.priceWei.toString(16)});
@@ -1023,7 +1068,8 @@ async function doBuy(n){
 async function doDelist(n){
   try{
     if(!S.wallet)return toast('Connect your wallet first');
-    if(S.apiLogin||!S.signed){toast('Wallet sign-in required to delist. Connect your wallet and sign in.');openWalletPicker();return}
+    if(S.apiLogin){toast('Delisting needs a connected wallet.');return}
+    if(!S.signed){toast('Please sign in your wallet to delist.');if(!(await signIn()))return}
     if(!prov()){toast('Connect a wallet to send this transaction.');openWalletPicker();return}
     const hash=await sendTx({to:HERO,data:SEL.delist+encUint(n.id)});
     toast('Delist sent. Waiting for confirmation…');
@@ -1062,7 +1108,8 @@ async function doList(n,priceBnb){
   try{
     if(!S.wallet)return toast('Connect your wallet first');
     if(isBotList()&&!S.puzzleOk){openListPuzzle(n,priceBnb);return}
-    if(!S.puzzleOk&&(S.apiLogin||!S.signed)){toast('Wallet sign-in required to list. Connect your wallet and sign in.');openWalletPicker();return}
+    if(S.apiLogin){toast('Listing needs a connected wallet.');return}
+    if(!S.puzzleOk&&!S.signed){toast('Please sign in your wallet to list.');if(!(await signIn()))return}
     if(!prov()){toast('Connect a wallet to send this transaction.');openWalletPicker();return}
     const wei=bnbToWei(priceBnb.toFixed(3));if(wei==null)return toast('Invalid price');
     S.puzzleOk=false;
