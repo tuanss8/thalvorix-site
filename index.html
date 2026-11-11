@@ -458,6 +458,137 @@ radial-gradient(ellipse at 30% 35%,rgba(160,60,200,.55),transparent 55%),radial-
         </section>
         <section class="section x-panel" id="p-token" hidden>
           <div class="x-box" id="tokenComingSoon"><h2>THX Presale — LIVE</h2><p><b class="x-gold">THX</b> is the official THALVORIX token. Presale is live now — ends <b>25 Nov 2026, 04:07 WIB</b> (<span id="psCount">…</span>). Burn Box rewards are recorded in THX and can be claimed when the token launches. Only trust announcements from thalvorix.xyz and @THALVORIX on X.</p><p class="x-muted" id="psStats">Sold: <b style="color:#fff">0 THX</b> &middot; Remaining: <b style="color:#fff">500,000,000 THX</b></p><p class="x-muted">Rate: <b style="color:#fff">1 BNB = 13,600,000 THX</b> &middot; Hero NFT holders: <b style="color:#fff">1 BNB = 68,000,000 THX</b> (80% off, discount cap by NFT tier: Common 150,000, Uncommon 160,000, Rare 200,000, Epic 1,000,000, Legendary 2,000,000 THX per NFT). Min buy 0.0015 BNB, max 5 BNB per transaction.</p><p class="x-muted" id="psHolder" hidden></p><div class="x-row" style="gap:8px;flex-wrap:wrap;align-items:center"><input class="x-in" id="psAmt" type="number" step="0.0015" min="0.0015" max="5" value="0.0015" placeholder="BNB amount" style="flex:1 1 140px"><button class="x-cta" id="psBuy">Buy THX</button></div><p class="x-muted" id="psEst">You get ≈ 20,400 THX for 0.0015 BNB.</p><p class="x-muted" id="psMsg"></p><div class="x-row" style="margin-top:12px"><a class="btn" href="whitepaper.html" target="_blank" rel="noopener">Whitepaper THX</a><a class="btn" href="https://bscscan.com/address/0xcc40eaf664ee84fc696c32e615ce71b838777641" target="_blank" rel="noopener">Presale contract</a></div><p class="x-muted" style="margin-top:10px">Presale: 500,000,000 THX &middot; Unsold THX is burned at the end &middot; Liquidity locked 1 year. Read the whitepaper for tokenomics, burn, and the 1-year liquidity lock.</p></div>
+          <div class="x-box" id="tokenWhitepaper" style="margin-top:14px"><h2>Thalvorix (THX) Whitepaper</h2><p class="x-muted">Version 2.0 &mdash; November 11, 2026 &middot; Website: <a href="https://thalvorix.xyz/">thalvorix.xyz</a> &middot; Token: THX &mdash; <span class="mono">0x4fCdA9835B50BDF454BA96a813d564Ad3060c540</span> (BNB Chain) &middot; Hero NFT: <span class="mono">0x6D862c8B847323961FCD349ffFbee0133F6B929A</span> &middot; Presale contract: <span class="mono">ThalvorixPresaleTiered</span> &mdash; <a href="https://bscscan.com/address/0xcc40eaf664ee84fc696c32e615ce71b838777641"><span class="mono">0xcc40eaf664ee84fc696c32e615ce71b838777641</span></a> (verified on BscScan, Exact Match)</p>
+          <h3>1. Summary</h3>
+          <p>Thalvorix is an NFT game on BNB Chain. Players collect Hero NFTs (max 6,666), battle in Duel Arena Battle Card, and win Mystery Boxes containing items.</p>
+          <p>THX is the Thalvorix utility token. A total of <b class="x-gold">1,000,000,000 THX</b> was minted. <b class="x-gold">200,000,000 THX was permanently burned on November 11, 2026</b> when the first presale contract was closed, so the <b class="x-gold">effective supply is 800,000,000 THX</b>. THX is used for game rewards (Zealy, Burn Box) and will become the in-game currency.</p>
+          <p>The THX presale is <b class="x-gold">live now, November 11&ndash;25, 2026</b>, at <b class="x-gold">1 USDT = 20,000 THX</b> (1 THX = $0.00005). Hero NFT holders get an 80% discount, with the discount quota depending on the rarity tier of the NFTs they hold.</p>
+          <p>This whitepaper explains: tokenomics, presale, burn, and liquidity.</p>
+          <p><b>Important note:</b> The &ldquo;THX&rdquo; ticker is also used by another project (THX Network, Ethereum). Thalvorix THX is a different token, on BNB Chain, with the contract above. Always verify the contract address before buying.</p>
+          <h3>2. THX Token</h3>
+          <table><tr><th>Item</th><th>Detail</th></tr>
+          <tr><td>Name</td><td>Thalvorix</td></tr>
+          <tr><td>Symbol</td><td>THX</td></tr>
+          <tr><td>Network</td><td>BNB Smart Chain (BSC, chain 56)</td></tr>
+          <tr><td>Contract address</td><td><span class="mono">0x4fCdA9835B50BDF454BA96a813d564Ad3060c540</span></td></tr>
+          <tr><td>Total minted</td><td>1,000,000,000 THX</td></tr>
+          <tr><td>Burned (Nov 11, 2026)</td><td>200,000,000 THX (first presale contract closure)</td></tr>
+          <tr><td>Effective supply</td><td>800,000,000 THX</td></tr>
+          <tr><td>Decimals</td><td>18</td></tr>
+          <tr><td>Status</td><td>Already deployed, verified on BscScan (Exact Match). No DEX pair yet.</td></tr></table>
+          <h3>3. Tokenomics (800,000,000 THX effective)</h3>
+          <table><tr><th>Allocation</th><th>Amount</th><th>%</th><th>Notes</th></tr>
+          <tr><td>Presale</td><td>500,000,000</td><td>62.5%</td><td>Sold in the presale (see Chapter 4)</td></tr>
+          <tr><td>Liquidity</td><td>150,000,000</td><td>18.75%</td><td>Paired with BNB on PancakeSwap at listing</td></tr>
+          <tr><td>Initial burn</td><td>25,000,000</td><td>3.125%</td><td>Burned at listing (to the dead address)</td></tr>
+          <tr><td>Zealy &amp; community rewards</td><td>25,000,000</td><td>3.125%</td><td>Zealy Season 1 rewards (24.5 million) + future seasons</td></tr>
+          <tr><td>Burn Box rewards</td><td>25,000,000</td><td>3.125%</td><td>THX for Mystery Boxes burned</td></tr>
+          <tr><td>Team / dev</td><td>25,000,000</td><td>3.125%</td><td>For development</td></tr>
+          <tr><td>Ecosystem &amp; marketing</td><td>25,000,000</td><td>3.125%</td><td>Partnerships, listings, promotion</td></tr>
+          <tr><td>Treasury / reserve</td><td>25,000,000</td><td>3.125%</td><td>Reserve for future needs</td></tr>
+          <tr><td><b>Total (effective)</b></td><td><b>800,000,000</b></td><td><b>100%</b></td><td></td></tr></table>
+          <p>The original mint was 1,000,000,000 THX. 200,000,000 THX was burned on November 11, 2026, when the first presale contract was closed (its unsold allocation was sent to the dead address by <span class="mono">finalize()</span>). The eight allocations above add up to the remaining 800,000,000 THX.</p>
+          <h3>4. Presale</h3>
+          <p><b>Live: November 11&ndash;25, 2026 (14 days), ends November 25, 2026, 04:07 WIB.</b></p>
+          <h3>4.1 Price</h3>
+          <table><tr><th>Buyer</th><th>Price</th></tr>
+          <tr><td>Normal price</td><td><b>1 USDT = 20,000 THX</b> (1 THX = $0.00005) &mdash; paid in BNB: <b>1 BNB = 13,600,000 THX</b></td></tr>
+          <tr><td>Hero NFT holder (80% discount)</td><td><b>1 BNB = 68,000,000 THX</b> (pay 20% of the normal price)</td></tr></table>
+          <p>The presale contract prices in BNB, with fixed rates (13,600,000 THX per BNB normal, 68,000,000 THX per BNB for holders). The USDT price above is based on BNB at about $680 when the presale was designed; if the BNB price moves, the dollar price moves with it.</p>
+          <h3>4.2 Purchase rules</h3>
+          <ul>
+          <li><b>Currency:</b> BNB.</li>
+          <li><b>Min. buy:</b> 0.0015 BNB per transaction (about $1).</li>
+          <li><b>Max. buy:</b> 5 BNB per transaction.</li>
+          <li><b>NFT holder &mdash; discount cap by NFT tier</b> (total, at the discount price, summed across all NFTs held):</li>
+          </ul>
+          <table><tr><th>Hero NFT tier</th><th>Discount cap per NFT</th></tr>
+          <tr><td>Common</td><td>150,000 THX</td></tr>
+          <tr><td>Uncommon</td><td>160,000 THX</td></tr>
+          <tr><td>Rare</td><td>200,000 THX</td></tr>
+          <tr><td>Epic</td><td>1,000,000 THX</td></tr>
+          <tr><td>Legendary</td><td>2,000,000 THX</td></tr></table>
+          <ul>
+          <li>The smallest holder purchase (0.0015 BNB) buys 102,000 THX at the discount price, so <b>any holder of a single Hero NFT can buy at least once at the discount price</b>, whatever the tier.</li>
+          <li><b>After the discount quota is used, the holder can keep buying at the normal price</b> &mdash; the discount cap only limits how much can be bought at the discount price, not how much can be bought in total.</li>
+          <li><b>Who gets the discount:</b> a wallet holding at least 1 Hero NFT (checked on-chain via <span class="mono">rarityOf</span> and <span class="mono">ownerOf</span> of the Hero contract). The discount applies automatically in the presale contract; the buyer submits the token IDs of the NFTs they hold, and the contract verifies ownership and sums the tier caps.</li>
+          <li><b>Presale allocation:</b> 500,000,000 THX.</li>
+          <li><b>Duration:</b> 14 days (November 11&ndash;25, 2026), or until the allocation sells out, whichever comes first.</li>
+          <li><b>Max. funds raised:</b> about $25,000 (about 36.8 BNB) if the full allocation sells out.</li>
+          </ul>
+          <h3>4.3 How to buy</h3>
+          <ol>
+          <li>Connect your wallet (MetaMask) on the presale page at <a href="https://thalvorix.xyz/">thalvorix.xyz</a> (THALVORIX Token tab).</li>
+          <li>Enter the BNB amount.</li>
+          <li>If the wallet holds a Hero NFT, the discount price applies automatically (the site sends your Hero token IDs; the quota is checked on-chain).</li>
+          <li>Confirm the transaction. THX is sent directly to the buyer&rsquo;s wallet.</li>
+          </ol>
+          <p>Presale contract: <span class="mono">ThalvorixPresaleTiered</span> &mdash; <a href="https://bscscan.com/address/0xcc40eaf664ee84fc696c32e615ce71b838777641"><span class="mono">0xcc40eaf664ee84fc696c32e615ce71b838777641</span></a> (verified on BscScan, Exact Match).</p>
+          <h3>4.4 After the presale ends</h3>
+          <ul>
+          <li><b>Unsold THX is BURNED</b> &mdash; sent to the dead address <span class="mono">0x000000000000000000000000000000000000dEaD</span> by the <span class="mono">finalize()</span> function in the contract. It can never be recovered.</li>
+          <li><b>BNB raised</b> is withdrawn by the owner to create liquidity and fund operations.</li>
+          </ul>
+          <h3>5. Burn</h3>
+          <p>Thalvorix uses burn to reduce supply:</p>
+          <ol>
+          <li><b>First presale closure burn:</b> 200,000,000 THX burned on November 11, 2026 (the unsold allocation of the first presale contract). This is already done and verifiable on BscScan.</li>
+          <li><b>Initial burn:</b> 25,000,000 THX (from the tokenomics allocation) burned at listing.</li>
+          <li><b>Presale remainder burn:</b> all unsold presale THX is burned at <span class="mono">finalize()</span>.</li>
+          <li><b>Ongoing burn:</b> additional burn mechanisms (e.g. from game fees) will be announced separately.</li>
+          </ol>
+          <p>All burns are verifiable on BscScan (transfers to the dead address).</p>
+          <h3>6. Liquidity &amp; 1-Year Lock</h3>
+          <p>After the presale ends:</p>
+          <ol>
+          <li><b>60% of the BNB raised</b> + <b>150,000,000 THX</b> (liquidity allocation) is added as liquidity on <b>PancakeSwap</b> (THX/BNB pair).</li>
+          <li><b>LP tokens are LOCKED for 1 year</b> (365 days) through a third-party locker (PinkLock / Team Finance). During the lock, no one can remove the liquidity &mdash; including the team.</li>
+          <li>Lock proof (PinkLock link) will be published on <a href="https://thalvorix.xyz/">thalvorix.xyz</a> and X.</li>
+          <li>At the presale price (1 THX = $0.00005), the listing price is about <b>$0.0001</b> (2x the presale price), with a fully diluted valuation of about <b>$100,000</b>.</li>
+          </ol>
+          <p>The remaining 40% of BNB raised is used for operations, development, and marketing.</p>
+          <h3>7. THX Utility</h3>
+          <ul>
+          <li><b>Game rewards:</b> winning in Duel Arena Battle Card, ranking up, and Burn Box rewards pay THX.</li>
+          <li><b>Zealy:</b> Season 1 rewards (24.5 million THX) and future seasons.</li>
+          <li><b>In-game currency:</b> buying items / game features (planned).</li>
+          <li><b>Governance (planned):</b> THX holders can vote on community decisions.</li>
+          </ul>
+          <h3>8. Hero NFT &amp; Game</h3>
+          <ul>
+          <li><b>Hero NFT:</b> max 6,666, free mint max 2 per wallet. Contract: <a href="https://bscscan.com/token/0x6D862c8B847323961FCD349ffFbee0133F6B929A"><span class="mono">0x6D862c8B847323961FCD349ffFbee0133F6B929A</span></a>.</li>
+          <li><b>Game:</b> Duel Arena Battle Card (<a href="https://thalvorix.xyz/duel-arena-2d.html">2D</a> and <a href="https://thalvorix.xyz/duel-arena/">3D</a>).</li>
+          <li><b>Mystery Box:</b> earned from wins; can be burned for THX (claimable when THX lists).</li>
+          <li><b>Market:</b> buy/sell Hero NFTs on <a href="https://element.market/collections/thalvorix-hero">Element Market</a>.</li>
+          </ul>
+          <h3>9. Roadmap (short)</h3>
+          <ul>
+          <li><b>Already live:</b> Hero NFT, THX (contract), Duel Arena Battle Card, Mystery Box, Burn Box, Zealy Season 1.</li>
+          <li><b>THX Presale:</b> LIVE November 11&ndash;25, 2026 &mdash; 500,000,000 THX, 80% discount for NFT holders (tiered caps).</li>
+          <li><b>Listing:</b> PancakeSwap (THX/BNB) + LP lock for 1 year.</li>
+          <li><b>Next:</b> THX utility inside the game, next Zealy season, online PvP.</li>
+          </ul>
+          <h3>10. Risks &amp; Disclaimer</h3>
+          <p><b>Not investment advice.</b> THX is a game utility token, not a security. Its price can rise or fall sharply.</p>
+          <ul>
+          <li><b>Shared ticker:</b> &ldquo;THX&rdquo; is also used by another project. Always check the contract address <span class="mono">0x4fCdA9835B50BDF454BA96a813d564Ad3060c540</span> before buying.</li>
+          <li><b>Smart contracts:</b> the presale contract is compiled and verified on BscScan (Exact Match). Even so, there is always a risk of bugs. Never put in funds you cannot afford to lose.</li>
+          <li><b>Liquidity:</b> LP is locked for 1 year, but the THX price can still fluctuate with the market.</li>
+          <li><b>The team does not guarantee any price or profit.</b></li>
+          </ul>
+          <h3>11. Official Links</h3>
+          <ul>
+          <li>Website: <a href="https://thalvorix.xyz/">https://thalvorix.xyz</a></li>
+          <li>X: <a href="https://x.com/THALVORIX">https://x.com/THALVORIX</a></li>
+          <li>Zealy: <a href="https://zealy.io/cw/thalvorix">https://zealy.io/cw/thalvorix</a></li>
+          <li>Hero NFT on Element: <a href="https://element.market/collections/thalvorix-hero">https://element.market/collections/thalvorix-hero</a></li>
+          <li>THX on BscScan: <a href="https://bscscan.com/token/0x4fCdA9835B50BDF454BA96a813d564Ad3060c540">https://bscscan.com/token/0x4fCdA9835B50BDF454BA96a813d564Ad3060c540</a></li>
+          <li>Hero on BscScan: <a href="https://bscscan.com/token/0x6D862c8B847323961FCD349ffFbee0133F6B929A">https://bscscan.com/token/0x6D862c8B847323961FCD349ffFbee0133F6B929A</a></li>
+          <li>Presale contract on BscScan: <a href="https://bscscan.com/address/0xcc40eaf664ee84fc696c32e615ce71b838777641">https://bscscan.com/address/0xcc40eaf664ee84fc696c32e615ce71b838777641</a></li>
+          </ul>
+          <p><i>Only use the links above. Beware of fake sites/groups impersonating Thalvorix.</i></p>
+          </div>
+
         </section>
         <section class="section x-panel" id="p-settings" hidden>
           <div class="head"><p class="head__eyebrow" id="settingsEyebrow">Settings</p><h2 id="settingsTitle">Settings</h2></div>
